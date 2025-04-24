@@ -216,9 +216,13 @@ class Point3D:
 
 
 class Dataset2D:
+    _frozen = False 
+
     def __init__(self, arr):
         self.arr = arr
         self._startidx = 1
+
+        self._frozen = True
 
     @property
     def arr(self):
@@ -277,6 +281,17 @@ class Dataset2D:
 
     def __setitem__(self, idx, value):
        self._arr[self._offset_ij(idx)] = value
+
+    def __getattr__(self, key):
+        return getattr(self._arr, key)
+
+    def __setattr__(self, key, value):
+        if not self._frozen or key in dir(self):
+            object.__setattr__(self, key, value)
+        else:
+            if not hasattr(self._value, key):
+                raise AttributeError(f'Key "{key}" not found in either the Dataset2D itself or its stored array {repr(self._value)}')
+            setattr(self._value, key, value)
 
     def __str__(self):
         return str(self._arr)

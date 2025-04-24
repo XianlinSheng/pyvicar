@@ -6,6 +6,7 @@ from .probe import Probe
 from .canonical_body import CanonicalBody
 from .unstruc_surface import UnstrucSurface
 from .nonuniform_grid import NonuniformGrid
+from .drag_lift import DragLiftList
 
 
 class Case(Group, Writable):
@@ -33,9 +34,13 @@ class Case(Group, Writable):
         self._children.ygrid = NonuniformGrid(self._path / 'ygrid.dat')
         self._children.zgrid = NonuniformGrid(self._path / 'zgrid.dat')
 
+        self._children.draglift = DragLiftList(self)
 
         self._finalize_init()
 
+    @property
+    def path(self):
+        return self._path
 
     def write(self):
         self._children.input.write()
@@ -49,4 +54,7 @@ class Case(Group, Writable):
             self._children.ygrid.write()
         if self._children.zgrid:
             self._children.zgrid.write()
+    
+    def read(self):
+        self._children.draglift.read()
 

@@ -96,15 +96,30 @@ class List(MutableSequence, Container):
         if not isinstance(new, Container):
             raise TypeError(f'Expected a Container (Group/List) to be inside a List, but encountered {repr(new)}')
 
+    def _offset_i(self, i):
+        if isinstance(i, slice):
+            start = i.start
+            stop = i.stop
+            step = i.step
+            if not start is None:
+                start -= self._startidx
+            if not stop is None:
+                stop -= self._startidx
+            i = slice(start, stop, step)
+        else:
+            i = i - self._startidx
+
+        return i
+
     def __getitem__(self, index):
-        return self._children[index - self._startidx]
+        return self._children[self._offset_i(index)]
 
     def __setitem__(self, index, value):
         self._elemcheck(value)
-        self._children[index - self._startidx] = value
+        self._children[self._offset_i(index)] = value
 
     def __delitem__(self, index):
-        del self._children[index - self._startidx]
+        del self._children[self._offset_i(index)]
 
     def __len__(self):
         return len(self._children)
