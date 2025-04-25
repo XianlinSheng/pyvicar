@@ -1,7 +1,7 @@
-from pyvicar.tree.group import Group
-from pyvicar.file.io import Writable
-from pyvicar.tree.field import Field
-from pyvicar.file.formatter import KV2Formatter
+from pyvicar._tree import Group, Field
+from pyvicar._file import Writable
+from pyvicar._format import KV2Formatter
+
 
 class PoissonSolver(Group, Writable):
     def __init__(self, f):
@@ -9,17 +9,20 @@ class PoissonSolver(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.itSolverType = Field('itSolverType', 'pbicgstab', '', {'linesor': 1, 'mg': 2, 'pbicgstab': 3})
-        self._children.redblack = Field('red_black', False, '', Field.vmapPresets.bool2int)
+        self._children.itSolverType = Field(
+            "itSolverType", "pbicgstab", "", {"linesor": 1, "mg": 2, "pbicgstab": 3}
+        )
+        self._children.redblack = Field(
+            "red_black", False, "", Field.vmapPresets.bool2int
+        )
 
-        self._children.omega = Field('omega', 1.5)
+        self._children.omega = Field("omega", 1.5)
 
-        self._children.itermaxPoisson = Field('itermaxPoisson', 10000)
-        self._children.resmaxPoisson = Field('resmaxPoisson', 5e-4)
-        self._children.iterresPoisson = Field('iterresPoisson', 5)
+        self._children.itermaxPoisson = Field("itermaxPoisson", 10000)
+        self._children.resmaxPoisson = Field("resmaxPoisson", 5e-4)
+        self._children.iterresPoisson = Field("iterresPoisson", 5)
 
         self._finalize_init()
-
 
     def write(self):
         self._formatter += self._children.itSolverType

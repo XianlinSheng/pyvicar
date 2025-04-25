@@ -1,9 +1,9 @@
-from pyvicar.tree.group import Group
-from pyvicar.file.io import Writable
-from pyvicar.tree.field import Field
-from pyvicar.file.formatter import KV2Formatter
+from pyvicar._tree import Group, Field
+from pyvicar._file import Writable
+from pyvicar._format import KV2Formatter
 
-mgCycleType = {'vcycle': 1, 'wcycle': 2, 'fcycle': 3}
+mgCycleType = {"vcycle": 1, "wcycle": 2, "fcycle": 3}
+
 
 class MultigridMethod(Group, Writable):
     def __init__(self, f):
@@ -11,25 +11,32 @@ class MultigridMethod(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.xCycleType = Field('xCycleType', 'vcycle', '', mgCycleType)
-        self._children.yCycleType = Field('yCycleType', 'vcycle', '', mgCycleType)
-        self._children.zCycleType = Field('zCycleType', 'vcycle', '', mgCycleType)
+        self._children.xCycleType = Field("xCycleType", "vcycle", "", mgCycleType)
+        self._children.yCycleType = Field("yCycleType", "vcycle", "", mgCycleType)
+        self._children.zCycleType = Field("zCycleType", "vcycle", "", mgCycleType)
 
-        self._children.iterFinest = Field('iterFinest', 1)
-        self._children.iterInterInc = Field('iterInterInc', 0, '0 when linear increase')
-        self._children.iterCoarse = Field('iterCoarse', 1)
+        self._children.iterFinest = Field("iterFinest", 1)
+        self._children.iterInterInc = Field("iterInterInc", 0, "0 when linear increase")
+        self._children.iterCoarse = Field("iterCoarse", 1)
 
-        self._children.xChangeGridLevelN = Field('xChangeGridLevelN', False, '', Field.vmapPresets.bool2int)
-        self._children.yChangeGridLevelN = Field('yChangeGridLevelN', False, '', Field.vmapPresets.bool2int)
-        self._children.zChangeGridLevelN = Field('zChangeGridLevelN', False, '', Field.vmapPresets.bool2int)
+        self._children.xChangeGridLevelN = Field(
+            "xChangeGridLevelN", False, "", Field.vmapPresets.bool2int
+        )
+        self._children.yChangeGridLevelN = Field(
+            "yChangeGridLevelN", False, "", Field.vmapPresets.bool2int
+        )
+        self._children.zChangeGridLevelN = Field(
+            "zChangeGridLevelN", False, "", Field.vmapPresets.bool2int
+        )
 
-        self._children.outputConvergence = Field('outputConvergence', False, '', Field.vmapPresets.bool2int)
+        self._children.outputConvergence = Field(
+            "outputConvergence", False, "", Field.vmapPresets.bool2int
+        )
 
-        self._children.nCellCoarseLevel = Field('nCellCoarseLevel', 2)
-        self._children.iSubMG = Field('iSubMG', False, '', Field.vmapPresets.bool2int)
+        self._children.nCellCoarseLevel = Field("nCellCoarseLevel", 2)
+        self._children.iSubMG = Field("iSubMG", False, "", Field.vmapPresets.bool2int)
 
         self._finalize_init()
-
 
     def write(self):
         self._formatter += self._children.xCycleType
@@ -53,4 +60,3 @@ class MultigridMethod(Group, Writable):
         self._formatter += self._children.nCellCoarseLevel
         self._formatter += self._children.iSubMG
         self._formatter.write()
-

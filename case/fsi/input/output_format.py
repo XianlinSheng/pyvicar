@@ -1,7 +1,7 @@
-from pyvicar.tree.group import Group
-from pyvicar.file.io import Writable
-from pyvicar.tree.field import Field
-from pyvicar.file.formatter import KV2Formatter
+from pyvicar._tree import Group, Field
+from pyvicar._file import Writable
+from pyvicar._format import KV2Formatter
+
 
 class OutputFormat(Group, Writable):
     def __init__(self, f):
@@ -9,14 +9,15 @@ class OutputFormat(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.iFullQ = Field('iFullQ', False, '', Field.vmapPresets.bool2int)
-        self._children.nDimFullQ = Field('nDimFullQ', 2)
-        self._children.stackSize = Field('stackSize', 100)
-        self._children.stackStart = Field('stackStart', 0)
-        self._children.markerFullQ = Field('markerFullQ', False, '', Field.vmapPresets.bool2int)
+        self._children.iFullQ = Field("iFullQ", False, "", Field.vmapPresets.bool2int)
+        self._children.nDimFullQ = Field("nDimFullQ", 2)
+        self._children.stackSize = Field("stackSize", 100)
+        self._children.stackStart = Field("stackStart", 0)
+        self._children.markerFullQ = Field(
+            "markerFullQ", False, "", Field.vmapPresets.bool2int
+        )
 
         self._finalize_init()
-
 
     def write(self):
         self._formatter += self._children.iFullQ
@@ -25,4 +26,3 @@ class OutputFormat(Group, Writable):
         self._formatter += self._children.stackStart
         self._formatter += self._children.markerFullQ
         self._formatter.write()
-

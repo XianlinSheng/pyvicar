@@ -1,9 +1,11 @@
 from collections.abc import Iterable, MutableSequence
 from abc import ABC
-from pyvicar.tree.field import Field
+from .field import Field
+
 
 class Container(ABC):
     pass
+
 
 # accessed by struct.name
 # iterated by for name, obj in struct
@@ -13,7 +15,7 @@ class Struct(Iterable):
 
     def __repr__(self):
         return f"Struct({vars(self)})"
-    
+
     def keys(self):
         return vars(self).keys()
 
@@ -30,18 +32,20 @@ class Group(Container):
 
     def __init__(self):
         Container.__init__(self)
-        self._children = Struct()     # all kv pairs storage
-
+        self._children = Struct()  # all kv pairs storage
 
     def _finalize_init(self):
         # expose public interface for items stored in _children
         for k, v in self._children:
+
             def make_group_property(k):
                 def getter(self):
                     return getattr(self._children, k)
 
                 def setter(self, value):
-                    raise AttributeError(f'Name {k} is a Group/Writer, not a settable Field')
+                    raise AttributeError(
+                        f"Name {k} is a Group/Writer, not a settable Field"
+                    )
 
                 return property(getter, setter)
 
@@ -60,16 +64,20 @@ class Group(Container):
                 case Field():
                     setattr(self.__class__, k, make_field_property(k))
                 case _:
-                    raise TypeError(f'The children of a Group can either be another Container(Group/List) or a Field, but encountered "{k}": {v}')
-        
+                    raise TypeError(
+                        f'The children of a Group can either be another Container(Group/List) or a Field, but encountered "{k}": {v}'
+                    )
+
         # freeze structure, no new attr is allowed to be created anymore
         self._frozen = True
 
     def __setattr__(self, key, value):
         if self._frozen and not hasattr(self, key):
-            raise AttributeError( f'Name "{key}" not found. Group is a static directory, dynamic creation not allowed. Existing children:\n{self.list_children()}')
+            raise AttributeError(
+                f'Name "{key}" not found. Group is a static directory, dynamic creation not allowed. Existing children:\n{self.list_children()}'
+            )
         object.__setattr__(self, key, value)
-    
+
     def list_children(self):
         return list(self._children.keys())
 
@@ -80,7 +88,7 @@ class List(MutableSequence, Container):
         Container.__init__(self)
         self._children = []
         self._startidx = 1
-    
+
     @property
     def startidx(self):
         return self._startidx
@@ -88,13 +96,15 @@ class List(MutableSequence, Container):
     @startidx.setter
     def startidx(self, value):
         if not isinstance(value, int):
-            raise TypeError(f'Expected int for start index, but encountered {value}')
+            raise TypeError(f"Expected int for start index, but encountered {value}")
         self._startidx = value
-    
+
     # can be overriden to suit specific needs upper level
     def _elemcheck(self, new):
         if not isinstance(new, Container):
-            raise TypeError(f'Expected a Container (Group/List) to be inside a List, but encountered {repr(new)}')
+            raise TypeError(
+                f"Expected a Container (Group/List) to be inside a List, but encountered {repr(new)}"
+            )
 
     def _offset_i(self, i):
         if isinstance(i, slice):
@@ -123,7 +133,7 @@ class List(MutableSequence, Container):
 
     def __len__(self):
         return len(self._children)
-    
+
     # this is necessary because default iter uses index and here the index can be shifted
     def __iter__(self):
         return iter(self._children)
@@ -131,11 +141,11 @@ class List(MutableSequence, Container):
     def insert(self, index, value):
         self._elemcheck(value)
         self._children.insert(index - self._startidx, value)
-    
+
     def append(self, value):
         self._elemcheck(value)
         self._children.append(value)
-    
+
     def __iadd__(self, value):
         if isinstance(value, Iterable):
             for onevalue in value:
@@ -143,4 +153,3 @@ class List(MutableSequence, Container):
         else:
             self.append(value)
         return self
-

@@ -1,7 +1,7 @@
-from pyvicar.tree.group import Group
-from pyvicar.file.io import Writable
-from pyvicar.tree.field import Field
-from pyvicar.file.formatter import KV2Formatter
+from pyvicar._tree import Group, Field
+from pyvicar._file import Writable
+from pyvicar._format import KV2Formatter
+
 
 class FSI(Group, Writable):
     def __init__(self, f):
@@ -9,30 +9,35 @@ class FSI(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.coupling = Field('coupling', 'explicit', '', {'explicit': 0, 'implicit': 1})
-        self._children.implMaxres = Field('implMaxres', 1e-6)
-        self._children.implMaxiter = Field('implMaxiter', 10)
+        self._children.coupling = Field(
+            "coupling", "explicit", "", {"explicit": 0, "implicit": 1}
+        )
+        self._children.implMaxres = Field("implMaxres", 1e-6)
+        self._children.implMaxiter = Field("implMaxiter", 10)
 
-        self._children.alpOpt = Field('alpOpt', 'no', '', {'no': 1, 'v': 2, 'am': 3})
-        self._children.alphaUnderrelax = Field('alphaUnderrelax', 1)
-        self._children.alphaUnderrelax2 = Field('alphaUnderrelax2', 10)
-        self._children.timeImpl1 = Field('timeImpl1', 1)
-        self._children.timeImpl2 = Field('timeImpl1', 2)
+        self._children.alpOpt = Field("alpOpt", "no", "", {"no": 1, "v": 2, "am": 3})
+        self._children.alphaUnderrelax = Field("alphaUnderrelax", 1)
+        self._children.alphaUnderrelax2 = Field("alphaUnderrelax2", 10)
+        self._children.timeImpl1 = Field("timeImpl1", 1)
+        self._children.timeImpl2 = Field("timeImpl1", 2)
 
-        self._children.strucSolverMaxiter = Field('strucSolverMaxiter', 2500)
-        self._children.strucSolverMaxres = Field('strucSolverMaxres', 1e-6)
-        self._children.overrelax = Field('overrelax', 1)
-        self._children.substepIter = Field('substepIter', 10)
+        self._children.strucSolverMaxiter = Field("strucSolverMaxiter", 2500)
+        self._children.strucSolverMaxres = Field("strucSolverMaxres", 1e-6)
+        self._children.overrelax = Field("overrelax", 1)
+        self._children.substepIter = Field("substepIter", 10)
 
-        self._children.forceWeight = Field('forceWeight', 1)
-        self._children.SSMForceProbeL = Field('SSMForceProbeL', 0.5)
-        self._children.bendingModel = Field('bendingModel', 'fedkiw', '', {'fedkiw': 1, 'marco': 2})
+        self._children.forceWeight = Field("forceWeight", 1)
+        self._children.SSMForceProbeL = Field("SSMForceProbeL", 0.5)
+        self._children.bendingModel = Field(
+            "bendingModel", "fedkiw", "", {"fedkiw": 1, "marco": 2}
+        )
 
-        self._children.youngsModulusOpt = Field('youngsModulusOpt', 'const', '', {'const': 1, 'variable': 2})
-        self._children.fibres = Field('fibres', 0, 'not available now')
+        self._children.youngsModulusOpt = Field(
+            "youngsModulusOpt", "const", "", {"const": 1, "variable": 2}
+        )
+        self._children.fibres = Field("fibres", 0, "not available now")
 
         self._finalize_init()
-
 
     def write(self):
         self._formatter += self._children.coupling
@@ -61,4 +66,3 @@ class FSI(Group, Writable):
         self._formatter += self._children.youngsModulusOpt
         self._formatter += self._children.fibres
         self._formatter.write()
-

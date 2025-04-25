@@ -1,5 +1,5 @@
-from pyvicar.tree.group import List
-from pyvicar.file.io import Writable
+from pyvicar._tree import List
+from pyvicar._file import Writable
 from .body import Body
 
 
@@ -9,19 +9,16 @@ class Bodies(List, Writable):
         Writable.__init__(self)
         self._f = f
 
-
     def _elemcheck(self, new):
         if not isinstance(new, Body):
-            raise TypeError(f'Expected a Body object, but encountered {repr(new)}')
-
+            raise TypeError(f"Expected a Body object, but encountered {repr(new)}")
 
     def write(self):
         f = self._f
 
         for body in self:
             body.write()
-            f.write('\n')
-        
+            f.write("\n")
 
     def appendnew(self, n=1):
         newobjs = [Body(self._f) for _ in range(n)]
@@ -31,6 +28,5 @@ class Bodies(List, Writable):
         else:
             return newobjs
 
-    
     def resetnew(self, n=1):
         self._children = [Body(self._f) for _ in range(n)]

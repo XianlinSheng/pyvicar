@@ -21,7 +21,6 @@ class Series(Iterable):
 
     def __iter__(self):
         return iter(self._files)
-    
 
     # e.g. nameformat = r'file\.(\d{4})\.(\d{3})\.txt'
     def from_format(basepath, nameformat):
@@ -34,14 +33,15 @@ class Series(Iterable):
                 if match:
                     idxes = tuple(int(n) for n in match.groups())
                     files.append(IndexedFile(idxes, file))
-        
+
         files.sort(key=lambda obj: obj.idxes)
 
         return Series(nameformat, files)
 
 
-if __name__ == '__main__':
-    series = Series.from_format('/home/vicar/plate_study/2d/w00f05', r'drag_lift_body_(\d{3})\.csv')
+if __name__ == "__main__":
+    series = Series.from_format(
+        "/home/vicar/plate_study/2d/w00f05", r"drag_lift_body_(\d{3})\.csv"
+    )
     for file in series:
-        print(f'{file.idxes=},{file.path}')
-
+        print(f"{file.idxes=},{file.path}")
