@@ -1,9 +1,9 @@
 class Dataset2D:
     _frozen = False
 
-    def __init__(self, arr):
+    def __init__(self, arr, startIdx=1):
         self.arr = arr
-        self._startidx = 1
+        self._startidx = startIdx
 
         self._frozen = True
 

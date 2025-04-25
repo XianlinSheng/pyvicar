@@ -9,7 +9,7 @@ class WallTime(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.systemWallTime = Field("systemWallTime", 100)
+        self._children.systemWallTime = Field("systemWallTime", 100.0)
         self._children.exitSafeTime = Field("exitSafeTime", 99.9)
         self._children.iSafeTime = Field(
             "iSafeTime", False, "", Field.vmapPresets.bool2int

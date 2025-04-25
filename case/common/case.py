@@ -2,11 +2,11 @@ from pathlib import Path
 from pyvicar._tree import Group
 from pyvicar._file import Writable
 from .input import Input
-from pyvicar.case.common.probe import Probe
+from .probe import Probe
 from .canonical_body import CanonicalBody
-from pyvicar.case.common.unstruc_surface import UnstrucSurface
-from pyvicar.case.common.nonuniform_grid import NonuniformGrid
-from pyvicar.case.common.drag_lift import DragLiftList
+from .unstruc_surface import UnstrucSurface
+from .nonuniform_grid import NonuniformGrid
+from .drag_lift import DragLiftList
 
 
 class Case(Group, Writable):
