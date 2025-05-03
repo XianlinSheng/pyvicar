@@ -153,3 +153,6 @@ class List(MutableSequence, Container):
         else:
             self.append(value)
         return self
+
+    def __repr__(self):
+        return f"List({repr(self._children)})"

@@ -23,7 +23,7 @@ class Field:
             self.vorig = vorig
 
         def __or__(self, B):
-            return Verbose(
+            return Field.Verbose(
                 self.dscrp or B.dscrp,
                 self.vmap or B.vmap,
                 self.vorig or B.vorig,
@@ -137,7 +137,7 @@ class Field:
         return str(self.value)
 
     def __repr__(self):
-        return f"Field[{self._valueType.__name__}]({self.key_str(verbose=Verbose.all)}: {self.value_str(verbose=Verbose.all)})"
+        return f"Field[{self._valueType.__name__}]({self.key_str(verbose=Field.Verbose.all)}: {self.value_str(verbose=Field.Verbose.all)})"
 
     def __getitem__(self, idx):
         return self._value[idx]

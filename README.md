@@ -7,8 +7,10 @@ and provides tools to generate grids and surface mesh.
 
 ## Requirement
 - numpy (dataset data structure)
-- pandas (reading output)
-- pyvista (mesh visualization)
+- numpy-stl (reading .stl geometries)
+- pandas (reading output tables)
+- pyvista (mesh visualization and postprocessing)
+- mpi4py (parallel postprocessing)
 
 ## Examples
 

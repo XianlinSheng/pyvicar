@@ -7,6 +7,7 @@ from .canonical_body import CanonicalBody
 from .unstruc_surface import UnstrucSurface
 from .nonuniform_grid import NonuniformGrid
 from .drag_lift import DragLiftList
+from .dump import Dump
 
 
 class Case(Group, Writable):
@@ -39,6 +40,7 @@ class Case(Group, Writable):
         self._children.zgrid = NonuniformGrid(self._path / "zgrid.dat")
 
         self._children.draglift = DragLiftList(self)
+        self._children.dump = Dump(self)
 
         self._finalize_init()
 
@@ -61,3 +63,4 @@ class Case(Group, Writable):
 
     def read(self):
         self._children.draglift.read()
+        self._children.dump.read()

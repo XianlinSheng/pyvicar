@@ -27,15 +27,17 @@ class TriSurface:
     def nElem(self):
         return self._nElem
 
-    def display(self):
+    def show(self):
+        self.to_pyvista().plot(show_edges=True, color="lightblue")
+
+    def to_pyvista(self):
         points = self._xyz.arr
         faces = self._conn.arr - self._conn.startidx
 
         # pyvista takes: [3, i0, i1, i2, 3, i0, i1, i2, ...]
         faces_pv = np.hstack([np.full((faces.shape[0], 1), 3), faces]).ravel()
 
-        mesh = pv.PolyData(points, faces_pv)
-        mesh.plot(show_edges=True, color="lightblue")
+        return pv.PolyData(points, faces_pv)
 
     def from_xyz_conn(
         xyz: np.ndarray, conn: np.ndarray, fromStartIdx: int = 0, toStartIdx: int = 1
