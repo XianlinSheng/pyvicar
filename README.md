@@ -9,8 +9,17 @@ and provides tools to generate grids and surface mesh.
 - numpy (dataset data structure)
 - numpy-stl (reading .stl geometries)
 - pandas (reading output tables)
-- pyvista (mesh visualization and postprocessing)
 - mpi4py (parallel postprocessing)
+- pyvista (mesh visualization and postprocessing) Important:
+*on an off-screen server, 
+a specific osmesa build of vtk needs to be installed before pyvista*:
+<pre>
+conda install -c conda-forge vtk=*=osmesa*
+conda install -c conda-forge pyvista # or pip install pyvista
+</pre>
+conda forge might not have the newest python build for pyvista, 
+but pip install will work too.
+
 
 ## Examples
 
