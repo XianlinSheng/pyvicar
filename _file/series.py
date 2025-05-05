@@ -38,6 +38,12 @@ class Series(Iterable):
 
         return Series(nameformat, files)
 
+    def __bool__(self):
+        return len(self._files) != 0
+
+    def __len__(self):
+        return len(self._files)
+
 
 if __name__ == "__main__":
     series = Series.from_format(

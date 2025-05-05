@@ -1,6 +1,7 @@
-from collections.abc import Iterable, MutableSequence
+from collections.abc import Iterable, MutableSequence, MutableMapping
 from abc import ABC
 from .field import Field
+import pyvicar.tools.mpi as mpi
 
 
 class Container(ABC):
@@ -44,7 +45,7 @@ class Group(Container):
 
                 def setter(self, value):
                     raise AttributeError(
-                        f"Name {k} is a Group/Writer, not a settable Field"
+                        f"Name {k} is a Group/List/Dict, not a settable Field"
                     )
 
                 return property(getter, setter)
@@ -65,7 +66,7 @@ class Group(Container):
                     setattr(self.__class__, k, make_field_property(k))
                 case _:
                     raise TypeError(
-                        f'The children of a Group can either be another Container(Group/List) or a Field, but encountered "{k}": {v}'
+                        f'The children of a Group can either be another Container(Group/List/Dict) or a Field, but encountered "{k}": {v}'
                     )
 
         # freeze structure, no new attr is allowed to be created anymore
@@ -82,11 +83,11 @@ class Group(Container):
         return list(self._children.keys())
 
 
-# List contains dynamic children that can be accessed as a list
+# List contains dynamic childrenlist that can be accessed as a list
 class List(MutableSequence, Container):
     def __init__(self):
         Container.__init__(self)
-        self._children = []
+        self._childrenlist = []
         self._startidx = 1
 
     @property
@@ -103,7 +104,7 @@ class List(MutableSequence, Container):
     def _elemcheck(self, new):
         if not isinstance(new, Container):
             raise TypeError(
-                f"Expected a Container (Group/List) to be inside a List, but encountered {repr(new)}"
+                f"Expected a Container (Group/List/Dict) to be inside a List, but encountered {repr(new)}"
             )
 
     def _offset_i(self, i):
@@ -122,29 +123,29 @@ class List(MutableSequence, Container):
         return i
 
     def __getitem__(self, index):
-        return self._children[self._offset_i(index)]
+        return self._childrenlist[self._offset_i(index)]
 
     def __setitem__(self, index, value):
         self._elemcheck(value)
-        self._children[self._offset_i(index)] = value
+        self._childrenlist[self._offset_i(index)] = value
 
     def __delitem__(self, index):
-        del self._children[self._offset_i(index)]
+        del self._childrenlist[self._offset_i(index)]
 
     def __len__(self):
-        return len(self._children)
+        return len(self._childrenlist)
 
     # this is necessary because default iter uses index and here the index can be shifted
     def __iter__(self):
-        return iter(self._children)
+        return iter(self._childrenlist)
 
     def insert(self, index, value):
         self._elemcheck(value)
-        self._children.insert(index - self._startidx, value)
+        self._childrenlist.insert(index - self._startidx, value)
 
     def append(self, value):
         self._elemcheck(value)
-        self._children.append(value)
+        self._childrenlist.append(value)
 
     def __iadd__(self, value):
         if isinstance(value, Iterable):
@@ -155,4 +156,51 @@ class List(MutableSequence, Container):
         return self
 
     def __repr__(self):
-        return f"List({repr(self._children)})"
+        return f"List({repr(self._childrenlist)})"
+
+    def mpi_dispatch(self):
+        return mpi.dispatch(self, self._startidx)
+
+
+# Dict contains dynamic children that can be accessed as a dict
+class Dict(MutableMapping, Container):
+    def __init__(self):
+        Container.__init__(self)
+        self._childrendict = {}
+
+    # can be overriden to suit specific needs upper level
+    def _elemcheck(self, new):
+        if not isinstance(new, Container):
+            raise TypeError(
+                f"Expected a Container (Group/List/Dict) to be inside a List, but encountered {repr(new)}"
+            )
+
+    def __getitem__(self, key):
+        return self._childrendict[key]
+
+    def __setitem__(self, key, value):
+        self._elemcheck(value)
+        self._childrendict[key] = value
+
+    # can be overriden to achieve deleting a file/folder
+    def __delitem__(self, key):
+        del self._childrendict[key]
+
+    def __len__(self):
+        return len(self._childrendict)
+
+    def __iter__(self):
+        return iter(self._childrendict)
+
+    def __repr__(self):
+        return f"Dict({repr(self._childrendict)})"
+
+    def keys(self):
+        return self._childrendict.keys()
+
+    def values(self):
+        return self._childrendict.values()
+
+    def add_pair(self, key, value):
+        self._elemcheck(value)
+        self._childrendict[key] = value

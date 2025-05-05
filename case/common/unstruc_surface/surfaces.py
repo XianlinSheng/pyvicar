@@ -22,11 +22,11 @@ class Surfaces(List, Writable):
 
     def appendnew(self, n=1):
         newobjs = [Surface(self._f) for _ in range(n)]
-        self._children += newobjs
+        self._childrenlist += newobjs
         if n == 1:
             return newobjs[0]
         else:
             return newobjs
 
     def resetnew(self, n=1):
-        self._children = [Surface(self._f) for _ in range(n)]
+        self._childrenlist = [Surface(self._f) for _ in range(n)]
