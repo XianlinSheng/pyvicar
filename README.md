@@ -10,6 +10,7 @@ and provides tools to generate grids and surface mesh.
 - numpy-stl (reading .stl geometries)
 - pandas (reading output tables)
 - mpi4py (parallel postprocessing)
+- ffmpeg-python (convert frames to movie files)
 - pyvista (mesh visualization and postprocessing) Important:
 *on an off-screen server, 
 a specific osmesa build of vtk needs to be installed before pyvista*:
@@ -128,3 +129,108 @@ plt.plot(time, cyp, label="sum", color="k", linewidth=2)
 plt.legend()
 plt.show()
 </pre>
+
+#### Animations
+<pre>
+import pyvista as pv
+from itertools import product
+import pyvicar.tools.mpi as mpi
+from pyvicar.case.version import Case
+
+
+# sync mode (default): all processors working on same case
+mpi.set_sync()
+
+
+cases = ["case1", "..."]
+for case in cases:
+    c = Case(case)
+
+    c.read()
+    c.post.enable()
+    c.post.animations.enable()
+    c.post.animations.del_animations()
+    anivel = c.post.animations.add_new("vel")
+    anivel.frames.enable()
+
+    for vtk in c.dump.vtk.mpi_dispatch():
+        mesh = vtk.to_pyvista()
+        # here starts pyvista
+
+        plotter = pv.Plotter(off_screen=True)
+        # contour scalar bar
+        scalar_bar_args = {
+            "title_font_size": 40,
+            "label_font_size": 36,
+            "position_x": 0.9,      # horizontal position (0 to 1)
+            "position_y": 0.05,     # vertical position (0 to 1)
+            "width": 0.05,
+            "height": 0.3,
+            "vertical": True,       # or False for horizontal bar
+            "color": "white",
+        }
+        plotter.add_mesh(
+            clipped_slice,
+            scalars="VEL",
+            cmap="coolwarm",
+            clim=[0, 1.2],
+            scalar_bar_args=scalar_bar_args,
+        )
+
+        plotter.view_xy()           # Set view to XY plane
+        plotter.set_background("white")
+        plotter.camera.parallel_projection = True
+        plotter.camera.zoom(2.2)
+
+        # save to a frame png
+        anivel.frames.from_seriesi_pyvista(
+            vtk.seriesi, plotter, window_size=[3840, 2160]
+        )
+
+
+# async mode: processors are irrelavant to each other
+# this is necessary if running mpi async
+mpi.set_async()
+
+
+anis = ["vel", "..."]
+span = list(product(cases, anis))       # cartesian product (flatten nested loops)
+for case, aniname in mpi.dispatch(span):
+    c = Case(case)
+
+    c.read()
+    # convert frames to movies
+    c.post.animations[aniname].frames.to_movie(quiet=True)
+
+</pre>
+where MPI is used to postprocess in parallel. 
+The script with MPI is fully compatible with pure serial one:
+<pre>
+python post_with_mpi.py
+</pre>
+is equivalent to a serial code. To run in parallel, use:
+<pre>
+mpirun -np x python post_with_mpi.py
+</pre>
+
+Two parallel modes are shown in the example: sync and async.
+
+Sync mode is used when all processors work on the same directory (case), 
+so they need to be synchronized to update any changes in the folder 
+and the tree structure of Case.
+All processors are aligned: 
+
+- upon mpi.set_sync() ends (initial alignment)
+- upon mpi.set_async() starts (final alignment)
+- right after folder / file changes (all necessary middle keypoints)
+
+The keypoints during the process are handled internally, 
+and at the beginning there is an implicitly set_sync(),
+so one may ignore setting modes when all processors are always modifying same cases.
+For example, in the same case, use multiple processors to generate frames in parallel.
+
+However, when trying to modify different cases, Case needs to know that it does not need to 
+wait for others when it is modifying something, so explicit set_async() is mandatory
+before starting an async block.
+
+
