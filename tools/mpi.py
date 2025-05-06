@@ -1,5 +1,6 @@
 from mpi4py import MPI
 from collections.abc import Iterable, Sequence
+from itertools import product
 from enum import Enum
 
 
@@ -8,6 +9,10 @@ _rank = _comm.Get_rank()
 _size = _comm.Get_size()
 
 _is_host = _rank == 0
+
+
+def barrier():
+    return _comm.Barrier()
 
 
 class ParallelMode(Enum):
@@ -67,7 +72,7 @@ def barrier_or_async():
         _comm.Barrier()
 
 
-def dispatch(listobj: Sequence, startidx=0):
+def dispatch_sequence(listobj: Sequence, startidx=0):
     # calculate the elements and dispatch views to each processor
     if _rank == 0:
         total = len(listobj)
@@ -97,6 +102,16 @@ def dispatch(listobj: Sequence, startidx=0):
         view.set_parent(listobj)
 
     return view
+
+
+# dispatch an Iterable, first create indexed list as its parent
+def dispatch(listobj: Iterable):
+    # refer to a list, so startidx must = 0
+    return dispatch_sequence(list(listobj), 0)
+
+
+def prod_and_dispatch(*args):
+    return dispatch(product(*args))
 
 
 class MPIView(Iterable):

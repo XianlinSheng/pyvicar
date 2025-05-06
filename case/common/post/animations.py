@@ -2,7 +2,7 @@ import ffmpeg
 import shutil
 from collections.abc import Iterable
 from pyvicar._utilities import Optional
-from pyvicar._tree import Group, Dict
+from pyvicar._tree import Group, Dict, List
 from pyvicar._file import Readable
 from pyvicar._file import Series, Siblings
 import pyvicar.tools.mpi as mpi
@@ -21,12 +21,26 @@ class AnimationDict(Dict, Readable, Optional):
             self._path.mkdir(exist_ok=True)
         mpi.barrier_or_async()
 
-    def enable(self):
-        super().enable()
-        self._init()
+    def _elemcheck(self, new):
+        if not isinstance(new, Animation):
+            raise TypeError(
+                f"Expected an Animation to be inside an AnimationDict, but encountered {repr(new)}"
+            )
 
-    def _disable(self):
-        return super().disable()
+    def __setitem__(self, _):
+        raise AttributeError(
+            f"[] = ... syntax not supported, animations are not resettable, to add new item, use animations.add_new(name) instead"
+        )
+
+    def __delitem__(self, key):
+        ani = self._childrendict[key]
+        ani.clear()
+        del self._childrendict[key]
+
+    def clear(self):
+        for ani in self._childrendict.values():
+            ani.clear()
+        self._childrendict.clear()
 
     def read(self):
         if not self._path.exists():
@@ -35,24 +49,17 @@ class AnimationDict(Dict, Readable, Optional):
         self.enable()
 
         siblingsdict = Siblings.siblings_dict_at_path(self._path)
-        for basename, siblings in siblingsdict.items():
+        for basename in siblingsdict.keys():
             ani = Animation(self, basename)
-            folders = siblings.folders()
-            files = siblings.files()
-
-            # frames folder
-            if None in folders.exts():
-                folder = folders[None]
-                series = Series.from_format(folder.path, basename + r"\.(\d+)\.png")
-                ani.frames.enable()
-                ani.frames._nframe = len(series)
-
-            # movie files
-            for file in files:
-                movie = Movie(file.path, file.extension)
-                ani.add_pair(file.extension, movie)
-
             self._childrendict[basename] = ani
+            ani.read()
+
+    def enable(self):
+        super().enable()
+        self._init()
+
+    def _disable(self):
+        return super().disable()
 
     @property
     def path(self):
@@ -68,44 +75,8 @@ class AnimationDict(Dict, Readable, Optional):
 
         return ani
 
-    def del_animations(self, names=None):
-        if names is None:
-            names = list(self._childrendict.keys())
 
-        if isinstance(names, str):
-            ani = self._childrendict[names]
-            ani.del_movies()
-            ani.del_frames()
-            del self._childrendict[names]
-            return
-
-        if isinstance(names, Iterable):
-            for name in names:
-                self.del_animations(name)
-            return
-
-        raise TypeError(
-            f"del_animations takes in str or [str], but encountered {names}"
-        )
-
-    def _elemcheck(self, new):
-        if not isinstance(new, Animation):
-            raise TypeError(
-                f"Expected an Animation to be inside an AnimationDict, but encountered {repr(new)}"
-            )
-
-    def __setitem__(self, _):
-        raise AttributeError(
-            f"[] = ... syntax not supported, animations are not resettable, to add new item, use animations.add_new(name) instead"
-        )
-
-    def __delitem__(self, _):
-        raise AttributeError(
-            f"del syntax not supported, use animations.del_animation(names) instead"
-        )
-
-
-class Animation(Group, Dict):
+class Animation(Group, Dict, Readable):
     def __init__(self, animations, name):
         Group.__init__(self)
         Dict.__init__(self)
@@ -117,40 +88,17 @@ class Animation(Group, Dict):
 
         self._finalize_init()
 
-    @property
-    def path(self):
-        return self._path
+    def __delattr__(self, name):
+        if name != "frames":
+            raise AttributeError(
+                f"By default an attribute in Group is static and thus not deletable"
+            )
 
-    def has_movies(self):
-        return len(self._childrendict) > 0
-
-    def del_movies(self, names=None):
-        if names is None:
-            names = list(self._childrendict.keys())
-
-        if isinstance(names, str):
-            if mpi.is_host_in_sync():
-                self._childrendict[names].path.unlink()
-            mpi.barrier_or_async()
-            del self._childrendict[names]
-            return
-
-        if isinstance(names, Iterable):
-            for name in names:
-                self.del_movies(name)
-            return
-
-        raise TypeError(f"del_movies takes in str or [str], but encountered {names}")
-
-    def del_frames(self):
         if self._children.frames and mpi.is_host_in_sync():
             shutil.rmtree(self._children.frames.path)
         mpi.barrier_or_async()
-        self._children.frames = Frames(self, self._name)
 
-    def reset_frames(self):
-        self.del_frames()
-        self._children.frames.enable()
+        self._children.frames = Frames(self, self._name)
 
     def _elemcheck(self, new):
         if not isinstance(new, Movie):
@@ -158,50 +106,96 @@ class Animation(Group, Dict):
                 f"Expected a Movie to be inside an Animation, but encountered {repr(new)}"
             )
 
-    def __repr__(self):
-        return f"Animation('{self._name}'; frames: {self._children.frames.nframe if self._children.frames else 'inactive'}; movies: {list(self._childrendict.keys())})"
-
     def __setitem__(self, _):
         raise AttributeError(
             f"[] = ... syntax not supported, movies are read-only and are not resettable"
         )
 
-    def __delitem__(self, _):
-        raise AttributeError(
-            f"del syntax not supported, use animation.del_movies(names) or animation.del_frames() instead"
-        )
+    def __delitem__(self, key):
+        mov = self._childrendict[key]
+        if mpi.is_host_in_sync():
+            mov.path.unlink()
+        mpi.barrier_or_async()
+        del self._childrendict[key]
 
+    def __repr__(self):
+        return f"Animation('{self._name}'; frames: {len(self._children.frames) if self._children.frames else 'inactive'}; movies: {list(self._childrendict.keys())})"
 
-class Frames(Group, Optional):
-    def __init__(self, animation, name):
-        Group.__init__(self)
-        Optional.__init__(self)
-        self._animation = animation
-        self._path = animation.path / name
-        self._name = name
+    def clear(self):
+        for mov in self._childrendict.values():
+            if mpi.is_host_in_sync():
+                mov.path.unlink()
+            mpi.barrier_or_async()
+        self._childrendict.clear()
+
+        if self._children.frames and mpi.is_host_in_sync():
+            shutil.rmtree(self._children.frames.path)
+        mpi.barrier_or_async()
+
+        self._children.frames = Frames(self, self._name)
+
+    def read(self):
+        siblings = Siblings.from_basename(self._path, self._name)
+        folders = siblings.folders()
+        files = siblings.files()
+
+        # frames folder
+        if None in folders.exts():
+            self._children.frames.enable()
+            self._children.frames.read()
+
+        # movie files
+        for file in files:
+            # movie does not need to be read
+            movie = Movie(file.path, file.extension)
+            self._childrendict[file.extension] = movie
 
     @property
     def path(self):
         return self._path
 
     @property
-    def nframe(self):
-        return self._nframe
+    def name(self):
+        return self._name
 
-    def is_active(self):
-        return self
 
-    def has_frame(self):
-        return self._nframe > 0
-
-    def is_complete(self):
-        return self and self._nframe > 0
+class Frames(List, Readable, Optional):
+    def __init__(self, animation, name):
+        List.__init__(self)
+        Optional.__init__(self)
+        self._animation = animation
+        self._path = animation.path / name
+        self._name = name
 
     def _init(self):
         if mpi.is_host_in_sync():
             self._path.mkdir(exist_ok=True)
         mpi.barrier_or_async()
         self._nframe = 0
+
+    def __delitem__(self, index):
+        frame = self._childrenlist[self._offset_i(index)]
+        if mpi.is_host_in_sync():
+            frame.path.unlink()
+        mpi.barrier_or_async()
+        del self._childrenlist[self._offset_i(index)]
+
+    def clear(self):
+        if mpi.is_host_in_sync():
+            for frame in self._childrenlist:
+                frame.path.unlink()
+        mpi.barrier_or_async()
+        self._childrenlist.clear()
+
+    def read(self):
+        series = Series.from_format(self._path, self._name + r"\.(\d+)\.png")
+
+        for file in series:
+            frame = Frame(file.path, file.idxes[0])
+            self._childrenlist.append(frame)
+
+        if self._childrenlist:
+            self._startidx = self._childrenlist[0].idx
 
     def enable(self):
         super().enable()
@@ -210,10 +204,26 @@ class Frames(Group, Optional):
     def _disable(self):
         return super().disable()
 
+    @property
+    def path(self):
+        return self._path
+
+    def has_frame(self):
+        return len(self._childrenlist) > 0
+
+    def from_seriesi_pyvista(self, seriesi, plotter, *args, **kwargs):
+        path = self._path / f"{self._name}.{seriesi}.png"
+        plotter.show(screenshot=path, *args, **kwargs)
+
     def to_ffmpeg(self, framerate=10):
-        if not self.is_complete():
+        if not self:
             raise Exception(
-                f"Frames inactive or no valid frame files, cannot be transferred to ffmpeg, call animations.read() to reload data"
+                f"Frames inactive, cannot be transferred to ffmpeg, call animation.read() to load data"
+            )
+
+        if not self.has_frame():
+            raise Exception(
+                f"No active frames, cannot be transferred to ffmpeg, call frames.read() to load data"
             )
         return ffmpeg.input(f"{self._path}/{self._name}.%d.png", framerate=framerate)
 
@@ -242,9 +252,21 @@ class Frames(Group, Optional):
             )
         mpi.barrier_or_async()
 
-    def from_seriesi_pyvista(self, seriesi, plotter, *args, **kwargs):
-        path = self._path / f"{self._name}.{seriesi}.png"
-        plotter.show(screenshot=path, *args, **kwargs)
+
+class Frame(Group):
+    def __init__(self, path, idx):
+        Group.__init__(self)
+        Optional.__init__(self)
+        self._path = path
+        self._idx = idx
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def idx(self):
+        return self._idx
 
 
 class Movie(Group):

@@ -43,7 +43,7 @@ class VTKList(List, Readable, Optional):
         if not self:
             raise Exception(f"VTKList is not active now")
 
-        return self[self._startidx - 1]
+        return self._childrenlist[-1]
 
 
 class VTK:

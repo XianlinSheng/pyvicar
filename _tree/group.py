@@ -147,6 +147,9 @@ class List(MutableSequence, Container):
         self._elemcheck(value)
         self._childrenlist.append(value)
 
+    def clear(self):
+        self._childrenlist.clear()
+
     def __iadd__(self, value):
         if isinstance(value, Iterable):
             for onevalue in value:
@@ -159,7 +162,7 @@ class List(MutableSequence, Container):
         return f"List({repr(self._childrenlist)})"
 
     def mpi_dispatch(self):
-        return mpi.dispatch(self, self._startidx)
+        return mpi.dispatch_sequence(self, self._startidx)
 
 
 # Dict contains dynamic children that can be accessed as a dict
@@ -204,3 +207,6 @@ class Dict(MutableMapping, Container):
     def add_pair(self, key, value):
         self._elemcheck(value)
         self._childrendict[key] = value
+
+    def clear(self):
+        self._childrendict.clear()
