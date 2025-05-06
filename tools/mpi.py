@@ -63,8 +63,12 @@ def is_host():
     return _is_host
 
 
-def is_host_in_sync():
-    return _parallelmode == ParallelMode.Sync and _rank == 0
+def is_synchost_or_async():
+    return (
+        _parallelmode == ParallelMode.Sync
+        and _rank == 0
+        or _parallelmode == ParallelMode.Async
+    )
 
 
 def barrier_or_async():

@@ -183,7 +183,7 @@ for case in cases:
         plotter.camera.zoom(2.2)
 
         # save to a frame png
-        anivel.frames.from_seriesi_pyvista(
+        anivel.frames.from_pyvista(
             vtk.seriesi, plotter, window_size=[3840, 2160]
         )
 

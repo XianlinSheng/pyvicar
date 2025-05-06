@@ -1,6 +1,6 @@
 import ffmpeg
 import shutil
-from collections.abc import Iterable
+import matplotlib.pyplot as plt
 from pyvicar._utilities import Optional
 from pyvicar._tree import Group, Dict, List
 from pyvicar._file import Readable
@@ -17,7 +17,7 @@ class AnimationDict(Dict, Readable, Optional):
         self._path = self._post.path / "Animations"
 
     def _init(self):
-        if mpi.is_host_in_sync():
+        if mpi.is_synchost_or_async():
             self._path.mkdir(exist_ok=True)
         mpi.barrier_or_async()
 
@@ -94,7 +94,7 @@ class Animation(Group, Dict, Readable):
                 f"By default an attribute in Group is static and thus not deletable"
             )
 
-        if self._children.frames and mpi.is_host_in_sync():
+        if self._children.frames and mpi.is_synchost_or_async():
             shutil.rmtree(self._children.frames.path)
         mpi.barrier_or_async()
 
@@ -113,7 +113,7 @@ class Animation(Group, Dict, Readable):
 
     def __delitem__(self, key):
         mov = self._childrendict[key]
-        if mpi.is_host_in_sync():
+        if mpi.is_synchost_or_async():
             mov.path.unlink()
         mpi.barrier_or_async()
         del self._childrendict[key]
@@ -123,12 +123,12 @@ class Animation(Group, Dict, Readable):
 
     def clear(self):
         for mov in self._childrendict.values():
-            if mpi.is_host_in_sync():
+            if mpi.is_synchost_or_async():
                 mov.path.unlink()
             mpi.barrier_or_async()
         self._childrendict.clear()
 
-        if self._children.frames and mpi.is_host_in_sync():
+        if self._children.frames and mpi.is_synchost_or_async():
             shutil.rmtree(self._children.frames.path)
         mpi.barrier_or_async()
 
@@ -168,20 +168,19 @@ class Frames(List, Readable, Optional):
         self._name = name
 
     def _init(self):
-        if mpi.is_host_in_sync():
+        if mpi.is_synchost_or_async():
             self._path.mkdir(exist_ok=True)
         mpi.barrier_or_async()
-        self._nframe = 0
 
     def __delitem__(self, index):
         frame = self._childrenlist[self._offset_i(index)]
-        if mpi.is_host_in_sync():
+        if mpi.is_synchost_or_async():
             frame.path.unlink()
         mpi.barrier_or_async()
         del self._childrenlist[self._offset_i(index)]
 
     def clear(self):
-        if mpi.is_host_in_sync():
+        if mpi.is_synchost_or_async():
             for frame in self._childrenlist:
                 frame.path.unlink()
         mpi.barrier_or_async()
@@ -211,9 +210,14 @@ class Frames(List, Readable, Optional):
     def has_frame(self):
         return len(self._childrenlist) > 0
 
-    def from_seriesi_pyvista(self, seriesi, plotter, *args, **kwargs):
+    def frame_by_pyvista(self, seriesi, plotter, *args, **kwargs):
         path = self._path / f"{self._name}.{seriesi}.png"
         plotter.show(screenshot=path, *args, **kwargs)
+
+    def frame_by_matplotlib(self, seriesi, fig, *args, **kwargs):
+        path = self._path / f"{self._name}.{seriesi}.png"
+        fig.savefig(path, *args, **kwargs)
+        plt.close(fig)
 
     def to_ffmpeg(self, framerate=10):
         if not self:

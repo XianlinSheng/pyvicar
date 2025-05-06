@@ -2,6 +2,7 @@ from pyvicar._utilities import Optional
 from pyvicar._tree import Group
 from pyvicar._file import Readable
 from .animations import AnimationDict
+from .reports import ReportDict
 
 
 class Post(Group, Readable, Optional):
@@ -16,6 +17,7 @@ class Post(Group, Readable, Optional):
         self._path.mkdir(exist_ok=True)
 
         self._children.animations = AnimationDict(self)
+        self._children.reports = ReportDict(self)
 
         self._finalize_init()
 
@@ -32,6 +34,7 @@ class Post(Group, Readable, Optional):
 
         self.enable()
         self._children.animations.read()
+        self._children.reports.read()
 
     @property
     def path(self):
