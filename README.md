@@ -9,6 +9,7 @@ and provides tools to generate grids and surface mesh.
 - numpy (dataset data structure)
 - numpy-stl (reading .stl geometries)
 - pandas (reading output tables)
+- matplotlib (visualize dataset)
 - mpi4py (parallel postprocessing)
 - ffmpeg-python (convert frames to movie files)
 - pyvista (mesh visualization and postprocessing) Important:

@@ -2,6 +2,8 @@ from mpi4py import MPI
 from collections.abc import Iterable, Sequence
 from itertools import product
 from enum import Enum
+import time
+from datetime import timedelta
 
 
 _comm = MPI.COMM_WORLD
@@ -9,6 +11,8 @@ _rank = _comm.Get_rank()
 _size = _comm.Get_size()
 
 _is_host = _rank == 0
+
+_start_time = time.time()
 
 
 def barrier():
@@ -155,3 +159,17 @@ class MPIView(Iterable):
 
     def __repr__(self):
         return f"MPIView({self._parent.__class__.__name__}[{self._start} : {self._stop}] @ Proc {_rank})"
+
+
+def elapsed_time():
+    _comm.Barrier()
+    end_time = time.time()
+    return end_time - _start_time
+
+
+def print_elapsed_time(banner="-"):
+    etime = elapsed_time()
+    if _is_host:
+        msg = f"Total elapsed time: {str(timedelta(seconds=etime))}"
+        banner = "".join([banner] * len(msg))
+        print(f"\n{banner}\n{msg}\n{banner}\n")
