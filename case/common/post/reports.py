@@ -165,6 +165,14 @@ class Report(Group, Dict, Readable):
         fig.savefig(path, *args, **kwargs)
         plt.close(fig)
 
+    def table_by_dict(self, row, **kwargs):
+        path = self._path / f"{self._name}.csv"
+
+        # convert to csv compatible (split vector)
+        row = _dict_to_csv_row(row, **kwargs)
+
+        pd.DataFrame([row]).to_csv(path, index=False)
+
 
 class Rows(List, Readable, Optional):
     def __init__(self, report, name):
@@ -218,67 +226,12 @@ class Rows(List, Readable, Optional):
         return len(self._childrenlist) > 0
 
     def row_by_dict(
-        self,
-        seriesi,
-        row,
-        seriesi_col=False,
-        seriesi_label="seriesi",
-        split_vector=True,
-        split_vector_args={},
+        self, seriesi, row, seriesi_col=False, seriesi_label="seriesi", **kwargs
     ):
-        split_vector_args = {
-            **{
-                "suffix": "xyz",
-                "keep_original": True,
-                "norm": False,
-                "norm_label": "norm",
-            },
-            **split_vector_args,
-        }
-
         path = self._path / f"{self._name}.{seriesi}.csv"
 
-        # split vector-like value [1, 2, 3] into multiple cols with suffix _x _y _z ... _suffix[n]
-        if split_vector:
-            max_split = len(split_vector_args["suffix"])
-            key_to_remove = []
-            more_kv = {}
-            for key, value in row.items():
-                match value:
-                    case str():
-                        continue
-                    case Sequence():
-                        ncomp = len(value)
-                    case np.ndarray():
-                        if len(value.shape) != 1:
-                            raise ValueError(
-                                f"Cannot split a multidimensional array shape {value.shape}"
-                            )
-                        ncomp = value.shape[0]
-                    case _:
-                        continue
-
-                if ncomp > max_split:
-                    raise ValueError(
-                        f"Attempted to split vector to cols with suffix '{split_vector_args['suffix']}', but encountered {ncomp} components {value}, suffix not enough"
-                    )
-
-                for comp, suffix in zip(value, split_vector_args["suffix"]):
-                    more_kv[f"{key}_{suffix}"] = comp
-
-                if split_vector_args["norm"]:
-                    arr = np.array(value)
-                    more_kv[f"{key}_{split_vector_args['norm_label']}"] = (
-                        np.linalg.norm(arr)
-                    )
-
-                if not split_vector_args["keep_original"]:
-                    key_to_remove.append(key)
-
-            for key in key_to_remove:
-                del row[key]
-
-            row.update(more_kv)
+        # convert to csv compatible (split vector)
+        row = _dict_to_csv_row(row, **kwargs)
 
         if seriesi_label in row:
             raise KeyError(
@@ -329,3 +282,63 @@ class Table(Group):
 
     def to_pandas(self):
         return pd.read_csv(self._path)
+
+
+def _dict_to_csv_row(
+    row,
+    split_vector=True,
+    split_vector_args={},
+):
+    split_vector_args = {
+        **{
+            "suffix": "xyz",
+            "keep_original": True,
+            "norm": False,
+            "norm_label": "norm",
+        },
+        **split_vector_args,
+    }
+
+    # split vector-like value [1, 2, 3] into multiple cols with suffix _x _y _z ... _suffix[n]
+    if split_vector:
+        max_split = len(split_vector_args["suffix"])
+        key_to_remove = []
+        more_kv = {}
+        for key, value in row.items():
+            match value:
+                case str():
+                    continue
+                case Sequence():
+                    ncomp = len(value)
+                case np.ndarray():
+                    if len(value.shape) != 1:
+                        raise ValueError(
+                            f"Cannot split a multidimensional array shape {value.shape}"
+                        )
+                    ncomp = value.shape[0]
+                case _:
+                    continue
+
+            if ncomp > max_split:
+                raise ValueError(
+                    f"Attempted to split vector to cols with suffix '{split_vector_args['suffix']}', but encountered {ncomp} components {value}, suffix not enough"
+                )
+
+            for comp, suffix in zip(value, split_vector_args["suffix"]):
+                more_kv[f"{key}_{suffix}"] = comp
+
+            if split_vector_args["norm"]:
+                arr = np.array(value)
+                more_kv[f"{key}_{split_vector_args['norm_label']}"] = np.linalg.norm(
+                    arr
+                )
+
+            if not split_vector_args["keep_original"]:
+                key_to_remove.append(key)
+
+        for key in key_to_remove:
+            del row[key]
+
+        row.update(more_kv)
+
+    return row
