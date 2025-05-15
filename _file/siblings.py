@@ -50,7 +50,7 @@ class Siblings(Iterable):
         return self.filter(lambda f: f.filetype == Siblings.FileType.Folder)
 
     def from_basename(basepath, basename):
-        regex_pattern = re.compile(basename + r"(\..+)?")
+        regex_pattern = re.compile(r"^" + basename + r"(\..+)?$")
 
         files = {}
         for file in Path(basepath).iterdir():

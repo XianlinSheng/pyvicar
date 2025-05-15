@@ -11,7 +11,7 @@ and provides tools to generate grids and surface mesh.
 - pandas (reading output tables)
 - matplotlib (visualize dataset)
 - mpi4py (parallel postprocessing)
-- ffmpeg-python (convert frames to movie files)
+- ffmpeg-python (convert frames to video files)
 - pyvista (mesh visualization and postprocessing) Important:
 *on an off-screen server, 
 a specific osmesa build of vtk needs to be installed before pyvista*:
@@ -200,8 +200,8 @@ for case, aniname in mpi.dispatch(span):
     c = Case(case)
 
     c.read()
-    # convert frames to movies
-    c.post.animations[aniname].frames.to_movie(quiet=True)
+    # convert frames to videos
+    c.post.animations[aniname].frames.to_video(quiet=True)
 
 </pre>
 where MPI is used to postprocess in parallel. 

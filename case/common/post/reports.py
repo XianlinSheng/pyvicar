@@ -77,6 +77,15 @@ class ReportDict(Dict, Readable, Optional):
 
         return rep
 
+    def get_or_create(self, name):
+        if not name in self._childrendict:
+            rep = Report(self, name)
+            self._childrendict[name] = rep
+        else:
+            rep = self._childrendict[name]
+
+        return rep
+
 
 class Report(Group, Dict, Readable):
     def __init__(self, reports, name):
