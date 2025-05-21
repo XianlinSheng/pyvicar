@@ -11,7 +11,7 @@ class General(Group, Writable):
 
         self._children.bodyType = Field("body_type", "unstruc", "", {"unstruc": 4})
         self._children.bodyDim = Field("body_dim", 3)
-        self._children.motionType = Field("motionType", "fixed", "", {"fixed": 0})
+        self._children.motionType = Field("motionType", "stationary", "", {"stationary": 0, "forced": 1, 'flow_induced': 2, 'prescribed': 3, 'hinged': 4})
         self._children.membraneType = Field(
             "membraneType", "open", "", {"open": 1, "closed": 2, "diff": 3}
         )

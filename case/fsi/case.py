@@ -12,7 +12,7 @@ from pyvicar.case.common.post import Post
 
 
 class Case(Group, Writable):
-    def __init__(self, path):
+    def __init__(self, path="."):
         Group.__init__(self)
         Writable.__init__(self)
 
