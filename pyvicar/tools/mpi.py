@@ -4,6 +4,7 @@ from itertools import product
 from enum import Enum
 import time
 from datetime import timedelta
+from pyvicar.tools.miscellaneous import split_into_n
 
 
 _comm = MPI.COMM_WORLD
@@ -83,11 +84,7 @@ def barrier_or_async():
 def dispatch_sequence(listobj: Sequence, startidx=0):
     # calculate the elements and dispatch views to each processor
     if _rank == 0:
-        total = len(listobj)
-        eachbase = total // _size
-        extra = total - eachbase * _size
-        nelems = [eachbase] * _size
-        nelems = [eachbase + 1 if i < extra else eachbase for i in range(_size)]
+        nelems = split_into_n(len(listobj), _size)
         # reverse is used to relieve proc 0
         nelems.reverse()
 

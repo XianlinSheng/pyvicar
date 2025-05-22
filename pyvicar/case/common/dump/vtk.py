@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pyvicar._tree import List
 from pyvicar._file import Readable, Series
 from pyvicar._utilities import Optional
+import pyvicar.tools.test.vtk as vtktest
 
 
 class VTKList(List, Readable, Optional):
@@ -18,7 +19,7 @@ class VTKList(List, Readable, Optional):
         return super().disable()
 
     def _elemcheck(self, new):
-        if not isinstance(new, VTK):
+        if not isinstance(new, (VTK, vtktest.SampleVTK)):
             raise TypeError(
                 f"Expected a VTK object inside VTKList, but encountered {repr(new)}"
             )
@@ -32,7 +33,10 @@ class VTKList(List, Readable, Optional):
     def read(self):
         series = Series.from_format(self._case.path / "qFiles", r"fields\.(\d+)\.vtm")
         for i, file in enumerate(series):
-            vtk = VTK(file.path, file.idxes[0], i + self._startidx)
+            if not vtktest.is_test():
+                vtk = VTK(file.path, file.idxes[0], i + self._startidx)
+            else:
+                vtk = vtktest.SampleVTK(file.path, file.idxes[0], i + self._startidx)
             self._append(vtk)
 
         if series:
