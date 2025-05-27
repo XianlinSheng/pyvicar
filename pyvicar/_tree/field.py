@@ -70,7 +70,7 @@ class Field:
             new = self._vmap[new]
 
         # implicit int -> float conversion
-        if self._valueType is float and isinstance(new, int):
+        if self._valueType is float and isinstance(new, (int, np.integer, np.floating)):
             new = float(new)
 
         # implicit np.ndarray -> Dataset2D

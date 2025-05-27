@@ -19,13 +19,13 @@ class Case(Group, Writable):
         self._path = Path(path)
         self._pathProcLog = self._path / "ProcLog"
         self._pathRestart = self._path / "Restart"
-        self._pathQFiles = self._path / "qFiles"
+        self._pathFieldsFiles = self._path / "FieldsFiles"
         self._pathMarkerFiles = self._path / "MarkerFiles"
 
         self._path.mkdir(exist_ok=True)
         self._pathProcLog.mkdir(exist_ok=True)
         self._pathRestart.mkdir(exist_ok=True)
-        self._pathQFiles.mkdir(exist_ok=True)
+        self._pathFieldsFiles.mkdir(exist_ok=True)
         self._pathMarkerFiles.mkdir(exist_ok=True)
 
         self._children.input = Input(self._path / "input.dat")

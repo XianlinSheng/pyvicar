@@ -8,6 +8,7 @@ from pyvicar.case.common.canonical_body.body.wall_porous import WallPorousVeloci
 from pyvicar.case.common.canonical_body.body.material import Material
 from pyvicar.case.common.canonical_body.body.restoring_force import RestoringForce
 from .fsi import FSI
+from .restricted_hinge import RestrictedHinge
 
 
 class Body(Group, Writable):
@@ -19,10 +20,11 @@ class Body(Group, Writable):
         self._children.general = General(f)
         self._children.position = Position(f)
         self._children.motion = Motion(f)
+        self._children.fsi = FSI(f, defaulton=False)
+        self._children.restrictedHinge = RestrictedHinge(f, defaulton=False)
         self._children.porous = WallPorousVelocity(f)
         self._children.material = Material(f)
         self._children.restrForce = RestoringForce(f)
-        self._children.fsi = FSI(f, defaulton=False)
 
         self._finalize_init()
 
@@ -30,8 +32,10 @@ class Body(Group, Writable):
         self._children.general.write()
         self._children.position.write()
         self._children.motion.write()
+        if self._children.restrictedHinge:
+            self._children.restrictedHinge.write()
+        elif self._children.fsi:
+            self._children.fsi.write()
         self._children.porous.write()
         self._children.material.write()
         self._children.restrForce.write()
-        if self._children.fsi:
-            self._children.fsi.write()
