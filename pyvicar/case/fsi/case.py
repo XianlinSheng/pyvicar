@@ -9,6 +9,7 @@ from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job
 from pyvicar.case.common.drag_lift import DragLiftList
 from pyvicar.case.common.dump import Dump
+from .restart import Restart
 from pyvicar.case.common.post import Post
 
 
@@ -44,6 +45,7 @@ class Case(Group, Writable):
 
         self._children.draglift = DragLiftList(self)
         self._children.dump = Dump(self)
+        self._children.restart = Restart(self)
         self._children.post = Post(self)
 
         self._finalize_init()
@@ -70,4 +72,5 @@ class Case(Group, Writable):
     def read(self):
         self._children.draglift.read()
         self._children.dump.read()
+        self._children.restart.read()
         self._children.post.read()

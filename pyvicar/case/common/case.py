@@ -9,6 +9,7 @@ from .nonuniform_grid import NonuniformGrid
 from .job import Job
 from .drag_lift import DragLiftList
 from .dump import Dump
+from .restart import Restart
 from .post import Post
 
 
@@ -45,6 +46,7 @@ class Case(Group, Writable):
 
         self._children.draglift = DragLiftList(self)
         self._children.dump = Dump(self)
+        self._children.restart = Restart(self)
         self._children.post = Post(self)
 
         self._finalize_init()
