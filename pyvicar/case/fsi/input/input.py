@@ -125,3 +125,5 @@ class Input(Group, Writable):
         self._children.shearSensing.write()
 
         write_mg_comment(f)
+
+        f.flush()

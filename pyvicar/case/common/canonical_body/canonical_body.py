@@ -34,3 +34,5 @@ class CanonicalBody(Group, Writable):
         f.write("\n")
 
         self._children.bodies.write()
+
+        f.flush()

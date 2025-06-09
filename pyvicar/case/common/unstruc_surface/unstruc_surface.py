@@ -42,3 +42,5 @@ class UnstrucSurface(Group, Writable, Optional):
             # This is the requirement of the input format
             self._formatter += self._children.fluidPoint
             self._formatter.write()
+
+        f.flush()

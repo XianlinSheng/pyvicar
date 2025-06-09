@@ -110,3 +110,5 @@ class Input(Group, Writable):
         self._children.outputFormat.write()
 
         write_mg_comment(f)
+
+        f.flush()

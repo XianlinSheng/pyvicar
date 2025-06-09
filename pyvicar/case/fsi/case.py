@@ -1,5 +1,6 @@
+import os
 from pathlib import Path
-from pyvicar._tree import Group
+from pyvicar._tree import Group, Field
 from pyvicar._file import Writable
 from .input import Input
 from pyvicar.case.common.probe import Probe
@@ -48,6 +49,10 @@ class Case(Group, Writable):
         self._children.restart = Restart(self)
         self._children.post = Post(self)
 
+        self._children.runpath = Field(
+            "runpath", "~/Vicar3D/versions/version/src/Vicar3D"
+        )
+
         self._finalize_init()
 
     @property
@@ -74,3 +79,11 @@ class Case(Group, Writable):
         self._children.dump.read()
         self._children.restart.read()
         self._children.post.read()
+
+    def mpirun(self, np, outfile=None):
+        os.system(
+            f"mpirun -np {np} {self._children.runpath} {f'> {outfile}' if not outfile is None else f''}"
+        )
+
+    def sbatch(self):
+        os.system(f"sbatch job")

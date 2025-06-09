@@ -26,3 +26,5 @@ class Probe(Group, Writable):
         f.write("\n")
 
         self._children.markers.write()
+
+        f.flush()

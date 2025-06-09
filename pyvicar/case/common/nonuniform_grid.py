@@ -34,3 +34,5 @@ class NonuniformGrid(Group, Writable, Optional):
 
         self._formatter += self._children.nodes
         self._formatter.write()
+
+        self._f.flush()

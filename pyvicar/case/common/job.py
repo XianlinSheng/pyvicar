@@ -51,3 +51,5 @@ class Job(Group, Writable, Optional):
             f"mpirun -np {self._children.mpinp} {self._children.runpath} > {self._children.logfile}\n"
         )
         f.write(f"\n")
+
+        f.flush()
