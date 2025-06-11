@@ -17,7 +17,7 @@ class TimeStepControl(Group, Writable):
         self._children.nProbe = Field("nProbe", 0)
         self._children.nInit = Field("nInit", 0)
         self._children.nDumpInit = Field("nDumpInit", 0)
-        self._children.ntFIMStart = Field("ntFIMStart", 0)
+        self._children.ntMotionStart = Field("ntMotionStart", 0)
 
         self._children.formatDump = Field(
             "formatDump", "vtk", "", {"rawq": 0, "vtk": 1}
@@ -51,7 +51,7 @@ class TimeStepControl(Group, Writable):
         self._formatter += self._children.nProbe
         self._formatter += self._children.nInit
         self._formatter += self._children.nDumpInit
-        self._formatter += self._children.ntFIMStart
+        self._formatter += self._children.ntMotionStart
         self._formatter.write()
 
         self._formatter += self._children.formatDump
