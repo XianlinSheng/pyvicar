@@ -10,7 +10,10 @@ class PoissonSolver(Group, Writable):
         self._formatter = KV2Formatter(f)
 
         self._children.itSolverType = Field(
-            "itSolverType", "pbicgstab", "", {"linesor": 1, "mg": 2, "pbicgstab": 3}
+            "itSolverType",
+            "pbicgstab",
+            "",
+            {"linesor": 1, "mg": 2, "pbicgstab": 3, "srj": 4},
         )
         self._children.redblack = Field(
             "red_black", False, "", Field.vmapPresets.bool2int

@@ -6,6 +6,7 @@ from .input import Input
 from .probe import Probe
 from .canonical_body import CanonicalBody
 from .unstruc_surface import UnstrucSurface
+from .srj import SRJ
 from .nonuniform_grid import NonuniformGrid
 from .job import Job
 from .drag_lift import DragLiftList
@@ -39,6 +40,9 @@ class Case(Group, Writable):
         self._children.unstrucSurface = UnstrucSurface(
             self._path / "unstruc_surface_in.dat"
         )
+
+        self._children.srj = SRJ(self._path / "SRJ_params_in.dat")
+
         self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
         self._children.zgrid = NonuniformGrid(self._path / "zgrid.dat")
@@ -66,6 +70,8 @@ class Case(Group, Writable):
         self._children.canonicalBody.write()
         if self._children.unstrucSurface:
             self._children.unstrucSurface.write()
+        if self._children.srj:
+            self._children.srj.write()
         if self._children.xgrid:
             self._children.xgrid.write()
         if self._children.ygrid:
