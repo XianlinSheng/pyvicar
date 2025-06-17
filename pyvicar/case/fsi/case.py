@@ -88,8 +88,8 @@ class Case(Group, Writable):
 
     def mpirun(self, np, outfile=None):
         os.system(
-            f"mpirun -np {np} {self._children.runpath} {f'> {outfile}' if not outfile is None else f''}"
+            f"cd {self._path}; mpirun -np {np} {self._children.runpath} {f'> {outfile}' if not outfile is None else f''}; cd - > /dev/null"
         )
 
     def sbatch(self):
-        os.system(f"sbatch job")
+        os.system(f"sbatch {self._path}/job")
