@@ -92,4 +92,4 @@ class Case(Group, Writable):
         )
 
     def sbatch(self):
-        os.system(f"sbatch {self._path}/job")
+        os.system(f"cd {self._path}; sbatch job; cd - > /dev/null")
