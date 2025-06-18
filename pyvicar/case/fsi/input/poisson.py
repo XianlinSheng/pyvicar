@@ -13,7 +13,7 @@ class PoissonSolver(Group, Writable):
             "itSolverType",
             "pbicgstab",
             "",
-            {"linesor": 1, "mg": 2, "pbicgstab": 3, "srj": 4},
+            {"linesor": 1, "mg": 2, "pbicgstab": 3, "srj": 4, "cgsrj": 5},
         )
         self._children.redblack = Field(
             "red_black", False, "", Field.vmapPresets.bool2int
