@@ -9,4 +9,4 @@ from .line_calculus import (
     line_length,
 )
 
-from .time import slice_by_t, tfourier
+from .time import slice_by_t, tfourier, tfilter

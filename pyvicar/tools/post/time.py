@@ -2,17 +2,16 @@ import numpy as np
 
 
 def slice_by_t(x, x1, x2):
-    if x1 is None:
-        i1 = None
-    else:
+    i1 = None
+
+    if not x1 is None:
         for i, val in enumerate(x):
             if val >= x1:
                 i1 = i
                 break
 
-    if x2 is None:
-        i2 = None
-    else:
+    i2 = None
+    if not x2 is None:
         for i, val in enumerate(x):
             if val >= x2:
                 i2 = i
@@ -36,3 +35,12 @@ def tfourier(ft, dt, mag=True):
     freqs = np.fft.rfftfreq(N, d=dt)
 
     return amps, freqs
+
+
+def tfilter(ft, window_size=5, mode="same"):
+    if window_size < 0:
+        raise ValueError(f"filter window size cannot < 0, encountered {window_size}")
+    if window_size == 0:
+        return ft
+    kernel = np.ones(window_size) / window_size
+    return np.convolve(ft, kernel, mode=mode)

@@ -92,6 +92,15 @@ class RHMBody(Group, Writable):
         self._children.restrictPosXOffset = Field("restrictPosXOffset", 0.0)
         self._children.restrictPosYOffset = Field("restrictPosYOffset", 0.0)
         self._children.restrictPosZOffset = Field("restrictPosZOffset", 0.0)
+        self._children.kx = Field("kx", 0.0)
+        self._children.ky = Field("ky", 0.0)
+        self._children.kz = Field("kz", 0.0)
+        self._children.cx = Field("cx", 0.0)
+        self._children.cy = Field("cy", 0.0)
+        self._children.cz = Field("cz", 0.0)
+        self._children.k0_xoffset = Field("k0_xoffset", 0.0)
+        self._children.k0_yoffset = Field("k0_yoffset", 0.0)
+        self._children.k0_zoffset = Field("k0_zoffset", 0.0)
 
         self._children.xcentBody = Field("xcentBody", 0.0)
         self._children.ycentBody = Field("ycentBody", 0.0)
@@ -157,6 +166,21 @@ class RHMBody(Group, Writable):
         self._formatter += self._children.restrictPosXOffset
         self._formatter += self._children.restrictPosYOffset
         self._formatter += self._children.restrictPosZOffset
+        self._formatter.write()
+
+        self._formatter += self._children.kx
+        self._formatter += self._children.ky
+        self._formatter += self._children.kz
+        self._formatter.write()
+
+        self._formatter += self._children.cx
+        self._formatter += self._children.cy
+        self._formatter += self._children.cz
+        self._formatter.write()
+
+        self._formatter += self._children.k0_xoffset
+        self._formatter += self._children.k0_yoffset
+        self._formatter += self._children.k0_zoffset
         self._formatter.write()
 
         self._formatter += self._children.xcentBody
