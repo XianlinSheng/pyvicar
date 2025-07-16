@@ -96,8 +96,8 @@ class Spanned2DCurve(TriSurface):
         A = np.arange(npoint - 1, dtype=int)
         B = np.arange(1, npoint, dtype=int)
         if cycled:
-            A = np.concatenate([A, npoint - 1], dtype=int)
-            B = np.concatenate([B, 0], dtype=int)
+            A = np.concatenate([A, np.array([npoint - 1])], dtype=int)
+            B = np.concatenate([B, np.array([0])], dtype=int)
 
         C = B + npoint
         D = A + npoint

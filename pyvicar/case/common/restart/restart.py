@@ -1,5 +1,5 @@
 from pyvicar._tree import Group
-from pyvicar._file import Readable
+from pyvicar.file import Readable
 from pyvicar._utilities import Optional
 from .flow import FlowLists
 from .body import BodyLists

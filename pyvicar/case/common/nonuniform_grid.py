@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._format import DatasetFormatter
 
 

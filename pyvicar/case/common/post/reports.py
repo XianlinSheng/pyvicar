@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 from collections.abc import Sequence
 from pyvicar._utilities import Optional
 from pyvicar._tree import Group, Dict, List
-from pyvicar._file import Readable
-from pyvicar._file import Series, Siblings
+from pyvicar.file import Readable
+from pyvicar.file import Series, Siblings
 import pyvicar.tools.mpi as mpi
 
 

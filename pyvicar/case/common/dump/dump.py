@@ -1,6 +1,6 @@
 from pathlib import Path
 from pyvicar._tree import Group
-from pyvicar._file import Readable
+from pyvicar.file import Readable
 from .vtk import VTKList
 from .marker import MarkerList
 

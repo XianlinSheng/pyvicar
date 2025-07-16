@@ -1,6 +1,6 @@
 from pyvicar._utilities import Optional
 from pyvicar._tree import Group
-from pyvicar._file import Readable
+from pyvicar.file import Readable
 from .animations import AnimationDict
 from .reports import ReportDict
 

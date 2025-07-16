@@ -1,5 +1,5 @@
 from pyvicar._tree import Group
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._format import KV1Formatter
 from .general import General
 from .position import Position

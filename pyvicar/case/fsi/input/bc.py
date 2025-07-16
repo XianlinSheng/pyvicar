@@ -1,5 +1,5 @@
 from pyvicar._tree import Group, Field
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter, write_banner
 
 bcTypes = {"dirichlet": 1, "neumann": 2, "symmetry": 4}

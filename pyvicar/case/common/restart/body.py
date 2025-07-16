@@ -1,6 +1,6 @@
 import shutil
 from pyvicar._tree import List, Group
-from pyvicar._file import Readable, Series
+from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
 
 

@@ -1,5 +1,5 @@
 from pyvicar._tree import Group, Field
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter
 
 
@@ -36,7 +36,7 @@ class TimeStepControl(Group, Writable):
             "frac_step", "nonvankan", "", {"nonvankan": 0, "vankan": 1}
         )
         self._children.advectionScheme = Field(
-            "advection_scheme", "cn2", "", {"ab2": 0, "cn1": 1, "cn2": 2}
+            "advection_scheme", "cn2", "", {"ab2": 1, "cn1": 2, "cn2": 3}
         )
 
         self._finalize_init()

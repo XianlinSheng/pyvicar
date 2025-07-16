@@ -1,6 +1,6 @@
 from pathlib import Path
 from pyvicar._tree import Group
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from .nodes import Nodes
 from .markers import Markers
 

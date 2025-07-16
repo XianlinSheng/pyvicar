@@ -1,7 +1,7 @@
 from pathlib import Path
 from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 
 
 class Job(Group, Writable, Optional):

@@ -1,5 +1,5 @@
 from pyvicar._tree import Group
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._format import write_banner
 from pyvicar.case.common.input.parallel import ParallelConfiguration
 from pyvicar.case.common.input.domain import ComputationalDomainConfiguration
@@ -21,7 +21,7 @@ from .scalars import Scalars
 from pyvicar.case.common.input.output_format import OutputFormat
 from .laplace import LaplaceSolver
 from .fsi import FSI
-from .shear_sensing import ShearStressSensing
+from .poisson_history import PoissonHistory
 from pyvicar.case.common.input.mg_comments import write_mg_comment
 
 
@@ -54,7 +54,7 @@ class Input(Group, Writable):
         self._children.outputFormat = OutputFormat(self._f)
         self._children.laplace = LaplaceSolver(self._f)
         self._children.fsi = FSI(self._f)
-        self._children.shearSensing = ShearStressSensing(self._f)
+        self._children.poissonHistory = PoissonHistory(self._f)
 
         self._finalize_init()
 
@@ -121,8 +121,8 @@ class Input(Group, Writable):
         write_banner(f, "FSI (fsi)")
         self._children.fsi.write()
 
-        write_banner(f, "Shear Stress Sensing (shearSensing)")
-        self._children.shearSensing.write()
+        write_banner(f, "Poisson History (poissonHistory)")
+        self._children.poissonHistory.write()
 
         write_mg_comment(f)
 

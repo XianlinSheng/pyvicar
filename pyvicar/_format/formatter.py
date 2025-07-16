@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._tree import Field
 
 

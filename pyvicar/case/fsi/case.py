@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from pyvicar._tree import Group, Field
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from .input import Input
 from pyvicar.case.common.probe import Probe
 from .canonical_body import CanonicalBody
@@ -12,6 +12,7 @@ from .rhm import RHM
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job
 from pyvicar.case.common.drag_lift import DragLiftList
+from .rhm_stat import RHMStatList
 from pyvicar.case.common.dump import Dump
 from .restart import Restart
 from pyvicar.case.common.post import Post
@@ -54,6 +55,7 @@ class Case(Group, Writable):
         self._children.job = Job(self._path / "job")
 
         self._children.draglift = DragLiftList(self)
+        self._children.rhmstat = RHMStatList(self)
         self._children.dump = Dump(self)
         self._children.restart = Restart(self)
         self._children.post = Post(self)
@@ -91,6 +93,7 @@ class Case(Group, Writable):
 
     def read(self):
         self._children.draglift.read()
+        self._children.rhmstat.read()
         self._children.dump.read()
         self._children.restart.read()
         self._children.post.read()

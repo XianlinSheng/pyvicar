@@ -1,5 +1,5 @@
 from pyvicar._tree import Group
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._format import write_banner
 from .parallel import ParallelConfiguration
 from .domain import ComputationalDomainConfiguration

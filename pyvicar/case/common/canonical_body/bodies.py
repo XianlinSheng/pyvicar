@@ -1,5 +1,5 @@
 from pyvicar._tree import List
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from .body import Body
 
 

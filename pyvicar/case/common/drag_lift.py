@@ -3,8 +3,8 @@ import pandas as pd
 from pathlib import Path
 from pyvicar._utilities import Optional
 from pyvicar._tree import Group, Field, List
-from pyvicar._file import Readable
-from pyvicar._file import Series
+from pyvicar.file import Readable
+from pyvicar.file import Series
 
 
 class DragLiftList(List, Readable, Optional):

@@ -1,5 +1,5 @@
 from pyvicar._tree import Group, Field
-from pyvicar._file import Writable
+from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter
 
 mgCycleType = {"vcycle": 1, "wcycle": 2, "fcycle": 3}

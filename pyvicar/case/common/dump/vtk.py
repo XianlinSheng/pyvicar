@@ -1,7 +1,7 @@
 import pyvista as pv
 from dataclasses import dataclass
 from pyvicar._tree import List
-from pyvicar._file import Readable, Series
+from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
 from pyvicar.tools.test.fsi.vtk import is_test, SampleVTK
 
