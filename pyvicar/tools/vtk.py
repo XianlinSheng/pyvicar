@@ -110,3 +110,13 @@ def compress_to_vtr(vtms, ijs):
         vtrfolder = vtm.path.parent / Path(f"{basename}")
         if vtrfolder.exists():
             shutil.rmtree(vtrfolder)
+
+
+def stroke(mesh, dz):
+    edges = mesh.extract_feature_edges(
+        boundary_edges=True, feature_edges=False, manifold_edges=False
+    )
+
+    tubes = edges.tube(radius=dz / 2)
+
+    return tubes
