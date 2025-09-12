@@ -9,6 +9,7 @@ from pyvicar.case.common.unstruc_surface import UnstrucSurface
 from pyvicar.case.common.srj import SRJ
 from pyvicar.case.common.srj2 import SRJ2
 from .rhm import RHM
+from pyvicar.case.common.cspline import CSpline
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job
 from pyvicar.case.common.drag_lift import DragLiftList
@@ -48,6 +49,7 @@ class Case(Group, Writable):
         self._children.srj2 = SRJ2(self._path / "SRJ2_params_in.dat")
 
         self._children.rhm = RHM(self._path / "rhm_in.dat")
+        self._children.cspline = CSpline(self._path / "cspline_in.dat")
 
         self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
@@ -82,6 +84,8 @@ class Case(Group, Writable):
             self._children.srj2.write()
         if self._children.rhm:
             self._children.rhm.write()
+        if self._children.cspline:
+            self._children.cspline.write()
         if self._children.xgrid:
             self._children.xgrid.write()
         if self._children.ygrid:

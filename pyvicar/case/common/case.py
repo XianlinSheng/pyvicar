@@ -8,6 +8,7 @@ from .canonical_body import CanonicalBody
 from .unstruc_surface import UnstrucSurface
 from .srj import SRJ
 from .srj2 import SRJ2
+from .cspline import CSpline
 from .nonuniform_grid import NonuniformGrid
 from .job import Job
 from .drag_lift import DragLiftList
@@ -45,6 +46,8 @@ class Case(Group, Writable):
         self._children.srj = SRJ(self._path / "SRJ_params_in.dat")
         self._children.srj2 = SRJ2(self._path / "SRJ2_params_in.dat")
 
+        self._children.cspline = CSpline(self._path / "cspline_in.dat")
+
         self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
         self._children.zgrid = NonuniformGrid(self._path / "zgrid.dat")
@@ -76,6 +79,8 @@ class Case(Group, Writable):
             self._children.srj.write()
         if self._children.srj2:
             self._children.srj2.write()
+        if self._children.cspline:
+            self._children.cspline.write()
         if self._children.xgrid:
             self._children.xgrid.write()
         if self._children.ygrid:

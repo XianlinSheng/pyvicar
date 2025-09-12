@@ -1,5 +1,6 @@
 import numpy as np
 import pyvista as pv
+import trimesh
 from pyvicar._datatype import Dataset2D
 from .stl_reader import read_stl
 
@@ -38,6 +39,19 @@ class TriSurface:
         faces_pv = np.hstack([np.full((faces.shape[0], 1), 3), faces]).ravel()
 
         return pv.PolyData(points, faces_pv)
+
+    def to_trimesh(self):
+        return trimesh.Trimesh(
+            vertices=self._xyz.arr, faces=(self._conn.arr - self._xyz.startidx)
+        )
+
+    def to_stl(self, filename):
+        mesh = self.to_trimesh()
+        mesh.export(f"{filename}.stl")
+
+    def to_obj(self, filename):
+        mesh = self.to_trimesh()
+        mesh.export(f"{filename}.obj")
 
     def from_xyz_conn(
         xyz: np.ndarray, conn: np.ndarray, fromStartIdx: int = 0, toStartIdx: int = 1
@@ -87,4 +101,17 @@ class TriSurface:
         return TriSurface(
             xyz=Dataset2D(xyz, startIdx=startIdx),
             conn=Dataset2D(conn, startIdx=startIdx),
+        )
+
+    def from_obj(path, startIdx=1):
+        mesh = trimesh.load(path)
+        return TriSurface(
+            Dataset2D(mesh.vertices, startIdx=startIdx),
+            Dataset2D(mesh.faces + startIdx, startIdx=startIdx),
+        )
+
+    def from_npz(path, fromStartIdx=0, toStartIdx=1):
+        data = np.load(path)
+        return TriSurface.from_xyz_conn(
+            data["xyz"], data["conn"], fromStartIdx, toStartIdx
         )
