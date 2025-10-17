@@ -10,6 +10,7 @@ from pyvicar.case.common.srj import SRJ
 from pyvicar.case.common.srj2 import SRJ2
 from .rhm import RHM
 from pyvicar.case.common.cspline import CSpline
+from pyvicar.case.common.ib2 import IB2
 from .poisson_history import PoissonHistory
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job
@@ -51,6 +52,7 @@ class Case(Group, Writable):
 
         self._children.rhm = RHM(self._path / "rhm_in.dat")
         self._children.cspline = CSpline(self._path / "cspline_in.dat")
+        self._children.ib2 = IB2(self._path / "ib2_in.dat")
 
         self._children.poissonHistory = PoissonHistory(
             self._path / "poisson_history_in.dat"
@@ -91,6 +93,8 @@ class Case(Group, Writable):
             self._children.rhm.write()
         if self._children.cspline:
             self._children.cspline.write()
+        if self._children.ib2:
+            self._children.ib2.write()
         if self._children.poissonHistory:
             self._children.poissonHistory.write()
         if self._children.xgrid:

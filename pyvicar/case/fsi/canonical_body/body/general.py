@@ -22,6 +22,7 @@ class General(Group, Writable):
                 "prescribed": 3,
                 "hinged": 4,
                 "rhm": 15,
+                "ib2": 16,
             },
         )
         self._children.membraneType = Field(

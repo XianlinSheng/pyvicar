@@ -1,13 +1,15 @@
 from pathlib import Path
 from pyvicar._tree import Group, List, Field
+from pyvicar._utilities import Optional
 from pyvicar.file import Writable
 from pyvicar._format import KV1Formatter
 
 
-class RHM(Group, Writable):
+class RHM(Group, Writable, Optional):
     def __init__(self, path):
         Group.__init__(self)
         Writable.__init__(self)
+        Optional.__init__(self)
         self._path = Path(path)
         if self:
             self._init()
