@@ -27,6 +27,10 @@ class RHM(Group, Writable, Optional):
 
         self._finalize_init()
 
+    def enable(self):
+        Optional.enable(self)
+        self._init()
+
     def write(self):
         if not self:
             raise Exception(f"The object is not active, call .enable() to enable it")
