@@ -6,7 +6,7 @@ from pyvicar.case.common.input.domain import ComputationalDomainConfiguration
 from pyvicar.case.common.input.ic import InitialConditions
 from .bc import BoundaryConditions
 from pyvicar.case.common.input.pbc import PressureBoundaryConditions
-from pyvicar.case.common.input.time_step import TimeStepControl
+from .time_step import TimeStepControl
 from pyvicar.case.common.input.hybridization import Hybridization
 from pyvicar.case.common.input.internal_boundary import InternalBoundary
 from pyvicar.case.common.input.extended_outflow import ExtendedOutflow
