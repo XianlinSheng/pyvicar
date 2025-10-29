@@ -3,6 +3,7 @@ import numpy as np
 import shutil
 from pathlib import Path
 import pyvicar.tools.mpi as mpi
+from pyvicar.tools.log import log
 
 
 def combine_vtr(vtm, ijs):
@@ -72,9 +73,18 @@ def create_ijs_from_forxy(npx, npy):
     return list1
 
 
-def compress_to_vtk(vtms):
+def remove_vtm(vtmpath, basename):
+    log(f"Removing original vtm {vtmpath}")
+    if vtmpath.exists():
+        vtmpath.unlink()
+    vtrfolder = vtmpath.parent / Path(f"{basename}")
+    if vtrfolder.exists():
+        shutil.rmtree(vtrfolder)
+
+
+def compress_to_vtk(vtms, keep_vtm=True):
     for vtm in mpi.dispatch(vtms):
-        print(f"compressing {vtm.path}")
+        log(f"Compressing {vtm.path}")
         basename = vtm.path.stem
         mesh = pv.read(vtm.path)
 
@@ -83,20 +93,19 @@ def compress_to_vtk(vtms):
         mesh = mesh.combine()
         mesh = mesh.clean(tolerance=1e-6)
         npoints_merged = mesh.n_points
-        print(f"{npoints_sum = }, {npoints_merged = }")
+        log(
+            f"Stat of npoints: sum of mb = {npoints_sum}, merged vtk = {npoints_merged}",
+        )
         newpath = vtm.path.parent / Path(f"{basename}.vtk")
         mesh.save(newpath, binary=True)
 
-        if vtm.path.exists():
-            vtm.path.unlink()
-        vtrfolder = vtm.path.parent / Path(f"{basename}")
-        if vtrfolder.exists():
-            shutil.rmtree(vtrfolder)
+        if not keep_vtm:
+            remove_vtm(vtm.path, basename)
 
 
-def compress_to_vtr(vtms, ijs):
+def compress_to_vtr(vtms, ijs, keep_vtm=True):
     for vtm in mpi.dispatch(vtms):
-        print(f"compressing {vtm.path}")
+        log(f"compressing {vtm.path}")
         basename = vtm.path.stem
         mesh = pv.read(vtm.path)
 
@@ -105,11 +114,8 @@ def compress_to_vtr(vtms, ijs):
         newpath = vtm.path.parent / Path(f"{basename}.vtr")
         mesh.save(newpath, binary=True)
 
-        if vtm.path.exists():
-            vtm.path.unlink()
-        vtrfolder = vtm.path.parent / Path(f"{basename}")
-        if vtrfolder.exists():
-            shutil.rmtree(vtrfolder)
+        if not keep_vtm:
+            remove_vtm(vtm.path, basename)
 
 
 def stroke(mesh, dz):

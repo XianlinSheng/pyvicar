@@ -9,3 +9,12 @@ def split_into_n(total, n):
     nelems = [eachbase + 1 if i < extra else eachbase for i in range(n)]
 
     return nelems
+
+
+class args:
+    def add_default(new, default):
+        default.update(new)
+        return default
+
+    def choose(kwargs, chosen):
+        return {k: kwargs[k] for k in kwargs if k in chosen}

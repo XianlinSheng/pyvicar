@@ -170,3 +170,8 @@ def print_elapsed_time(banner="-"):
         msg = f"Total elapsed time: {str(timedelta(seconds=etime))}"
         banner = "".join([banner] * len(msg))
         print(f"\n{banner}\n{msg}\n{banner}\n")
+
+
+def print_host(*args, **kwargs):
+    if is_host():
+        print(*args, **kwargs)

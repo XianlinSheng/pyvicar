@@ -1,7 +1,6 @@
-from pathlib import Path
 from pyvicar._tree import Group
 from pyvicar.file import Readable
-from .vtk import VTKList
+from .vtk import VTKList, VTMList
 from .marker import MarkerList
 
 
@@ -11,11 +10,13 @@ class Dump(Group, Readable):
         Readable.__init__(self)
         self._case = case
 
+        self._children.vtm = VTMList(case)
         self._children.vtk = VTKList(case)
         self._children.marker = MarkerList(case)
 
         self._finalize_init()
 
     def read(self):
+        self._children.vtm.read()
         self._children.vtk.read()
         self._children.marker.read()

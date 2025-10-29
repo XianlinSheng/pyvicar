@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.signal import butter, filtfilt
+from abc import ABC, abstractmethod
 
 
 def slice_by_t(x, x1, x2):
@@ -37,7 +39,35 @@ def tfourier(ft, dt, mag=True):
     return amps, freqs
 
 
-def tfilter(ft, window_size=5, mode="same"):
+class TFilter(ABC):
+    @abstractmethod
+    def filt(self, ft):
+        return filtfilt(self._b, self._a, ft)
+
+    def butter(time, cutoff_period, order=4):
+        order = 4
+        cutoff_freq = 1 / cutoff_period
+        fs = (time.shape[0] - 1) / (time[-1] - time[0])
+        nyq = fs / 2
+        b, a = butter(order, cutoff_freq / nyq, btype="low")
+        return TFilterBA(b, a)
+
+
+class TFilterNone(TFilter):
+    def filt(self, ft):
+        return ft
+
+
+class TFilterBA(TFilter):
+    def __init__(self, b, a):
+        self._b = b
+        self._a = a
+
+    def filt(self, ft):
+        return filtfilt(self._b, self._a, ft)
+
+
+def tfilter_mean(ft, window_size=5, mode="same"):
     if window_size < 0:
         raise ValueError(f"filter window size cannot < 0, encountered {window_size}")
     if window_size == 0:

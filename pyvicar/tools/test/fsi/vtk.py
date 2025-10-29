@@ -107,9 +107,9 @@ class sample_option:
 sample_option.use_3ddomain()
 
 
-class SampleVTK:
+class SampleVTM:
     def __init__(self, path, tstep, seriesi):
-        print(f"VTK Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
+        print(f"VTM Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
         self._path = path
         self._tstep = tstep
         self._seriesi = seriesi
@@ -128,9 +128,38 @@ class SampleVTK:
 
     def to_pyvista_multiblocks(self):
         print(
-            f"VTK Debug: transferring to pyvista mb {self._path}, step {self._tstep}, No. {self._seriesi}"
+            f"VTM Debug: transferring to pyvista mb {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
         return sample_option._sample
+
+    def to_pyvista(self):
+        print(
+            f"VTM Debug: transferring to pyvista combined {self._path}, step {self._tstep}, No. {self._seriesi}"
+        )
+        return sample_option._sample_combined
+
+    def __repr__(self):
+        return f"SampleVTM(tstep = {self._tstep})"
+
+
+class SampleVTK:
+    def __init__(self, path, tstep, seriesi):
+        print(f"VTK Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
+        self._path = path
+        self._tstep = tstep
+        self._seriesi = seriesi
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def tstep(self):
+        return self._tstep
+
+    @property
+    def seriesi(self):
+        return self._seriesi
 
     def to_pyvista(self):
         print(
