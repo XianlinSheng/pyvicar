@@ -6,6 +6,20 @@ import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
 
 
+class QBase:
+    pass
+
+
+@dataclass
+class QExist(QBase):
+    q_name: str
+
+
+@dataclass
+class QFromVel(QBase):
+    vel_name: str
+
+
 class Q:
     def use_exist(q_name):
         return QExist(q_name)
@@ -14,23 +28,13 @@ class Q:
         return QFromVel(vel_name)
 
 
-@dataclass
-class QExist(Q):
-    q_name: str
-
-
-@dataclass
-class QFromVel(Q):
-    vel_name: str
-
-
 # make the contour mesh
 def create_isoq(
     mesh,
     q=Q.from_vel(),
     iso_value=0.1,
 ):
-    if not isinstance(q, Q):
+    if not isinstance(q, QBase):
         raise TypeError(f"Use Q wizard to create argument, but encounter {type(q)}")
 
     mesh = mesh.cell_data_to_point_data(pass_cell_data=False)
@@ -57,30 +61,91 @@ def create_isoq(
     return mesh.contour(isosurfaces=[iso_value], scalars="Q")
 
 
+@dataclass
+class FieldBase:
+    name: str
+
+
+class FieldScalar(FieldBase):
+    pass
+
+
+class VecComp(Enum):
+    X = 0
+    Y = 1
+    Z = 2
+    MAG = 3
+
+
+@dataclass
+class FieldVector(FieldBase):
+    component: VecComp
+
+
+class Field:
+    def scalar(name):
+        return FieldScalar(name)
+
+    def vector(name, component="mag"):
+        return FieldVector(name, VecComp[component.upper()])
+
+
+class ColorBase:
+    pass
+
+
+@dataclass
+class ColorUniform(ColorBase):
+    name: str
+
+
+@dataclass
+class ColorField(ColorBase):
+    field: Field
+    cmap: str
+    clim: None | list
+    scalar_bar_args: None | dict
+
+
 class Color:
     def uniform(name="turquoise"):
         return ColorUniform(name)
 
     def field(
-        field_name,
-        cmap="viridis",
+        fieldobj,
+        cmap="coolwarm",
         clim=None,
-        scalar_bar_args=None,
+        scalar_bar_args={
+            "vertical": True,
+            "label_font_size": 40,
+            "title_font_size": 40,
+        },
     ):
-        return ColorField(field_name, cmap, clim, scalar_bar_args)
+        if not isinstance(fieldobj, FieldBase):
+            raise TypeError(
+                f"Use Field wizard to create argument, but encounter {type(fieldobj)}"
+            )
+        return ColorField(fieldobj, cmap, clim, scalar_bar_args)
 
 
-@dataclass
-class ColorUniform(Color):
-    name: str
-
-
-@dataclass
-class ColorField(Color):
-    field_name: str
-    cmap: str
-    clim: None | list
-    scalar_bar_args: None | dict
+def prep_field(mesh, field):
+    match field:
+        case FieldScalar():
+            return mesh, field.name
+        case FieldVector():
+            vec = mesh[field.name]
+            match field.component:
+                case VecComp.X:
+                    comp = vec[:, 0]
+                case VecComp.Y:
+                    comp = vec[:, 1]
+                case VecComp.Z:
+                    comp = vec[:, 2]
+                case VecComp.MAG:
+                    comp = np.linalg.norm(vec, axis=1)
+            comp_name = f"{field.name}({field.component.name})"
+            mesh[comp_name] = comp
+            return mesh, comp_name
 
 
 # quick generate
@@ -90,13 +155,18 @@ def gen_isoq_video(
     marker_f=lambda m: m,
     plotter_f=lambda p: p,
     iso_opacity=0.5,
-    iso_color=Color.uniform(),
+    iso_color=Color.field(Field.vector("VEL")),
     keep_frames=True,
+    out_name="q",
 ):
+    if not isinstance(iso_color, ColorBase):
+        raise TypeError(
+            f"Use Color wizard to create argument, but encounter {type(iso_color)}"
+        )
     c = vtklist.case
     c.post.enable()
     c.post.animations.enable()
-    a = c.post.animations.get_or_create("q")
+    a = c.post.animations.get_or_create(out_name)
     a.frames.enable()
 
     if not vtklist:
@@ -131,16 +201,19 @@ def gen_isoq_video(
                         contours,
                         color=iso_color.name,
                         opacity=iso_opacity,
+                        smooth_shading=True,
                     )
                 case ColorField():
+                    contours, field_name = prep_field(contours, iso_color.field)
                     plotter.add_mesh(
                         contours,
-                        scalars=iso_color.field_name,
+                        scalars=field_name,
                         cmap=iso_color.cmap,
                         clim=iso_color.clim,
                         show_scalar_bar=True,
                         opacity=iso_opacity,
                         scalar_bar_args=iso_color.scalar_bar_args,
+                        smooth_shading=True,
                     )
 
         outline = mesh.outline()
@@ -162,7 +235,7 @@ def gen_isoq_video(
 
     a.read()
     mpi.barrier()
-    a = c.post.animations["q"]
+    a = c.post.animations[out_name]
     a.frames.to_video(outformat="mp4")
     if not keep_frames:
         del a.frames
