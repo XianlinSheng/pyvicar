@@ -30,19 +30,21 @@ class QFromVel(Q):
     vel_type: FieldType
 
 
-def cell_to_point(mesh):
-    if hasattr(cell_to_point, "point_passed"):
-        return mesh
-    cell_to_point.point_passed = True
-    return mesh.cell_data_to_point_data(pass_cell_data=False)
-
-
 def plot_isoq(
     mesh,
     q=Q.from_vel(),
     iso_value=0.1,
     off_screen=False,
 ):
+    # this must be done inside because it has a static variable
+    #  whose lifetime is only during this plot function
+    # and needs to be reinitialized after next call
+    def cell_to_point(mesh):
+        if hasattr(cell_to_point, "point_passed"):
+            return mesh
+        cell_to_point.point_passed = True
+        return mesh.cell_data_to_point_data(pass_cell_data=False)
+
     if not isinstance(q, Q):
         raise TypeError(f"Use Q wizard to create argument, but encounter {type(q)}")
 
