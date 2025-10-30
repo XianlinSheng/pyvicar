@@ -263,7 +263,7 @@ class Frames(List, Readable, Optional):
     def to_video(
         self,
         framerate=10,
-        outformat="gif",
+        outformat="mp4",
         quiet=False,
     ):
         match mpi.parallel_mode():
@@ -278,7 +278,9 @@ class Frames(List, Readable, Optional):
             (
                 self.to_ffmpeg(framerate)
                 .output(
-                    f"{self._animation.path}/{self._name}.{outformat}", threads=threads
+                    f"{self._animation.path}/{self._name}.{outformat}",
+                    threads=threads,
+                    pix_fmt="yuv420p",  # cross-platform compatibility
                 )
                 .overwrite_output()
                 .run(quiet=quiet)
