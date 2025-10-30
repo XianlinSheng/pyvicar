@@ -2,6 +2,7 @@ import numpy as np
 import pyvista as pv
 from dataclasses import dataclass
 from enum import Enum
+import pyvicar.tools.log as log
 
 
 class FieldType(Enum):
@@ -71,7 +72,10 @@ def plot_isoq(
 
     plotter = pv.Plotter(off_screen=off_screen)
     plotter.add_mesh(outline, color="black", line_width=1)
-    plotter.add_mesh(contours, color="turquoise", opacity=0.7)
+    if contours.n_points == 0 or contours.n_cells == 0:
+        log.log(f"No q isosurfaces after calculation")
+    else:
+        plotter.add_mesh(contours, color="turquoise", opacity=0.7)
     plotter.add_axes()
     plotter.show_grid()
 

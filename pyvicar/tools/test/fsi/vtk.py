@@ -2,6 +2,7 @@ import pyvista as pv
 import numpy as np
 from abc import abstractmethod
 from pyvicar.tools.miscellaneous import split_into_n
+import pyvicar.tools.log as log
 
 
 _is_test = False
@@ -109,7 +110,7 @@ sample_option.use_3ddomain()
 
 class SampleVTM:
     def __init__(self, path, tstep, seriesi):
-        print(f"VTM Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
+        log.log(f"VTM Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
         self._path = path
         self._tstep = tstep
         self._seriesi = seriesi
@@ -127,13 +128,13 @@ class SampleVTM:
         return self._seriesi
 
     def to_pyvista_multiblocks(self):
-        print(
+        log.log(
             f"VTM Debug: transferring to pyvista mb {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
         return sample_option._sample
 
     def to_pyvista(self):
-        print(
+        log.log(
             f"VTM Debug: transferring to pyvista combined {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
         return sample_option._sample_combined
@@ -144,7 +145,7 @@ class SampleVTM:
 
 class SampleVTK:
     def __init__(self, path, tstep, seriesi):
-        print(f"VTK Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
+        log.log(f"VTK Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
         self._path = path
         self._tstep = tstep
         self._seriesi = seriesi
@@ -162,7 +163,7 @@ class SampleVTK:
         return self._seriesi
 
     def to_pyvista(self):
-        print(
+        log.log(
             f"VTK Debug: transferring to pyvista combined {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
         return sample_option._sample_combined

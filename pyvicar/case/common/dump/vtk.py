@@ -6,7 +6,7 @@ from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
 from pyvicar.tools.test.fsi.vtk import is_test, SampleVTK, SampleVTM
 from pyvicar.tools.vtk import compress_to_vtk
-from pyvicar.tools.log import log
+import pyvicar.tools.log as log
 
 
 class VTKListBase(List, Readable, Optional):
@@ -90,7 +90,7 @@ class VTMList(VTKListBase):
 
     def to_vtks(self, **kwargs):
         if is_test():
-            print(
+            log.log_host(
                 "VTM Debug: test will not delete vtms. keep_vtm has been forced to True"
             )
             kwargs["keep_vtm"] = True
