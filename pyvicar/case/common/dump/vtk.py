@@ -32,6 +32,10 @@ class VTKListBase(List, Readable, Optional):
     def _insert(self, *args, **kwargs):
         return super().insert(*args, **kwargs)
 
+    @property
+    def case(self):
+        return self._case
+
     def read(self):
         series = Series.from_format(
             self._case.path / "FieldsFiles", r"fields\.(\d+)\.vtm"
