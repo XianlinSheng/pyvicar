@@ -283,6 +283,11 @@ def create_slice(
     return slice
 
 
+def normal_to_plane(normal):
+    mapping = {"x": "yz", "y": "xz", "z": "xy"}
+    return mapping[normal.lower()] if isinstance(normal, str) else normal
+
+
 # quick generate
 def gen_slicecontour_video(
     vtklist,
@@ -355,7 +360,7 @@ def gen_slicecontour_video(
                     )
 
         # looking at the positive side, normal points to camera
-        plotter.camera_position = normal
+        plotter.camera_position = normal_to_plane(normal)
         plotter.camera.ParallelProjectionOn()
         # plotter.camera.zoom(1.5)
         plotter.add_axes()
