@@ -41,8 +41,6 @@ def create_isoq(
 
     match q:
         case QExist():
-            if q.q_type == FieldType.Cell:
-                mesh = cell_to_point(mesh)
             qfield = mesh.point_data[q.q_name]
         case QFromVel():
             mesh = mesh.compute_derivative(q.vel_name, gradient=True)
@@ -82,12 +80,22 @@ class FieldVector(FieldBase):
     component: VecComp
 
 
+@dataclass
+class FieldVectorVORFromVEL(FieldVector):
+    vel_name: str
+
+
 class Field:
     def scalar(name):
         return FieldScalar(name)
 
     def vector(name, component="mag"):
         return FieldVector(name, VecComp[component.upper()])
+
+    def vor_from_vel(vel_name, component="z"):
+        return FieldVectorVORFromVEL(
+            "VOR", component=VecComp[component.upper()], vel_name=vel_name
+        )
 
 
 class ColorBase:
@@ -129,9 +137,16 @@ class Color:
 
 
 def prep_field(mesh, field):
+    if isinstance(field, FieldVectorVORFromVEL):
+        mesh = mesh.compute_derivative(field.vel_name, vorticity=True)
+        mesh.rename_array("vorticity", "VOR")
+        field_name = "VOR"
+
+    field_name = field.name
+
     match field:
         case FieldScalar():
-            return mesh, field.name
+            return mesh, field_name
         case FieldVector():
             vec = mesh[field.name]
             match field.component:
@@ -143,7 +158,7 @@ def prep_field(mesh, field):
                     comp = vec[:, 2]
                 case VecComp.MAG:
                     comp = np.linalg.norm(vec, axis=1)
-            comp_name = f"{field.name}({field.component.name})"
+            comp_name = f"{field_name}({field.component.name})"
             mesh[comp_name] = comp
             return mesh, comp_name
 
@@ -179,7 +194,7 @@ def gen_isoq_video(
 
     for vtk, marker in mpi.dispatch(zip(vtklist, markers)):
         log.log(
-            f"plot_isoq: posting frame {vtk}{f' with {marker}' if marker is not None else ''}"
+            f"gen_isoq_video: posting frame {vtk}{f' with {marker}' if marker is not None else ''}"
         )
 
         mesh = vtk.to_pyvista()
@@ -193,7 +208,7 @@ def gen_isoq_video(
 
         contours = create_isoq(mesh)
         if contours.n_points == 0 or contours.n_cells == 0:
-            log.log(f"plot_isoq: No q isosurfaces after calculation")
+            log.log(f"gen_isoq_video: No q isosurfaces after calculation")
         else:
             match iso_color:
                 case ColorUniform():
@@ -218,6 +233,131 @@ def gen_isoq_video(
 
         outline = mesh.outline()
         plotter.add_mesh(outline, color="black", line_width=1)
+        plotter.add_axes()
+        plotter.show_grid()
+
+        plotter = plotter_f(plotter)
+
+        a.frames.frame_by_pyvista(vtk.seriesi, plotter, window_size=[3840, 2160])
+
+        plotter.close()
+        plotter.deep_clean()
+        del plotter
+
+        pv.close_all()
+
+    mpi.set_sync()
+
+    a.read()
+    mpi.barrier()
+    a = c.post.animations[out_name]
+    a.frames.to_video(outformat="mp4")
+    if not keep_frames:
+        del a.frames
+    mpi.barrier()
+
+    return a
+
+
+def add_default_for_none(passl, defaultl):
+    return [
+        passv if passv is not None else defaultv
+        for passv, defaultv in zip(passl, defaultl)
+    ]
+
+
+# make the slice contour
+def create_slice(
+    mesh,
+    normal="z",
+    origin=[None, None, None],
+    clip=None,  # [x1, x2, y1, y2, z1, z2]
+):
+    x1, x2, y1, y2, z1, z2 = mesh.bounds
+    origin = add_default_for_none(origin, [(x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2])
+    slice = mesh.slice(origin=origin, normal=normal)
+    if clip is not None:
+        clip = add_default_for_none(clip, [x1, x2, y1, y2, z1, z2])
+        slice = slice.clip_box(clip, invert=False)
+
+    return slice
+
+
+# quick generate
+def gen_slicecontour_video(
+    vtklist,
+    markers=None,
+    normal="z",
+    origin=[None, None, None],
+    clip=None,
+    marker_f=lambda m: m,
+    plotter_f=lambda p: p,
+    contour_color=Color.field(Field.vector("VEL")),
+    keep_frames=True,
+    out_name="vel",
+):
+    if not isinstance(contour_color, ColorBase):
+        raise TypeError(
+            f"Use Color wizard to create argument, but encounter {type(contour_color)}"
+        )
+    c = vtklist.case
+    c.post.enable()
+    c.post.animations.enable()
+    a = c.post.animations.get_or_create(out_name)
+    a.frames.enable()
+
+    if not vtklist:
+        return a
+
+    mpi.set_async()
+
+    if markers is None:
+        markers = [None] * len(vtklist)
+
+    for vtk, marker in mpi.dispatch(zip(vtklist, markers)):
+        log.log(
+            f"gen_slicecontour_video: posting frame {vtk}{f' with {marker}' if marker is not None else ''}"
+        )
+
+        mesh = vtk.to_pyvista()
+        mesh = mesh.cell_data_to_point_data(pass_cell_data=False)
+        plotter = pv.Plotter(off_screen=True)
+
+        if marker is not None:
+            bodies = marker.to_pyvista_multiblocks()
+            bodies = marker_f(bodies)
+            for body in bodies:
+                plotter.add_mesh(body)
+
+        if isinstance(contour_color, ColorField):
+            mesh, field_name = prep_field(mesh, contour_color.field)
+
+        slice = create_slice(mesh, normal, origin, clip)
+        if slice.n_points == 0 or slice.n_cells == 0:
+            log.log(f"gen_slicecontour_video: Empty slice")
+        else:
+            match contour_color:
+                case ColorUniform():
+                    plotter.add_mesh(
+                        slice,
+                        color=contour_color.name,
+                        smooth_shading=True,
+                    )
+                case ColorField():
+                    plotter.add_mesh(
+                        slice,
+                        scalars=field_name,
+                        cmap=contour_color.cmap,
+                        clim=contour_color.clim,
+                        show_scalar_bar=True,
+                        scalar_bar_args=contour_color.scalar_bar_args,
+                        smooth_shading=True,
+                    )
+
+        # looking at the positive side, normal points to camera
+        plotter.camera_position = normal
+        plotter.camera.ParallelProjectionOn()
+        # plotter.camera.zoom(1.5)
         plotter.add_axes()
         plotter.show_grid()
 
