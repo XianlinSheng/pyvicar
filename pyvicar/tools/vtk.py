@@ -82,7 +82,7 @@ def remove_vtm(vtmpath, basename):
         shutil.rmtree(vtrfolder)
 
 
-def compress_to_vtk(vtms, keep_vtm=True):
+def compress_to_vtk(vtms, keep_vtms=True):
     for vtm in mpi.dispatch(vtms):
         log(f"Compressing {vtm.path}")
         basename = vtm.path.stem
@@ -99,13 +99,13 @@ def compress_to_vtk(vtms, keep_vtm=True):
         newpath = vtm.path.parent / Path(f"{basename}.vtk")
         mesh.save(newpath, binary=True)
 
-        if not keep_vtm:
+        if not keep_vtms:
             remove_vtm(vtm.path, basename)
 
 
-def compress_to_vtr(vtms, ijs, keep_vtm=True):
+def compress_to_vtr(vtms, ijs, keep_vtms=True):
     for vtm in mpi.dispatch(vtms):
-        log(f"compressing {vtm.path}")
+        log(f"Compressing {vtm.path}")
         basename = vtm.path.stem
         mesh = pv.read(vtm.path)
 
@@ -114,7 +114,7 @@ def compress_to_vtr(vtms, ijs, keep_vtm=True):
         newpath = vtm.path.parent / Path(f"{basename}.vtr")
         mesh.save(newpath, binary=True)
 
-        if not keep_vtm:
+        if not keep_vtms:
             remove_vtm(vtm.path, basename)
 
 

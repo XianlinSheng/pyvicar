@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from pyvicar._tree import List
 from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
-from pyvicar.tools.test.fsi.vtk import is_test, SampleVTK, SampleVTM
-from pyvicar.tools.vtk import compress_to_vtk
+from pyvicar.tools.test.fsi.vtk import is_test, SampleVTM, SampleVTK, SampleVTR
+from pyvicar.tools.vtk import compress_to_vtk, compress_to_vtr, create_ijs_from_forxy
 import pyvicar.tools.log as log
 
 
@@ -35,20 +35,6 @@ class VTKListBase(List, Readable, Optional):
     @property
     def case(self):
         return self._case
-
-    def read(self):
-        series = Series.from_format(
-            self._case.path / "FieldsFiles", r"fields\.(\d+)\.vtm"
-        )
-        for i, file in enumerate(series):
-            if not is_test():
-                vtk = VTK(file.path, file.idxes[0], i + self._startidx)
-            else:
-                vtk = SampleVTK(file.path, file.idxes[0], i + self._startidx)
-            self._append(vtk)
-
-        if series:
-            self._enable()
 
     @property
     def latest(self):
@@ -93,12 +79,27 @@ class VTMList(VTKListBase):
         self._read_impl("vtm", VTM, SampleVTM)
 
     def to_vtks(self, **kwargs):
+        log.log_host(
+            "Warning: VTK might be 130% space of the original multiblocked VTR if the output is still a full structured rectangular domain. Use to_vtrs(npx, npy) to compress down to 25%"
+        )
         if is_test():
             log.log_host(
-                "VTM Debug: test will not delete vtms. keep_vtm has been forced to True"
+                "VTM Debug: test still converts real fields, but will not delete vtms. keep_vtms has been forced to True"
             )
-            kwargs["keep_vtm"] = True
+            kwargs["keep_vtms"] = True
         compress_to_vtk(self, **kwargs)
+        self.read()
+        self._case.dump.vtk.read()
+
+    def to_vtrs(self, npx, npy, **kwargs):
+        if is_test():
+            log.log_host(
+                "VTM Debug: test still converts real fields, but will not delete vtms. keep_vtms has been forced to True"
+            )
+            kwargs["keep_vtms"] = True
+        compress_to_vtr(self, create_ijs_from_forxy(npx, npy), **kwargs)
+        self.read()
+        self._case.dump.vtr.read()
 
 
 class VTKList(VTKListBase):
@@ -113,6 +114,20 @@ class VTKList(VTKListBase):
 
     def read(self):
         self._read_impl("vtk", VTK, SampleVTK)
+
+
+class VTRList(VTKListBase):
+    def __init__(self, case):
+        VTKListBase.__init__(self, case)
+
+    def _elemcheck(self, new):
+        if not isinstance(new, (VTR, SampleVTR)):
+            raise TypeError(
+                f"Expected a VTR object inside VTRList, but encountered {repr(new)}"
+            )
+
+    def read(self):
+        self._read_impl("vtr", VTR, SampleVTR)
 
 
 class VTKBase(ABC):
@@ -165,3 +180,14 @@ class VTK(VTKBase):
 
     def __repr__(self):
         return f"VTK(tstep = {self._tstep})"
+
+
+class VTR(VTKBase):
+    def __init__(self, path, tstep, seriesi):
+        VTKBase.__init__(self, path, tstep, seriesi)
+
+    def to_pyvista(self):
+        return pv.read(self._path)
+
+    def __repr__(self):
+        return f"VTR(tstep = {self._tstep})"

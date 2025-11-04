@@ -170,3 +170,32 @@ class SampleVTK:
 
     def __repr__(self):
         return f"SampleVTK(tstep = {self._tstep})"
+
+
+class SampleVTR:
+    def __init__(self, path, tstep, seriesi):
+        log.log(f"VTR Debug: creating handle for {path}, step {tstep}, No. {seriesi}")
+        self._path = path
+        self._tstep = tstep
+        self._seriesi = seriesi
+
+    @property
+    def path(self):
+        return self._path
+
+    @property
+    def tstep(self):
+        return self._tstep
+
+    @property
+    def seriesi(self):
+        return self._seriesi
+
+    def to_pyvista(self):
+        log.log(
+            f"VTR Debug: transferring to pyvista {self._path}, step {self._tstep}, No. {self._seriesi}"
+        )
+        return sample_option._sample_combined[0]
+
+    def __repr__(self):
+        return f"SampleVTR(tstep = {self._tstep})"
