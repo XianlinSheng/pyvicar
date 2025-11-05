@@ -5,6 +5,7 @@ from pyvicar._utilities import Optional
 from pyvicar._tree import Group, Field, List
 from pyvicar.file import Readable
 from pyvicar.file import Series
+from pyvicar.tools.post.time import proc_draglift
 
 
 class DragLiftList(List, Readable, Optional):
@@ -41,6 +42,9 @@ class DragLiftList(List, Readable, Optional):
 
         if series:
             self._enable()
+
+    def proc(self, *args, **kwargs):
+        return proc_draglift(self, *args, **kwargs)
 
 
 class DragLift(Group, Readable):
