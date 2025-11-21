@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyvicar"
+version = "1.0.0"
+description = "Python Shell for Vicar3D"
+authors = [{ name = "Xianlin Sheng" }]
+readme = "README.md"
+requires-python = ">=3.8,<3.13"
+
+dependencies = [
+    "numpy",
+    "scipy",
+    "numpy-stl",
+    "trimesh",
+    "h5py",
+    "pandas",
+    "matplotlib",
+    "mpi4py",
+    "ffmpeg-python",
+    "pyvista",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -77,7 +77,7 @@ class _SampleMeshGenerator3DDomain(_SampleMeshGenerator):
 
                     grid = pv.RectilinearGrid(x, y, z)
                     mb[block_id] = grid
-                    mb[block_id].name = f"Block-{i}-{j}-{k}"
+                    # mb[block_id].name = f"Block-{i}-{j}-{k}"
 
                     block_id += 1
 

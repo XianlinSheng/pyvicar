@@ -6,12 +6,24 @@ and provides tools to generate grids and surface mesh.
 
 
 ## Requirement
+- python>=3.8,<3.13
 - numpy (dataset data structure)
+- scipy (postprocessing tools)
 - numpy-stl (reading .stl geometries)
+- trimesh (operating triangular meshes)
 - pandas (reading output tables)
+- h5py (storing database, auto handled by conda)
 - matplotlib (visualize dataset)
 - mpi4py (parallel postprocessing)
-- ffmpeg-python (convert frames to video files)
+- ffmpeg (convert frames to video files, auto handled by conda)
+- ffmpeg-python (python controller of above) Important:
+*ffmpeg executable is not handled by pip dependencies and should be visible
+at the point of installing pyvicar.
+Recommand directly using conda,
+and this one line will install ffmpeg and its python wrapper*
+<pre>
+conda install -c conda-forge ffmpeg-python
+</pre>
 - pyvista (mesh visualization and postprocessing) Important:
 *on an off-screen server, 
 a specific osmesa build of vtk needs to be installed before pyvista*:
@@ -21,6 +33,18 @@ conda install -c conda-forge pyvista # or pip install pyvista
 </pre>
 conda forge might not have the newest python build for pyvista, 
 but pip install will work too.
+
+## Install
+<pre>
+git clone https://github.com/XianlinSheng/pyvicar.git
+pip install ./pyvicar
+</pre>
+If required dependencies do not exist, 
+pip install automatically install the newest version,
+but 2 needs to be considered: vtk backend and ffmpeg (see Requirement)
+
+
+
 
 
 ## Examples
