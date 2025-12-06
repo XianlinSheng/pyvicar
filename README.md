@@ -5,17 +5,17 @@ programmable batch generation and postprocessing,
 and provides tools to generate grids and surface mesh.
 
 
-## Requirement
+## Dependencies
 - python>=3.8,<3.13
 - numpy (dataset data structure)
 - scipy (postprocessing tools)
 - numpy-stl (reading .stl geometries)
 - trimesh (operating triangular meshes)
 - pandas (reading output tables)
-- h5py (storing database, auto handled by conda)
+- h5py (storing database, can be auto handled by conda)
 - matplotlib (visualize dataset)
 - mpi4py (parallel postprocessing)
-- ffmpeg (convert frames to video files, auto handled by conda)
+- ffmpeg (convert frames to video files, can be auto handled by conda)
 - ffmpeg-python (python controller of above) Important:
 *ffmpeg executable is not handled by pip dependencies and should be visible
 at the point of installing pyvicar.
@@ -35,15 +35,99 @@ conda forge might not have the newest python build for pyvista,
 but pip install will work too.
 
 ## Install
+Before installing pyvicar, 
+make sure the following dependencies are handled well
+
+### mpi, mpi4py
+
+If using existing MPI library, 
+make sure the mpi4py links against it correctly:
+<pre>
+which mpicc
+pip install --no-binary mpi4py --no-cache-dir --force-reinstall mpi4py
+python -c "from mpi4py import MPI; print(MPI.Get_library_version())"
+</pre>
+
+For a full new environment automatically, simply use conda:
+<pre>
+conda install -c conda-forge mpi4py
+</pre>
+
+### ffmpeg, ffmpeg-python
+
+If using existing ffmpeg executable, 
+make sure the ffmpeg-python can use it:
+<pre>
+which ffmpeg
+pip install --no-cache-dir --force-reinstall ffmpeg-python
+
+python -c "import ffmpeg; ffmpeg.input('testsrc=size=128x128:rate=1', f='lavfi', t=1).output('-', f='null').run()"
+</pre>
+
+For a full new environment automatically, simply use conda:
+<pre>
+conda install -c conda-forge ffmpeg-python
+</pre>
+
+### vtk, pyvista
+
+VTK can use X server, off-screen CPU, or off-screen GPU,
+but pip does not provide full pre-builts on these backends,
+so recommend using conda directly:
+<pre>
+conda install -c conda-forge vtk           # normal with x server
+conda install -c conda-forge vtk=*=osmesa* # headless cpu
+conda install -c conda-forge vtk=*=egl*    # headless gpu
+
+python -c "import vtk; rw = vtk.vtkRenderWindow(); print(rw.GetClassName())"
+</pre>
+
+<!-- If installing without conda is necessary, 
+one can still choose to build VTK library from cmake,
+and expose the library in PYTHONPATH:
+<pre>
+git clone https://github.com/Kitware/VTK
+cd VTK
+git checkout v9.1.0
+
+cmake -S . -B build \
+ -DCMAKE_BUILD_TYPE=Release \   
+ -DVTK_BUILD_TESTING=OFF \
+ -DVTK_BUILD_DOCUMENTATION=OFF \
+ -DVTK_BUILD_EXAMPLES=OFF \
+ -DVTK_MODULE_ENABLE_VTK_PythonInterpreter:STRING=NO \
+ -DVTK_WHEEL_BUILD=ON \
+ -DVTK_PYTHON_VERSION=3 \
+ -DVTK_WRAP_PYTHON=ON \
+ -DVTK_OPENGL_HAS_EGL:BOOL=ON \
+ -DVTK_USE_X:BOOL=OFF \
+ -DVTK_USE_COCOA:BOOL=OFF \
+ -DVTK_DEFAULT_RENDER_WINDOW_HEADLESS:BOOL=ON \
+ -DPython3_EXECUTABLE=$(which python) \
+ -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \ 
+ -DCMAKE_INSTALL_PREFIX=~/opt/vtk
+
+cmake --build build -j $(nproc)
+cmake --install build
+
+cd build
+python setup.py bdist_wheel
+</pre> -->
+
+Then, pyvista can be installed easily in either way with vtk package visible by python
+<pre>
+conda install -c conda-forge pyvista # conda forge
+pip install pyvista                  # pip install
+</pre>
+or it will be pip installed automatically when pip install pyvicar
+
+### pyvicar
 <pre>
 git clone https://github.com/XianlinSheng/pyvicar.git
 pip install ./pyvicar
 </pre>
 If required dependencies do not exist, 
-pip install automatically install the newest version,
-but 2 needs to be considered: vtk backend and ffmpeg (see Requirement)
-
-
+pip install automatically install the newest version.
 
 
 
