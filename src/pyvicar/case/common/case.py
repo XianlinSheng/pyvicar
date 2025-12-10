@@ -15,6 +15,8 @@ from .drag_lift import DragLiftList
 from .dump import Dump
 from .restart import Restart
 from .post import Post
+from pyvicar.tools.bcic_setter.common import set_inlet
+from pyvicar.geometry.case_setter.common import append_solid
 
 
 class Case(Group, Writable):
@@ -52,7 +54,7 @@ class Case(Group, Writable):
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
         self._children.zgrid = NonuniformGrid(self._path / "zgrid.dat")
 
-        self._children.job = Job(self._path / "job")
+        self._children.job = Job(self, self._path / "job")
 
         self._children.draglift = DragLiftList(self)
         self._children.dump = Dump(self)
@@ -95,10 +97,20 @@ class Case(Group, Writable):
         self._children.dump.read()
         self._children.post.read()
 
-    def mpirun(self, np, outfile=None):
+    def mpirun(self, np=None, outfile=None):
+        if np is None:
+            np = self.nproc
         os.system(
             f"cd {self._path}; mpirun -np {np} {self._children.runpath} {f'> {outfile}' if not outfile is None else f''}; cd - > /dev/null"
         )
 
     def sbatch(self):
         os.system(f"cd {self._path}; sbatch job; cd - > /dev/null")
+
+    @property
+    def nproc(self):
+        return self.input.parallel.npx.value * self.input.parallel.npy.value
+
+
+Case.set_inlet = set_inlet
+Case.append_solid = append_solid

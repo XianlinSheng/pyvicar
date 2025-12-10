@@ -49,7 +49,7 @@ class X1(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.bcx1 = Field("bcx1", "dirichlet", "", bcTypes)
+        self._children.bcx1 = Field("bcx1", "neumann", "", bcTypes)
         self._children.ux1 = Field("ux1", 0.0)
         self._children.vx1 = Field("vx1", 0.0)
         self._children.wx1 = Field("wx1", 0.0)
@@ -78,7 +78,7 @@ class X2(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.bcx2 = Field("bcx2", "dirichlet", "", bcTypes)
+        self._children.bcx2 = Field("bcx2", "neumann", "", bcTypes)
         self._children.ux2 = Field("ux2", 0.0)
         self._children.vx2 = Field("vx2", 0.0)
         self._children.wx2 = Field("wx2", 0.0)
@@ -107,7 +107,7 @@ class Y1(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.bcy1 = Field("bcy1", "dirichlet", "", bcTypes)
+        self._children.bcy1 = Field("bcy1", "neumann", "", bcTypes)
         self._children.uy1 = Field("uy1", 0.0)
         self._children.vy1 = Field("vy1", 0.0)
         self._children.wy1 = Field("wy1", 0.0)
@@ -136,7 +136,7 @@ class Y2(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.bcy2 = Field("bcy2", "dirichlet", "", bcTypes)
+        self._children.bcy2 = Field("bcy2", "neumann", "", bcTypes)
         self._children.uy2 = Field("uy2", 0.0)
         self._children.vy2 = Field("vy2", 0.0)
         self._children.wy2 = Field("wy2", 0.0)
@@ -165,7 +165,7 @@ class Z1(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.bcz1 = Field("bcz1", "dirichlet", "", bcTypes)
+        self._children.bcz1 = Field("bcz1", "neumann", "", bcTypes)
         self._children.uz1 = Field("uz1", 0.0)
         self._children.vz1 = Field("vz1", 0.0)
         self._children.wz1 = Field("wz1", 0.0)
@@ -194,7 +194,7 @@ class Z2(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.bcz2 = Field("bcz2", "dirichlet", "", bcTypes)
+        self._children.bcz2 = Field("bcz2", "neumann", "", bcTypes)
         self._children.uz2 = Field("uz2", 0.0)
         self._children.vz2 = Field("vz2", 0.0)
         self._children.wz2 = Field("wz2", 0.0)

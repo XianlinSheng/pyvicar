@@ -6,21 +6,19 @@ from .input import Input
 from pyvicar.case.common.probe import Probe
 from .canonical_body import CanonicalBody
 from pyvicar.case.common.unstruc_surface import UnstrucSurface
-from pyvicar.case.common.srj import SRJ
-from pyvicar.case.common.srj2 import SRJ2
-from .rhm import RHM
+from .scalar import Scalar
+from .thrombosis import Thrombosis
 from pyvicar.case.common.cspline import CSpline
-from pyvicar.case.common.ib2 import IB2
-from .poisson_history import PoissonHistory
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job
 from pyvicar.case.common.drag_lift import DragLiftList
-from .rhm_stat import RHMStatList
 from pyvicar.case.common.dump import Dump
+from pyvicar.case.common.restart import Restart
 from .restart import create_restart_obj
 from pyvicar.case.common.post import Post
 from pyvicar.tools.bcic_setter.common import set_inlet
 from pyvicar.geometry.case_setter.common import append_solid
+from pyvicar.tools.thrombosis.case_setter.gp import set_thrombosis_vars
 
 
 class Case(Group, Writable):
@@ -49,16 +47,9 @@ class Case(Group, Writable):
             self._path / "unstruc_surface_in.dat"
         )
 
-        self._children.srj = SRJ(self._path / "SRJ_params_in.dat")
-        self._children.srj2 = SRJ2(self._path / "SRJ2_params_in.dat")
-
-        self._children.rhm = RHM(self._path / "rhm_in.dat")
+        self._children.scalar = Scalar(self._path / "scalar_in.dat")
+        self._children.thrombosis = Thrombosis(self._path / "thrombosis_in.dat")
         self._children.cspline = CSpline(self._path / "cspline_in.dat")
-        self._children.ib2 = IB2(self._path / "ib2_in.dat")
-
-        self._children.poissonHistory = PoissonHistory(
-            self._path / "poisson_history_in.dat"
-        )
 
         self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
@@ -66,12 +57,11 @@ class Case(Group, Writable):
         self._children.job = Job(self, self._path / "job")
 
         self._children.draglift = DragLiftList(self)
-        self._children.rhmstat = RHMStatList(self)
         self._children.dump = Dump(self)
         self._children.restart = create_restart_obj(self)
         self._children.post = Post(self)
 
-        self._children.runpath = Field("runpath", "~/Vicar3D/versions/fsi/src/Vicar3D")
+        self._children.runpath = Field("runpath", "~/Vicar3D/versions/gp/src/Vicar3D")
 
         self._finalize_init()
 
@@ -85,18 +75,12 @@ class Case(Group, Writable):
         self._children.canonicalBody.write()
         if self._children.unstrucSurface:
             self._children.unstrucSurface.write()
-        if self._children.srj:
-            self._children.srj.write()
-        if self._children.srj2:
-            self._children.srj2.write()
-        if self._children.rhm:
-            self._children.rhm.write()
+        if self._children.scalar:
+            self._children.scalar.write()
+        if self._children.thrombosis:
+            self._children.thrombosis.write()
         if self._children.cspline:
             self._children.cspline.write()
-        if self._children.ib2:
-            self._children.ib2.write()
-        if self._children.poissonHistory:
-            self._children.poissonHistory.write()
         if self._children.xgrid:
             self._children.xgrid.write()
         if self._children.ygrid:
@@ -108,7 +92,6 @@ class Case(Group, Writable):
 
     def read(self):
         self._children.draglift.read()
-        self._children.rhmstat.read()
         self._children.dump.read()
         self._children.restart.read()
         self._children.post.read()
@@ -125,8 +108,13 @@ class Case(Group, Writable):
 
     @property
     def nproc(self):
-        return self.input.parallel.npx.value * self.input.parallel.npy.value
+        return (
+            self.input.parallel.npx.value
+            * self.input.parallel.npy.value
+            * self.input.parallel.npz.value
+        )
 
 
 Case.set_inlet = set_inlet
 Case.append_solid = append_solid
+Case.set_thrombosis_vars = set_thrombosis_vars

@@ -1,3 +1,4 @@
+import numpy as np
 from pathlib import Path
 from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
@@ -5,10 +6,11 @@ from pyvicar.file import Writable
 
 
 class Job(Group, Writable, Optional):
-    def __init__(self, path):
+    def __init__(self, case, path):
         Group.__init__(self)
         Writable.__init__(self)
         Optional.__init__(self)
+        self._case = case
         self._path = Path(path)
         if self:
             self._init()
@@ -21,16 +23,19 @@ class Job(Group, Writable, Optional):
         self._children.ntasksPerNode = Field("ntasksPerNode", 48)
         self._children.account = Field("account", "")
         self._children.mpinp = Field("mpinp", 48)
-        self._children.runpath = Field(
-            "runpath", "~/Vicar3D/versions/version/src/Vicar3D"
-        )
+        self._children.runpath = Field("runpath", "~/Vicar3D/versions/version/src/Vicar3D")
         self._children.logfile = Field("logfile", "log.std")
 
         self._finalize_init()
 
+    @property
+    def case(self):
+        return self._case
+
     def enable(self):
         Optional.enable(self)
         self._init()
+        self.autofill()
 
     def write(self):
         if not self:
@@ -53,3 +58,10 @@ class Job(Group, Writable, Optional):
         f.write(f"\n")
 
         f.flush()
+
+    # fill job np, mpi np, run path from current case config
+    def autofill(self):
+        nproc = self._case.nproc
+        self._children.nodes = int(np.ceil(nproc / self._children.ntasksPerNode.value))
+        self._children.mpinp = nproc
+        self._children.runpath = self._case._children.runpath.value

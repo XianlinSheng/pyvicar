@@ -4,15 +4,17 @@ from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
 
 
-class FlowLists(Group, Readable, Optional):
-    def __init__(self, case):
+class RestartLists(Group, Readable, Optional):
+    def __init__(self, case, prefix, partitioned):
         Group.__init__(self)
         Readable.__init__(self)
         Optional.__init__(self)
         self._case = case
+        self._prefix = prefix
+        self._partitioned = partitioned
 
-        self._children.t1 = FlowList(self._case, 1)
-        self._children.t2 = FlowList(self._case, 2)
+        self._children.t1 = RestartList(self._case, prefix, partitioned, 1)
+        self._children.t2 = RestartList(self._case, prefix, partitioned, 2)
 
         self._finalize_init()
 
@@ -31,7 +33,7 @@ class FlowLists(Group, Readable, Optional):
     @property
     def latest(self):
         if not self:
-            raise Exception(f"No active restart flow out files")
+            raise Exception(f"No active restart {self._prefix} out files")
 
         if self._children.t1:
             t1 = self._children.t1[0].path.stat().st_mtime
@@ -48,13 +50,23 @@ class FlowLists(Group, Readable, Optional):
         else:
             return self._children.t2
 
+    @property
+    def prefix(self):
+        return self._prefix
 
-class FlowList(List, Readable, Optional):
-    def __init__(self, case, tidx):
+    @property
+    def partitioned(self):
+        return self._partitioned
+
+
+class RestartList(List, Readable, Optional):
+    def __init__(self, case, prefix, partitioned, tidx):
         List.__init__(self)
         Readable.__init__(self)
         Optional.__init__(self)
         self._case = case
+        self._prefix = prefix
+        self._partitioned = partitioned
         self._tidx = tidx
 
     def _enable(self):
@@ -64,9 +76,13 @@ class FlowList(List, Readable, Optional):
         return super().disable()
 
     def _elemcheck(self, new):
-        if not isinstance(new, Flow):
+        if not isinstance(new, RestartFile):
             raise TypeError(
-                f"Expected a Flow object inside FlowList, but encountered {repr(new)}"
+                f"Expected a RestartFile object inside RestartList, but encountered {repr(new)}"
+            )
+        if new.prefix != self._prefix:
+            raise TypeError(
+                f"Expected a {self._prefix} RestartFile inside {self._prefix} RestartList, but encountered {new.prefix}"
             )
 
     def _append(self, *args, **kwargs):
@@ -78,11 +94,17 @@ class FlowList(List, Readable, Optional):
     def read(self):
         series = Series.from_format(
             self._case.path / "Restart",
-            r"restart_flow_out\.(\d{5})\." + f"{self._tidx}" + r"\.dat",
+            (
+                f"restart_{self._prefix}_out"
+                + get_iproc_fmt(self._partitioned)
+                + f".{self._tidx}"
+                + f".dat"
+            ),
         )
         for file in series:
-            flow = Flow(self._case, file.path, file.idxes[0], self._tidx)
-            self._append(flow)
+            idx = file.idxes[0] if self._partitioned else None
+            restart = RestartFile(self._case, self._prefix, file.path, idx, self._tidx)
+            self._append(restart)
 
         if series:
             self._enable()
@@ -91,20 +113,33 @@ class FlowList(List, Readable, Optional):
     def tidx(self):
         return self._tidx
 
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def partitioned(self):
+        return self._partitioned
+
     def to_restart_in(self):
         if not self:
-            raise Exception(f"No active restart flow in files")
+            raise Exception(f"No active restart {self._prefix} in files")
 
         for flow in self._childrenlist:
             flow.to_restart_in()
 
 
-class Flow:
-    def __init__(self, case, path, iproc, tidx):
+class RestartFile:
+    def __init__(self, case, prefix, path, iproc, tidx):
         self._case = case
+        self._prefix = prefix
         self._path = path
         self._iproc = iproc
         self._tidx = tidx
+
+    @property
+    def prefix(self):
+        return self._prefix
 
     @property
     def path(self):
@@ -119,9 +154,21 @@ class Flow:
         return self._tidx
 
     def to_restart_in(self):
-        newpath = self._case.path / "Restart" / f"restart_flow_in.{self._iproc:05}.dat"
+        newpath = (
+            self._case.path
+            / "Restart"
+            / f"restart_{self._prefix}_in{get_iproc_str(self._iproc)}.dat"
+        )
         shutil.copy(self._path, newpath)
         return newpath
 
     def __repr__(self):
-        return f"RestartFlow(iproc = {self._iproc}, tidx = {self._tidx})"
+        return f"RestartFile(prefix = {self._prefix}, iproc = {self._iproc}, tidx = {self._tidx})"
+
+
+def get_iproc_fmt(partitioned):
+    return r"\.(\d{5})" if partitioned else ""
+
+
+def get_iproc_str(iproc):
+    return f".{iproc:05}" if iproc is not None else ""

@@ -14,7 +14,7 @@ class TimeStepControl(Group, Writable):
         self._children.nDump = Field("nDump", 1)
         self._children.nRestart = Field("nRestart", 1)
         self._children.nStat = Field("nStat", 0)
-        self._children.nProbe = Field("nProbe", 0)
+        self._children.nProbe = Field("nProbe", 1)
         self._children.nInit = Field("nInit", 0)
         self._children.nDumpInit = Field("nDumpInit", 0)
 
@@ -22,7 +22,7 @@ class TimeStepControl(Group, Writable):
             "formatDump", "vtk", "", {"rawq": 0, "vtk": 1}
         )
         self._children.iDragLift = Field(
-            "iDragLift", False, "", Field.vmapPresets.bool2int
+            "iDragLift", True, "", Field.vmapPresets.bool2int
         )
         self._children.iVerbose = Field(
             "iVerbose", False, "", Field.vmapPresets.bool2int

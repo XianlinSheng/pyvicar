@@ -34,6 +34,7 @@ class MultigridMethod(Group, Writable):
         )
 
         self._children.nCellCoarseLevel = Field("nCellCoarseLevel", 2)
+        self._children.iSubMG = Field("iSubMG", False, "", Field.vmapPresets.bool2int)
 
         self._finalize_init()
 
@@ -57,4 +58,5 @@ class MultigridMethod(Group, Writable):
         self._formatter.write()
 
         self._formatter += self._children.nCellCoarseLevel
+        self._formatter += self._children.iSubMG
         self._formatter.write()
