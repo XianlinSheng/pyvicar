@@ -34,6 +34,7 @@ class Body(Group, Writable):
         Group.__init__(self)
         Writable.__init__(self)
         self._formatter = KV1Formatter(f)
+        self._f = f
 
         add_basics(self._children, self._f)
 

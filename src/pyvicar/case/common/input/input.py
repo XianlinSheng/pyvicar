@@ -85,7 +85,7 @@ class Input(Group, Writable):
         self._f = open(path, "w")
 
         # all subgroups
-        write_basics(self._children, self._f)
+        add_basics(self._children, self._f)
 
         self._finalize_init()
 
