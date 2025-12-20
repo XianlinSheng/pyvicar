@@ -1,3 +1,6 @@
+from dataclasses import fields
+
+
 def split_into_n(total, n):
     if not isinstance(total, int) or not isinstance(n, int):
         raise TypeError(
@@ -18,3 +21,26 @@ class args:
 
     def choose(kwargs, chosen):
         return {k: kwargs[k] for k in kwargs if k in chosen}
+
+
+def broadcast_ops(cls, ops):
+    def make_op(op):
+        def method(self, other):
+            return cls(
+                *[
+                    op(getattr(self, f.name), getattr(other, f.name))
+                    for f in fields(self)
+                ]
+            )
+
+        return method
+
+    for op in ops:
+        setattr(cls, f"__{op}__", make_op(getattr(operator, op)))
+
+    return cls
+
+
+def broadcast_arith_ops(cls):
+    ops = ["add", "sub", "mul", "truediv"]
+    return broadcast_ops(cls, ops)

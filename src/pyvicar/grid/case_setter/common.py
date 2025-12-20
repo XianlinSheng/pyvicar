@@ -1,6 +1,7 @@
 import numpy as np
 from pyvicar.grid.segment import Segment, connect_segs
 import pyvicar.tools.log as log
+from pyvicar.grid.grid_model import GridModel
 
 
 def refine_grid(
@@ -70,3 +71,29 @@ def grid_2d(case, dz):
     case.input.domain.zgridUnif = "uniform"
     case.input.domain.nz = 3
     case.input.domain.zout = dz * 2
+
+
+def apply_grid_model(c, gm, dx):
+    doml = gm.l0 * gm.doml
+    refl = gm.l0 * gm.refl
+    cent = doml[:, 0]
+    front = cent - refl[:, 0]
+    back = cent + refl[:, 1]
+    out = cent + doml[:, 1]
+
+    def kp(i):
+        return [front[i], back[i], out[i]]
+
+    refine_grid(c, "x", kp(0), dx, gm.grow[0, 0], gm.grow[0, 1])
+    refine_grid(c, "y", kp(1), dx, gm.grow[1, 0], gm.grow[1, 1])
+    if gm.dim2:
+        grid_2d(c, dx)
+    else:
+        refine_grid(c, "z", kp(2), dx, gm.grow[2, 0], gm.grow[2, 1])
+
+
+def grid_default(c, l0, dx=None, dim2=False):
+    if dx is None:
+        dx = l0 / 20
+    gm = GridModel.create_default(l0, dim2=dim2)
+    apply_grid_model(c, gm, dx)

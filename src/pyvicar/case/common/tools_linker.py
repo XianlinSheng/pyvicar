@@ -14,5 +14,7 @@ def link_common_tools(cls):
     cls.uniform_grid_n = grid.uniform_grid_n
     cls.uniform_grid_dx = grid.uniform_grid_dx
     cls.grid_2d = grid.grid_2d
+    cls.apply_grid_model = grid.apply_grid_model
+    cls.grid_default = grid.grid_default
     cls.show_grid = show_grid
     return cls
