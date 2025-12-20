@@ -3,23 +3,77 @@ from pyvicar.file import Writable
 from pyvicar._format import write_banner
 from .parallel import ParallelConfiguration
 from .domain import ComputationalDomainConfiguration
-from .ic import InitialConditions
 from .bc import BoundaryConditions
 from .pbc import PressureBoundaryConditions
 from .time_step import TimeStepControl
 from .hybridization import Hybridization
 from .internal_boundary import InternalBoundary
-from .extended_outflow import ExtendedOutflow
 from .ad import AdvectionDiffusionSolver
 from .poisson import PoissonSolver
 from .multigrid import MultigridMethod
 from .les import LES
-from .acoustics import Acoustics
 from .fea import FEA
 from .wall_time import WallTime
-from .scalars import Scalars
-from .output_format import OutputFormat
 from .mg_comments import write_mg_comment
+
+
+def add_basics(input_children, f):
+    input_children.parallel = ParallelConfiguration(f)
+    input_children.domain = ComputationalDomainConfiguration(f)
+    input_children.bc = BoundaryConditions(f)
+    input_children.pbc = PressureBoundaryConditions(f)
+    input_children.timeStep = TimeStepControl(f)
+    input_children.hybridization = Hybridization(f)
+    input_children.ib = InternalBoundary(f)
+    input_children.ad = AdvectionDiffusionSolver(f)
+    input_children.poisson = PoissonSolver(f)
+    input_children.multigrid = MultigridMethod(f)
+    input_children.les = LES(f)
+    input_children.fea = FEA(f)
+    input_children.wallTime = WallTime(f)
+
+    return input_children
+
+
+def write_basics(input_children, f):
+    write_banner(f, "Parallel Configuration (parallel)")
+    input_children.parallel.write()
+
+    write_banner(f, "Computational Domain Configuration (domain)")
+    input_children.domain.write()
+
+    write_banner(f, "Boundary Conditions (bc)")
+    input_children.bc.write()
+
+    write_banner(f, "Pressure Boundary Conditions (pressurebc)")
+    input_children.pbc.write()
+
+    write_banner(f, "Time Step Control (timeStep)")
+    input_children.timeStep.write()
+
+    write_banner(f, "Hybridization (hybridization)")
+    input_children.hybridization.write()
+
+    write_banner(f, "Internal Boundary (ib)")
+    input_children.ib.write()
+
+    write_banner(f, "Advection Diffusion Solver (ad)")
+    input_children.ad.write()
+
+    write_banner(f, "Poisson Solver (poisson)")
+    input_children.poisson.write()
+
+    write_banner(f, "Multigrid Method (multigrid)")
+    input_children.multigrid.write()
+
+    write_banner(f, "LES (les)")
+    input_children.les.write()
+
+    write_banner(f, "FEA (fea)")
+    input_children.fea.write()
+
+    write_banner(f, "Wall Time (wallTime)")
+    input_children.wallTime.write()
 
 
 class Input(Group, Writable):
@@ -31,83 +85,14 @@ class Input(Group, Writable):
         self._f = open(path, "w")
 
         # all subgroups
-        self._children.parallel = ParallelConfiguration(self._f)
-        self._children.domain = ComputationalDomainConfiguration(self._f)
-        self._children.ic = InitialConditions(self._f)
-        self._children.bc = BoundaryConditions(self._f)
-        self._children.pbc = PressureBoundaryConditions(self._f)
-        self._children.timeStep = TimeStepControl(self._f)
-        self._children.hybridization = Hybridization(self._f)
-        self._children.internalBoundary = InternalBoundary(self._f)
-        self._children.extendedOutflow = ExtendedOutflow(self._f)
-        self._children.ad = AdvectionDiffusionSolver(self._f)
-        self._children.poisson = PoissonSolver(self._f)
-        self._children.multigrid = MultigridMethod(self._f)
-        self._children.les = LES(self._f)
-        self._children.acoustics = Acoustics(self._f)
-        self._children.fea = FEA(self._f)
-        self._children.wallTime = WallTime(self._f)
-        self._children.scalars = Scalars(self._f)
-        self._children.outputFormat = OutputFormat(self._f)
+        write_basics(self._children, self._f)
 
         self._finalize_init()
 
     def write(self):
         f = self._f
 
-        write_banner(f, "Parallel Configuration (parallel)")
-        self._children.parallel.write()
-
-        write_banner(f, "Computational Domain Configuration (domain)")
-        self._children.domain.write()
-
-        write_banner(f, "Initial Conditions (ic)")
-        self._children.ic.write()
-
-        write_banner(f, "Boundary Conditions (bc)")
-        self._children.bc.write()
-
-        write_banner(f, "Pressure Boundary Conditions (pressurebc)")
-        self._children.pbc.write()
-
-        write_banner(f, "Time Step Control (timeStep)")
-        self._children.timeStep.write()
-
-        write_banner(f, "Hybridization (hybridization)")
-        self._children.hybridization.write()
-
-        write_banner(f, "Internal Boundary (internalBoundary)")
-        self._children.internalBoundary.write()
-
-        write_banner(f, "Extended Outflow (extendedOutflow)")
-        self._children.extendedOutflow.write()
-
-        write_banner(f, "Advection Diffusion Solver (ad)")
-        self._children.ad.write()
-
-        write_banner(f, "Poisson Solver (poisson)")
-        self._children.poisson.write()
-
-        write_banner(f, "Multigrid Method (multigrid)")
-        self._children.multigrid.write()
-
-        write_banner(f, "LES (les)")
-        self._children.les.write()
-
-        write_banner(f, "Acoustics (acoustics)")
-        self._children.acoustics.write()
-
-        write_banner(f, "FEA (fea)")
-        self._children.fea.write()
-
-        write_banner(f, "Wall Time (wallTime)")
-        self._children.wallTime.write()
-
-        write_banner(f, "Scalars and Other Flags (scalars)")
-        self._children.scalars.write()
-
-        write_banner(f, "Output Format (outputFormat)")
-        self._children.outputFormat.write()
+        write_basics(self._children, f)
 
         write_mg_comment(f)
 

@@ -48,47 +48,49 @@ class DragLiftList(List, Readable, Optional):
 
 
 class DragLift(Group, Readable):
-    def __init__(self, path, bodyi):
+    def __init__(self, path, iBody):
         Group.__init__(self)
         Readable.__init__(self)
         self._path = Path(path)
 
-        self._children.bodyi = Field("bodyi", bodyi)
+        self._children.iBody = Field("iBody", iBody)
 
     def read(self):
         csv = pd.read_csv(self._path)
 
-        self._children.time = Field("time", csv["time"].to_numpy()[:, np.newaxis])
+        for key, df in csv.items():
+            setattr(self._children, key, Field(key, df.to_numpy()[:, np.newaxis]))
+        # self._children.time = Field("time", csv["time"].to_numpy()[:, np.newaxis])
 
-        self._children.cxp = Field("cxp", csv["cxp"].to_numpy()[:, np.newaxis])
-        self._children.cxs = Field("cxs", csv["cxs"].to_numpy()[:, np.newaxis])
-        self._children.cx = Field("cx", csv["cx"].to_numpy()[:, np.newaxis])
+        # self._children.cxp = Field("cxp", csv["cxp"].to_numpy()[:, np.newaxis])
+        # self._children.cxs = Field("cxs", csv["cxs"].to_numpy()[:, np.newaxis])
+        # self._children.cx = Field("cx", csv["cx"].to_numpy()[:, np.newaxis])
 
-        self._children.cyp = Field("cyp", csv["cyp"].to_numpy()[:, np.newaxis])
-        self._children.cys = Field("cys", csv["cys"].to_numpy()[:, np.newaxis])
-        self._children.cy = Field("cy", csv["cy"].to_numpy()[:, np.newaxis])
+        # self._children.cyp = Field("cyp", csv["cyp"].to_numpy()[:, np.newaxis])
+        # self._children.cys = Field("cys", csv["cys"].to_numpy()[:, np.newaxis])
+        # self._children.cy = Field("cy", csv["cy"].to_numpy()[:, np.newaxis])
 
-        self._children.czp = Field("czp", csv["czp"].to_numpy()[:, np.newaxis])
-        self._children.czs = Field("czs", csv["czs"].to_numpy()[:, np.newaxis])
-        self._children.cz = Field("cz", csv["cz"].to_numpy()[:, np.newaxis])
+        # self._children.czp = Field("czp", csv["czp"].to_numpy()[:, np.newaxis])
+        # self._children.czs = Field("czs", csv["czs"].to_numpy()[:, np.newaxis])
+        # self._children.cz = Field("cz", csv["cz"].to_numpy()[:, np.newaxis])
 
-        self._children.cmxp = Field("cmxp", csv["cmxp"].to_numpy()[:, np.newaxis])
-        self._children.cmxs = Field("cmxs", csv["cmxs"].to_numpy()[:, np.newaxis])
-        self._children.cmx = Field("cmx", csv["cmx"].to_numpy()[:, np.newaxis])
+        # self._children.cmxp = Field("cmxp", csv["cmxp"].to_numpy()[:, np.newaxis])
+        # self._children.cmxs = Field("cmxs", csv["cmxs"].to_numpy()[:, np.newaxis])
+        # self._children.cmx = Field("cmx", csv["cmx"].to_numpy()[:, np.newaxis])
 
-        self._children.cmyp = Field("cmyp", csv["cmyp"].to_numpy()[:, np.newaxis])
-        self._children.cmys = Field("cmys", csv["cmys"].to_numpy()[:, np.newaxis])
-        self._children.cmy = Field("cmy", csv["cmy"].to_numpy()[:, np.newaxis])
+        # self._children.cmyp = Field("cmyp", csv["cmyp"].to_numpy()[:, np.newaxis])
+        # self._children.cmys = Field("cmys", csv["cmys"].to_numpy()[:, np.newaxis])
+        # self._children.cmy = Field("cmy", csv["cmy"].to_numpy()[:, np.newaxis])
 
-        self._children.cmzp = Field("cmzp", csv["cmzp"].to_numpy()[:, np.newaxis])
-        self._children.cmzs = Field("cmzs", csv["cmzs"].to_numpy()[:, np.newaxis])
-        self._children.cmz = Field("cmz", csv["cmz"].to_numpy()[:, np.newaxis])
+        # self._children.cmzp = Field("cmzp", csv["cmzp"].to_numpy()[:, np.newaxis])
+        # self._children.cmzs = Field("cmzs", csv["cmzs"].to_numpy()[:, np.newaxis])
+        # self._children.cmz = Field("cmz", csv["cmz"].to_numpy()[:, np.newaxis])
 
-        self._children.cpwx = Field("cpwx", csv["cpwx"].to_numpy()[:, np.newaxis])
-        self._children.cpwy = Field("cpwy", csv["cpwy"].to_numpy()[:, np.newaxis])
-        self._children.cpwz = Field("cpwz", csv["cpwz"].to_numpy()[:, np.newaxis])
-        self._children.cpw = Field("cpw", csv["cpw"].to_numpy()[:, np.newaxis])
+        # self._children.cpwx = Field("cpwx", csv["cpwx"].to_numpy()[:, np.newaxis])
+        # self._children.cpwy = Field("cpwy", csv["cpwy"].to_numpy()[:, np.newaxis])
+        # self._children.cpwz = Field("cpwz", csv["cpwz"].to_numpy()[:, np.newaxis])
+        # self._children.cpw = Field("cpw", csv["cpw"].to_numpy()[:, np.newaxis])
 
-        self._children.surfaceArea = Field("surfaceArea", csv["surfaceArea"])
+        # self._children.surfaceArea = Field("surfaceArea", csv["surfaceArea"])
 
         self._finalize_init()

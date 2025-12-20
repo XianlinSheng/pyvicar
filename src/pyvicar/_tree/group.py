@@ -75,12 +75,18 @@ class Group(Container):
     def __setattr__(self, key, value):
         if self._frozen and not hasattr(self, key):
             raise AttributeError(
-                f'Name "{key}" not found. Group is a static directory, dynamic creation not allowed. Existing children:\n{self.list_children()}'
+                f'Name "{key}" not found. Group is a static directory, dynamic creation not allowed. Existing children:\n{self.keys()}'
             )
         object.__setattr__(self, key, value)
 
-    def list_children(self):
-        return list(self._children.keys())
+    def keys(self):
+        return self._children.keys()
+
+    def values(self):
+        return self._children.values()
+
+    def items(self):
+        return self._children.items()
 
 
 # List contains dynamic childrenlist that can be accessed as a list

@@ -19,9 +19,9 @@ class Scalar(Group, Writable, Optional):
         self._f = open(self._path, "w")
         self._headerFormatter = KV2Formatter(self._f)
 
-        self._children.nscalars = Field("nscalars", 0)
-        self._children.irestart = Field(
-            "irestart", False, "", Field.vmapPresets.bool2int
+        self._children.nScalars = Field("nScalars", 0)
+        self._children.iRestart = Field(
+            "iRestart", False, "", Field.vmapPresets.bool2int
         )
         self._children.reactionType = Field(
             "reactionType", "none", "", {"none": 0, "thrombosis": 10, "user": 20}
@@ -57,8 +57,8 @@ class Scalar(Group, Writable, Optional):
 
         write_banner(f, "General Configuration")
 
-        self._headerFormatter += self._children.nscalars
-        self._headerFormatter += self._children.irestart
+        self._headerFormatter += self._children.nScalars
+        self._headerFormatter += self._children.iRestart
         self._headerFormatter += self._children.reactionType
         self._headerFormatter.write()
 

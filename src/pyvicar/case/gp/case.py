@@ -8,19 +8,16 @@ from .canonical_body import CanonicalBody
 from pyvicar.case.common.unstruc_surface import UnstrucSurface
 from .scalar import Scalar
 from .thrombosis import Thrombosis
-from pyvicar.case.common.cspline import CSpline
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job
 from pyvicar.case.common.drag_lift import DragLiftList
 from pyvicar.case.common.dump import Dump
-from pyvicar.case.common.restart import Restart
-from .restart import create_restart_obj
+from .restart_config import create_restart_obj
 from pyvicar.case.common.post import Post
-from pyvicar.tools.bcic_setter.common import set_inlet
-from pyvicar.geometry.case_setter.common import append_solid
-from pyvicar.tools.thrombosis.case_setter.gp import set_thrombosis_vars
+from .tools_linker import link_gp_tools
 
 
+@link_gp_tools
 class Case(Group, Writable):
     def __init__(self, path="."):
         Group.__init__(self)
@@ -49,7 +46,6 @@ class Case(Group, Writable):
 
         self._children.scalar = Scalar(self._path / "scalar_in.dat")
         self._children.thrombosis = Thrombosis(self._path / "thrombosis_in.dat")
-        self._children.cspline = CSpline(self._path / "cspline_in.dat")
 
         self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
@@ -79,8 +75,6 @@ class Case(Group, Writable):
             self._children.scalar.write()
         if self._children.thrombosis:
             self._children.thrombosis.write()
-        if self._children.cspline:
-            self._children.cspline.write()
         if self._children.xgrid:
             self._children.xgrid.write()
         if self._children.ygrid:
@@ -113,8 +107,3 @@ class Case(Group, Writable):
             * self.input.parallel.npy.value
             * self.input.parallel.npz.value
         )
-
-
-Case.set_inlet = set_inlet
-Case.append_solid = append_solid
-Case.set_thrombosis_vars = set_thrombosis_vars

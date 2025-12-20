@@ -7,18 +7,16 @@ from .probe import Probe
 from .canonical_body import CanonicalBody
 from .unstruc_surface import UnstrucSurface
 from .srj import SRJ
-from .srj2 import SRJ2
-from .cspline import CSpline
 from .nonuniform_grid import NonuniformGrid
 from .job import Job
 from .drag_lift import DragLiftList
 from .dump import Dump
-from .restart import Restart
+from .restart_config import create_restart_obj
 from .post import Post
-from pyvicar.tools.bcic_setter.common import set_inlet
-from pyvicar.geometry.case_setter.common import append_solid
+from .tools_linker import link_common_tools
 
 
+@link_common_tools
 class Case(Group, Writable):
     def __init__(self, path="."):
         Group.__init__(self)
@@ -46,9 +44,6 @@ class Case(Group, Writable):
         )
 
         self._children.srj = SRJ(self._path / "SRJ_params_in.dat")
-        self._children.srj2 = SRJ2(self._path / "SRJ2_params_in.dat")
-
-        self._children.cspline = CSpline(self._path / "cspline_in.dat")
 
         self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
@@ -58,11 +53,11 @@ class Case(Group, Writable):
 
         self._children.draglift = DragLiftList(self)
         self._children.dump = Dump(self)
-        self._children.restart = Restart(self)
+        self._children.restart = create_restart_obj(self)
         self._children.post = Post(self)
 
         self._children.runpath = Field(
-            "runpath", "~/Vicar3D/versions/version/src/Vicar3D"
+            "runpath", "~/Vicar3D/versions/common/src/Vicar3D"
         )
 
         self._finalize_init()
@@ -79,10 +74,6 @@ class Case(Group, Writable):
             self._children.unstrucSurface.write()
         if self._children.srj:
             self._children.srj.write()
-        if self._children.srj2:
-            self._children.srj2.write()
-        if self._children.cspline:
-            self._children.cspline.write()
         if self._children.xgrid:
             self._children.xgrid.write()
         if self._children.ygrid:
@@ -110,7 +101,3 @@ class Case(Group, Writable):
     @property
     def nproc(self):
         return self.input.parallel.npx.value * self.input.parallel.npy.value
-
-
-Case.set_inlet = set_inlet
-Case.append_solid = append_solid

@@ -1,5 +1,7 @@
 import numpy as np
+import heapq
 from dataclasses import dataclass
+from scipy.interpolate import interp1d
 
 
 def newton_iter(f, x0, maxiter=50, tol=1e-6):
@@ -26,6 +28,25 @@ def find_n_growth_rate(a0, length, q0):
         return fx, dfx
 
     return int(N), newton_iter(fdf, q0)
+
+
+def next_restricted_num(n, allowed):
+    allowed = sorted(allowed)
+    seen = set()
+    heap = [1]
+
+    while heap:
+        x = heapq.heappop(heap)
+        if x >= n:
+            return x
+
+        for p in allowed:
+            y = x * p
+            if y not in seen:
+                seen.add(y)
+                heapq.heappush(heap, y)
+
+    raise RuntimeError("next_restricted_num search failed")
 
 
 @dataclass
@@ -109,7 +130,8 @@ class Segment:
         x = self.grid
         return (11 * x[-1] - 18 * x[-2] + 9 * x[-3] - 2 * x[-4]) / 6
 
-    def smooth(self, lslope=None, rslope=None, iter=5, relax=0.74):
+    # del4 operator, relax < 3/4 to be stable
+    def smooth(self, lslope=None, rslope=None, iter=10, relax=0.5):
         padded = np.pad(self.grid, 1)
         C = slice(2, -2, None)
         W1 = slice(1, -3, None)
@@ -149,11 +171,22 @@ class Segment:
         self.grid[1:-1] = padded[C]
         return self
 
+    def resample(self, n=None, prime_comb=[2, 3]):
+        if n is None:
+            n = next_restricted_num(self.npoint - 1, prime_comb) + 1
+        i_old = np.linspace(0, 1, self.npoint)
+        i_new = np.linspace(0, 1, n)
+
+        interpolator = interp1d(i_old, self.grid, kind="cubic")
+        self.grid = interpolator(i_new)
+
+        return self
+
     def __add__(self, rseg):
         return Segment(np.concatenate((self.grid, rseg.grid[1:])))
 
 
 def connect_segs(segs):
     arrs = [seg.grid[1:] for seg in segs]
-    arrs = [segs[0].start] + arrs
+    arrs = [np.array([segs[0].start])] + arrs
     return Segment(np.concatenate(arrs))

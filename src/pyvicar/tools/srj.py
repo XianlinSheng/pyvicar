@@ -4,6 +4,7 @@ import h5py
 import numpy as np
 from dataclasses import dataclass
 from functools import partial
+import pyvicar.tools.log as log
 
 
 @dataclass
@@ -345,7 +346,7 @@ def node_omega_rearrange(path, obj, gridN):
 
         omegas = obj["omegas"]
         Ms = obj["Ms"]
-        print(f"rearranging {path} datasets, using gridN = {gridN}")
+        log.log_host(f"Rearranging {path} datasets, using gridN = {gridN}")
 
         obj.create_dataset("omegalist", data=rearrange_omegas(omegas, Ms, gridN))
         # del obj['omegas']

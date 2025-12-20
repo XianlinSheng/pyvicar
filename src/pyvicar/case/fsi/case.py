@@ -7,22 +7,22 @@ from pyvicar.case.common.probe import Probe
 from .canonical_body import CanonicalBody
 from pyvicar.case.common.unstruc_surface import UnstrucSurface
 from pyvicar.case.common.srj import SRJ
-from pyvicar.case.common.srj2 import SRJ2
+from .srj2 import SRJ2
 from .rhm import RHM
-from pyvicar.case.common.cspline import CSpline
-from pyvicar.case.common.ib2 import IB2
+from .cspline import CSpline
+from .ib2 import IB2
 from .poisson_history import PoissonHistory
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job
 from pyvicar.case.common.drag_lift import DragLiftList
 from .rhm_stat import RHMStatList
 from pyvicar.case.common.dump import Dump
-from .restart import create_restart_obj
+from .restart_config import create_restart_obj
 from pyvicar.case.common.post import Post
-from pyvicar.tools.bcic_setter.common import set_inlet
-from pyvicar.geometry.case_setter.common import append_solid
+from pyvicar.case.common.tools_linker import link_common_tools
 
 
+@link_common_tools
 class Case(Group, Writable):
     def __init__(self, path="."):
         Group.__init__(self)
@@ -126,7 +126,3 @@ class Case(Group, Writable):
     @property
     def nproc(self):
         return self.input.parallel.npx.value * self.input.parallel.npy.value
-
-
-Case.set_inlet = set_inlet
-Case.append_solid = append_solid

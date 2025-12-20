@@ -6,9 +6,9 @@ def set_inlet(case, inlet, vel):
     setattr(bc, f"v{inlet}", v)
     setattr(bc, f"w{inlet}", w)
 
-    case.input.ic.uinit = u
-    case.input.ic.vinit = v
-    case.input.ic.winit = w
+    case.input.domain.uinit = u
+    case.input.domain.vinit = v
+    case.input.domain.winit = w
 
 
 def set_scalar_inlet(var, inlet, val):

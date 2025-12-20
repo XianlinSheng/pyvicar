@@ -51,8 +51,8 @@ class General(Group, Writable):
             {"uniform": 0, "normal_uniform": 1, "data_array": 2, "user": 20},
         )
 
-        self._children.nPtsGCMBodyMarker = Field("nPtsGCMBodyMarker", 0)
-        self._children.nTriElement = Field("nTriElement", 0)
+        self._children.nPoint = Field("nPoint", 0)
+        self._children.nElem = Field("nElem", 0)
 
         self._finalize_init()
 
@@ -70,6 +70,6 @@ class General(Group, Writable):
         self._formatter += self._children.velSpatialType
         self._formatter.write()
 
-        self._formatter += self._children.nPtsGCMBodyMarker
-        self._formatter += self._children.nTriElement
+        self._formatter += self._children.nPoint
+        self._formatter += self._children.nElem
         self._formatter.write()

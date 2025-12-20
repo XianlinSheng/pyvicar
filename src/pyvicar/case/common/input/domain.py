@@ -9,8 +9,17 @@ class ComputationalDomainConfiguration(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.nRead = Field(
-            "nRead", False, "read restart file", Field.vmapPresets.bool2int
+        self._children.iRestart = Field(
+            "iRestart", False, "", Field.vmapPresets.bool2int
+        )
+        self._children.iAcou = Field("iAcou", False, "", Field.vmapPresets.bool2int)
+        self._children.nsa = Field("nsa", 4)
+        self._children.iAcouRest = Field(
+            "iAcouRest", False, "", Field.vmapPresets.bool2int
+        )
+        self._children.iFlow = Field("iFlow", True, "", Field.vmapPresets.bool2int)
+        self._children.userWallVel = Field(
+            "userWallVel", False, "", Field.vmapPresets.bool2int
         )
 
         self._children.nDim = Field("nDim", 3)
@@ -37,12 +46,24 @@ class ComputationalDomainConfiguration(Group, Writable):
         )
         self._children.zout = Field("zout", 5.0)
 
-        self._children.nonInertial = Field("nonInertial", 0)
+        self._children.uinit = Field("uinit", 0.0)
+        self._children.vinit = Field("vinit", 0.0)
+        self._children.winit = Field("winit", 0.0)
+        self._children.perturbation = Field("perturbation", 0.0)
+        self._children.fullyDevelopedProfile = Field(
+            "fullyDevelopedProfile", False, "", Field.vmapPresets.bool2int
+        )
+        self._children.ICIn = Field("ICIn", False, "", Field.vmapPresets.bool2int)
 
         self._finalize_init()
 
     def write(self):
-        self._formatter += self._children.nRead
+        self._formatter += self._children.iRestart
+        self._formatter += self._children.iAcou
+        self._formatter += self._children.nsa
+        self._formatter += self._children.iAcouRest
+        self._formatter += self._children.iFlow
+        self._formatter += self._children.userWallVel
         self._formatter.write()
 
         self._formatter += self._children.nDim
@@ -66,5 +87,10 @@ class ComputationalDomainConfiguration(Group, Writable):
         self._formatter += self._children.zout
         self._formatter.write()
 
-        self._formatter += self._children.nonInertial
+        self._formatter += self._children.uinit
+        self._formatter += self._children.vinit
+        self._formatter += self._children.winit
+        self._formatter += self._children.perturbation
+        self._formatter += self._children.fullyDevelopedProfile
+        self._formatter += self._children.ICIn
         self._formatter.write()

@@ -115,3 +115,11 @@ class TriSurface:
         return TriSurface.from_xyz_conn(
             data["xyz"], data["conn"], fromStartIdx, toStartIdx
         )
+
+    def from_unstruc(surf):
+        return TriSurface.from_xyz_conn(
+            surf.xyz.value.arr,
+            surf.conn.value.arr,
+            surf.xyz.value.startidx,
+            surf.xyz.value.startidx,
+        )

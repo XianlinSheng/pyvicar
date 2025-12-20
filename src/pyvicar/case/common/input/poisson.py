@@ -19,7 +19,7 @@ class PoissonSolver(Group, Writable):
         self._children.omega = Field("omega", 1.5)
 
         self._children.itermaxPoisson = Field("itermaxPoisson", 10000)
-        self._children.resmaxPoisson = Field("resmaxPoisson", 5e-4)
+        self._children.resmaxPoisson = Field("resmaxPoisson", 1e-4)
         self._children.iterresPoisson = Field("iterresPoisson", 5)
 
         self._finalize_init()

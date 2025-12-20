@@ -7,6 +7,7 @@ class TimeStepControl(Group, Writable):
     def __init__(self, f):
         Group.__init__(self)
         Writable.__init__(self)
+
         self._formatter = KV2Formatter(f)
 
         self._children.ntStep = Field("ntSteps", 1)
@@ -18,8 +19,8 @@ class TimeStepControl(Group, Writable):
         self._children.nInit = Field("nInit", 0)
         self._children.nDumpInit = Field("nDumpInit", 0)
 
-        self._children.formatDump = Field(
-            "formatDump", "vtk", "", {"rawq": 0, "vtk": 1}
+        self._children.iRestartStat = Field(
+            "iRestartStat", False, "", Field.vmapPresets.bool2int
         )
         self._children.iDragLift = Field(
             "iDragLift", True, "", Field.vmapPresets.bool2int
@@ -29,10 +30,13 @@ class TimeStepControl(Group, Writable):
         self._children.dt = Field("dt", 1e-3)
 
         self._children.fracStep = Field(
-            "frac_step", "nonvankan", "", {"nonvankan": 0, "vankan": 1}
+            "fracStep", "nonvankan", "", {"nonvankan": 0, "vankan": 1}
         )
-        self._children.advectionScheme = Field(
-            "advection_scheme", "cn2", "", {"ab2": 1, "cn1": 2, "cn2": 3}
+        self._children.advecScheme = Field(
+            "advecScheme", "cn2", "", {"ab2": 1, "cn1": 2, "cn2": 3}
+        )
+        self._children.iMomentumCC = Field(
+            "iMomentumCC", False, "", Field.vmapPresets.bool2int
         )
 
         self._finalize_init()
@@ -48,7 +52,7 @@ class TimeStepControl(Group, Writable):
         self._formatter += self._children.nDumpInit
         self._formatter.write()
 
-        self._formatter += self._children.formatDump
+        self._formatter += self._children.iRestartStat
         self._formatter += self._children.iDragLift
         self._formatter.write()
 
@@ -57,5 +61,6 @@ class TimeStepControl(Group, Writable):
         self._formatter.write()
 
         self._formatter += self._children.fracStep
-        self._formatter += self._children.advectionScheme
+        self._formatter += self._children.advecScheme
+        self._formatter += self._children.iMomentumCC
         self._formatter.write()

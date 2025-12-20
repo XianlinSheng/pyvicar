@@ -1,13 +1,13 @@
 from pyvicar._tree import Group
 from pyvicar.file import Writable
 from pyvicar._format import KV1Formatter
-from .general import General
+from pyvicar.case.common.canonical_body.body.general import General
 from pyvicar.case.common.canonical_body.body.position import Position
-from pyvicar.case.common.canonical_body.body.motion import Motion
+from .motion import Motion
+from .fsi import FSI
 from pyvicar.case.common.canonical_body.body.wall_porous import WallPorousVelocity
 from pyvicar.case.common.canonical_body.body.material import Material
 from pyvicar.case.common.canonical_body.body.restoring_force import RestoringForce
-from .fsi import FSI
 
 
 class Body(Group, Writable):
@@ -16,7 +16,14 @@ class Body(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV1Formatter(f)
 
-        self._children.general = General(f)
+        self._children.general = General(
+            f,
+            extMotionTypes={
+                "hinged": 4,
+                "rhm": 15,
+                "ib2": 16,
+            },
+        )
         self._children.position = Position(f)
         self._children.motion = Motion(f)
         self._children.fsi = FSI(f, defaulton=False)

@@ -21,11 +21,13 @@ class Motion(Group, Writable):
         self._children.freqy = Field("freqy", 0.0)
         self._children.freqz = Field("freqz", 0.0)
 
+        self._children.phasex = Field("phasex", 0.0)
+        self._children.phasey = Field("phasey", 0.0)
+        self._children.phasez = Field("phasez", 0.0)
+
         self._children.angvx = Field("angvx", 0.0)
         self._children.angvy = Field("angvy", 0.0)
         self._children.angvz = Field("angvz", 0.0)
-
-        self._children.phase = Field("phase", 0.0)
 
         self._children.ampangx = Field("ampangx", 0.0)
         self._children.ampangy = Field("ampangy", 0.0)
@@ -34,6 +36,10 @@ class Motion(Group, Writable):
         self._children.freqangx = Field("freqangx", 0.0)
         self._children.freqangy = Field("freqangy", 0.0)
         self._children.freqangz = Field("freqangz", 0.0)
+
+        self._children.phaseangx = Field("phaseangx", 0.0)
+        self._children.phaseangy = Field("phaseangy", 0.0)
+        self._children.phaseangz = Field("phaseangz", 0.0)
 
         self._finalize_init()
 
@@ -55,12 +61,14 @@ class Motion(Group, Writable):
         self._formatter += self._children.freqz
         self._formatter.write()
 
+        self._formatter += self._children.phasex
+        self._formatter += self._children.phasey
+        self._formatter += self._children.phasez
+        self._formatter.write()
+
         self._formatter += self._children.angvx
         self._formatter += self._children.angvy
         self._formatter += self._children.angvz
-        self._formatter.write()
-
-        self._formatter += self._children.phase
         self._formatter.write()
 
         self._formatter += self._children.ampangx
@@ -71,4 +79,9 @@ class Motion(Group, Writable):
         self._formatter += self._children.freqangx
         self._formatter += self._children.freqangy
         self._formatter += self._children.freqangz
+        self._formatter.write()
+
+        self._formatter += self._children.phaseangx
+        self._formatter += self._children.phaseangy
+        self._formatter += self._children.phaseangz
         self._formatter.write()

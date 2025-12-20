@@ -2,11 +2,7 @@ from pyvicar._tree import Group
 from pyvicar.file import Writable
 from pyvicar._format import KV1Formatter
 from .general import General
-from pyvicar.case.common.canonical_body.body.position import Position
-from .motion import Motion
-from pyvicar.case.common.canonical_body.body.wall_porous import WallPorousVelocity
-from pyvicar.case.common.canonical_body.body.material import Material
-from pyvicar.case.common.canonical_body.body.restoring_force import RestoringForce
+from pyvicar.case.common.canonical_body.body.body import add_basics, write_basics
 
 
 class Body(Group, Writable):
@@ -14,20 +10,13 @@ class Body(Group, Writable):
         Group.__init__(self)
         Writable.__init__(self)
         self._formatter = KV1Formatter(f)
+        self._f = f
 
-        self._children.general = General(f)
-        self._children.position = Position(f)
-        self._children.motion = Motion(f)
-        self._children.porous = WallPorousVelocity(f)
-        self._children.material = Material(f)
-        self._children.restrForce = RestoringForce(f)
+        add_basics(self._children, self._f)
+
+        self._children.general = General(self._f)
 
         self._finalize_init()
 
     def write(self):
-        self._children.general.write()
-        self._children.position.write()
-        self._children.motion.write()
-        self._children.porous.write()
-        self._children.material.write()
-        self._children.restrForce.write()
+        write_basics(self._children)

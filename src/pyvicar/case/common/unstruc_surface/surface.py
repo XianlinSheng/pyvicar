@@ -2,6 +2,7 @@ import numpy as np
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV1Formatter, DatasetFormatter
+from pyvicar.geometry import TriSurface
 
 
 class Surface(Group, Writable):
@@ -33,3 +34,6 @@ class Surface(Group, Writable):
         self._arrayFormatter += self._children.xyz
         self._arrayFormatter += self._children.conn
         self._arrayFormatter.write()
+
+
+Surface.to_trisurf = TriSurface.from_unstruc

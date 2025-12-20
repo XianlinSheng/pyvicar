@@ -154,6 +154,16 @@ class SurfTypeWing(Surface):
         self._children.hand_l = Field("hand_l", 0.0)
         self._children.wing_w = Field("wing_w", 0.0)
 
+        # feathers keyframing at joints
+        self._children.hmrs_feather_n = Field("hmrs_feather_n", 0)
+        self._children.ulna_feather_n = Field("ulna_feather_n", 0)
+        self._children.hand_feather_n = Field("hand_feather_n", 0)
+
+        self._children.shdr_feather_l = Field("shdr_feather_l", 0.0)
+        self._children.elbw_feather_l = Field("elbw_feather_l", 0.0)
+        self._children.wrst_feather_l = Field("wrst_feather_l", 0.0)
+        self._children.wtip_feather_l = Field("wtip_feather_l", 0.0)
+
         self._children.f = Field("f", 0.0)
         self._children.shdr_flap_amp = Field("shdr_flap_amp", 0.0)
         self._children.shdr_aoa_amp = Field("shdr_aoa_amp", 0.0)
@@ -163,9 +173,25 @@ class SurfTypeWing(Surface):
         self._children.elbw_flex_deg0 = Field("elbw_flex_deg0", 0.0)
         self._children.wrst_sweep_deg0 = Field("wrst_sweep_deg0", 0.0)
 
+        self._children.shdr_feather_amp = Field("shdr_feather_amp", 0.0)
+        self._children.elbw_feather_amp = Field("elbw_feather_amp", 0.0)
+        self._children.wrst_feather_amp = Field("wrst_feather_amp", 0.0)
+        self._children.wtip_feather_amp = Field("wtip_feather_amp", 0.0)
+
+        self._children.shdr_feather_deg0 = Field("shdr_feather_deg0", 0.0)
+        self._children.elbw_feather_deg0 = Field("elbw_feather_deg0", 0.0)
+        self._children.wrst_feather_deg0 = Field("wrst_feather_deg0", 0.0)
+        self._children.wtip_feather_deg0 = Field("wtip_feather_deg0", 0.0)
+
         self._finalize_init()
 
         self.type = "wing"
+
+    def set_fth_kf(self, param, arr):
+        poslist = ["shdr", "elbw", "wrst", "wtip"]
+        for pos, val in zip(poslist, arr):
+            name = f"{pos}_feather_{param}"
+            setattr(self, name, val)
 
     def write(self):
         f = self._f
@@ -201,6 +227,17 @@ class SurfTypeWing(Surface):
         self._headerFormatter += self._children.wing_w
         self._headerFormatter.write()
 
+        self._headerFormatter += self._children.hmrs_feather_n
+        self._headerFormatter += self._children.ulna_feather_n
+        self._headerFormatter += self._children.hand_feather_n
+        self._headerFormatter.write()
+
+        self._headerFormatter += self._children.shdr_feather_l
+        self._headerFormatter += self._children.elbw_feather_l
+        self._headerFormatter += self._children.wrst_feather_l
+        self._headerFormatter += self._children.wtip_feather_l
+        self._headerFormatter.write()
+
         self._headerFormatter += self._children.f
         self._headerFormatter.write()
 
@@ -215,4 +252,16 @@ class SurfTypeWing(Surface):
 
         self._headerFormatter += self._children.elbw_flex_deg0
         self._headerFormatter += self._children.wrst_sweep_deg0
+        self._headerFormatter.write()
+
+        self._headerFormatter += self._children.shdr_feather_amp
+        self._headerFormatter += self._children.elbw_feather_amp
+        self._headerFormatter += self._children.wrst_feather_amp
+        self._headerFormatter += self._children.wtip_feather_amp
+        self._headerFormatter.write()
+
+        self._headerFormatter += self._children.shdr_feather_deg0
+        self._headerFormatter += self._children.elbw_feather_deg0
+        self._headerFormatter += self._children.wrst_feather_deg0
+        self._headerFormatter += self._children.wtip_feather_deg0
         self._headerFormatter.write()

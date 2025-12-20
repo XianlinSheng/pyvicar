@@ -14,7 +14,7 @@ class ParallelConfiguration(Group, Writable):
         self._children.npz = Field("npz", 2, "n processes in z")
 
         self._children.ngl = Field("ngl", 2, "ghost layer thickness")
-        self._children.graphOn = Field("graphOn", True, "", Field.vmapPresets.bool2int)
+        self._children.graphOn = Field("iGraph", True, "", Field.vmapPresets.bool2int)
 
         self._finalize_init()
 

@@ -158,6 +158,17 @@ class Field:
                 )
             setattr(self._value, key, value)
 
+    def __eq__(self, b):
+        # implicit unwrap value from Field
+        if isinstance(b, Field):
+            b = b.value
+
+        # implicit convert value based on preset map
+        if isinstance(b, Hashable) and b in self._vmap:
+            b = self._vmap[b]
+
+        return self.value == b
+
 
 Field.vmapPresets.bool2int = {False: 0, True: 1}
 Field.vmapPresets.xyz2int = {"x": 1, "y": 2, "z": 3}

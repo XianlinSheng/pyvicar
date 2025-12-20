@@ -3,6 +3,7 @@ from scipy.signal import butter, filtfilt
 from abc import ABC, abstractmethod
 from pyvicar.tools.collections import struct
 from itertools import product
+import pyvicar.tools.log as log
 
 
 def slice_by_t(x, x1, x2):
@@ -107,6 +108,10 @@ class DictSetter(OutputSetter):
 
 
 def proc_body_one_series(out, body, fromname, toname, tslice, tfilter, do_sum):
+    if fromname not in body.keys():
+        log.log(f"Draglift Proc: {fromname} not in output dataset, skipped")
+        return out
+
     series = getattr(body, fromname).ravel()[tslice]
 
     if do_sum:
@@ -147,13 +152,13 @@ def append_body_series(out, bodyout):
 
 def proc_draglift(
     cdraglift,
-    output=StructSetter(),
     cut=None,
     filter_cutoff_period=None,
     sum_force=False,
     sum_moment=False,
     sum_power=False,
     sum_area=False,
+    output=StructSetter(),
 ):
     if not isinstance(output, OutputSetter):
         raise TypeError(f"Expect an OutputSetter for the output policy argument")
@@ -201,12 +206,12 @@ def proc_draglift(
         forces = append_body_series(forces, moment_out)
 
         power_out = proc_body_series(
-            power_out, body, "cpw", xyzs, tslice, tfilter, sum_power
+            power_out, body, "cpw", xyzs + [""], tslice, tfilter, sum_power
         )
         forces = append_body_series(forces, power_out)
 
         area_out = proc_body_one_series(
-            area_out, body, "surfaceArea", "area", tslice, tfilter, sum_area
+            area_out, body, "area", "area", tslice, tfilter, sum_area
         )
         forces = append_body_series(forces, area_out)
 

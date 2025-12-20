@@ -1,10 +1,11 @@
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV1Formatter
+from pyvicar.tools.miscellaneous import args
 
 
 class General(Group, Writable):
-    def __init__(self, f):
+    def __init__(self, f, extMotionTypes={}):
         Group.__init__(self)
         Writable.__init__(self)
         self._formatter = KV1Formatter(f)
@@ -15,22 +16,18 @@ class General(Group, Writable):
             "motionType",
             "stationary",
             "",
-            {
-                "stationary": 0,
-                "forced": 1,
-                "flow_induced": 2,
-                "prescribed": 3,
-                "hinged": 4,
-            },
+            args.add_default(
+                extMotionTypes,
+                {
+                    "stationary": 0,
+                    "forced": 1,
+                    "flow_induced": 2,
+                    "prescribed": 3,
+                },
+            ),
         )
         self._children.membraneType = Field(
             "membraneType", "open", "", {"open": 1, "closed": 2, "diff": 3}
-        )
-
-        self._children.combinedType = Field("combinedType", 0)
-        self._children.combinedGroupIndex = Field("combinedGroupIndex", 0)
-        self._children.surfaceIntegral = Field(
-            "surfaceIntegral", True, "", Field.vmapPresets.bool2int
         )
 
         self._children.wallType = Field(
@@ -40,8 +37,8 @@ class General(Group, Writable):
             {"noslip_nonporous": 0, "slip_porous": 1},
         )
 
-        self._children.nPtsGCMBodyMarker = Field("nPtsGCMBodyMarker", 0)
-        self._children.nTriElement = Field("nTriElement", 0)
+        self._children.nPoint = Field("nPoint", 0)
+        self._children.nElem = Field("nElem", 0)
 
         self._finalize_init()
 
@@ -54,14 +51,9 @@ class General(Group, Writable):
         self._formatter.write()
         self._formatter.splittext = " |-"
 
-        self._formatter += self._children.combinedType
-        self._formatter += self._children.combinedGroupIndex
-        self._formatter += self._children.surfaceIntegral
-        self._formatter.write()
-
         self._formatter += self._children.wallType
         self._formatter.write()
 
-        self._formatter += self._children.nPtsGCMBodyMarker
-        self._formatter += self._children.nTriElement
+        self._formatter += self._children.nPoint
+        self._formatter += self._children.nElem
         self._formatter.write()

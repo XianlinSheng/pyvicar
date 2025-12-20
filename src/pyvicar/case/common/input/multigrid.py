@@ -32,8 +32,7 @@ class MultigridMethod(Group, Writable):
         self._children.outputConvergence = Field(
             "outputConvergence", False, "", Field.vmapPresets.bool2int
         )
-
-        self._children.nCellCoarseLevel = Field("nCellCoarseLevel", 2)
+        self._children.nCellCoarse = Field("nCellCoarse", 2)
 
         self._finalize_init()
 
@@ -54,7 +53,5 @@ class MultigridMethod(Group, Writable):
         self._formatter.write()
 
         self._formatter += self._children.outputConvergence
-        self._formatter.write()
-
-        self._formatter += self._children.nCellCoarseLevel
+        self._formatter += self._children.nCellCoarse
         self._formatter.write()

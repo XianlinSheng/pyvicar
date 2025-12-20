@@ -4,6 +4,8 @@ from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV1Formatter, DatasetFormatter
+import pyvicar.tools.srj as srj
+import pyvicar.tools.log as log
 
 
 class SRJ(Group, Writable, Optional):
@@ -32,7 +34,7 @@ class SRJ(Group, Writable, Optional):
 
     def write(self):
         if not self:
-            raise Exception(f"The object is not active, call .enable() to enable it")
+            raise Exception(f"SRJ is not active, call .enable() to enable it")
 
         self._headerFormatter += self._children.nomega
         self._headerFormatter.write()
@@ -41,3 +43,27 @@ class SRJ(Group, Writable, Optional):
         self._arrayFormatter.write()
 
         self._f.flush()
+
+    def set_params(self, key=None, gridN=None, db="./srj_db.h5", rdb="srj_rdb.h5"):
+        if not self:
+            raise Exception(f"SRJ is not active, call .enable() to enable it")
+
+        if key is None:
+            p = srj.preset36()
+        else:
+            p = read_params(key, gridN, db, rdb)
+
+        self.nomega = p.nomega
+        self.omegas = p.omegas
+
+
+def read_params(key, gridN, db, rdb):
+    if not Path(rdb).exists():
+        if not Path(db).exists():
+            log.log_host("Generating Original SRJ DB")
+            srj.generate_database(db)
+
+        log.log_host("Generating Rearranged SRJ DB")
+        srj.generate_rearranged_database(db, rdb, gridN)
+
+    return srj.read_rearranged_omegas(key, rdb)
