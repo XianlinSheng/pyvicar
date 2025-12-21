@@ -30,6 +30,9 @@ class Dataset2D:
             raise TypeError(f"Expected int for start index, but encountered {value}")
         self._startidx = value
 
+    def copy(self):
+        return Dataset2D(self._arr.copy(), self._startidx)
+
     def _offset_ij(self, ij):
         if not isinstance(ij, tuple) and len(ij) == 2:
             raise IndexError(f'Expected 2D index for Dataset2D, but encountered "{ij}"')

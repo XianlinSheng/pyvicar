@@ -80,25 +80,33 @@ class Table:
             log.log(" ".join(row))
 
 
-def show_grid(c, xyz=[0, 0, 0], full=True):
-    x = get_grid(c, "x")
-    y = get_grid(c, "y")
-    z = get_grid(c, "z")
-    if c.unstrucSurface:
-        meshes = [
-            (surf.xyz.value.startidx, surf.xyz.value.arr, surf.conn.value.arr)
-            for surf in c.unstrucSurface.surfaces
-        ]
-    else:
-        meshes = []
-    X, Y, Z = np.meshgrid(x, y, z, indexing="ij")
-    nx, ny, nz = x.shape[0], y.shape[0], z.shape[0]
-    nxc, nyc, nzc = nx - 1, ny - 1, nz - 1
+@dataclass
+class Grid:
+    xyz: tuple
+    nxyz: tuple
+    ncxyz: tuple
+    lxyz: tuple
+
+    @classmethod
+    def create(cls, c):
+        x = get_grid(c, "x")
+        y = get_grid(c, "y")
+        z = get_grid(c, "z")
+        nx, ny, nz = x.shape[0], y.shape[0], z.shape[0]
+        nxc, nyc, nzc = nx - 1, ny - 1, nz - 1
+        lx, ly, lz = x[-1], y[-1], z[-1]
+        return cls((x, y, z), (nx, ny, nz), (nxc, nyc, nzc), (lx, ly, lz))
+
+
+def stat_grid_impl(grid, dim2):
+    nx, ny, nz = grid.nxyz
+    nxc, nyc, nzc = grid.ncxyz
+
     primes = sieve(int(max(nxc, nyc, nzc) ** 0.5) + 1)
 
     head = "Grid Stat"
     log.log(f"{head}: Total Cells = {nxc*nyc*nzc:,}, Total Nodes = {nx*ny*nz:,}")
-    if c.input.domain.nDim == 2:
+    if dim2:
         log.log(f"{head}: Total 2D Cells = {nxc*nyc:,}, Total 2D Nodes = {nx*ny:,}")
 
     def report_axis(name, n, nc):
@@ -119,6 +127,32 @@ def show_grid(c, xyz=[0, 0, 0], full=True):
         .format()
         .log()
     )
+
+
+def stat_grid(c):
+    stat_grid_impl(Grid.create(c), c.input.domain.nDim == 2)
+
+
+def show_grid(c, xyz=[0, 0, 0], full=True):
+    dim2 = c.input.domain.nDim == 2
+    grid = Grid.create(c)
+    x, y, z = grid.xyz
+    nx, ny, nz = grid.nxyz
+    lx, ly, lz = grid.nxyz
+    X, Y, Z = np.meshgrid(x, y, z, indexing="ij")
+
+    if dim2 and len(xyz) == 2:
+        xyz = [xyz[0], xyz[1], lz / 2]
+
+    if c.unstrucSurface:
+        meshes = [
+            (surf.xyz.value.startidx, surf.xyz.value.arr, surf.conn.value.arr)
+            for surf in c.unstrucSurface.surfaces
+        ]
+    else:
+        meshes = []
+
+    stat_grid_impl(grid, dim2)
 
     frow, fcol = 3, 3
     fig1 = plt.figure(figsize=(2.5 * fcol, 2.5 * frow))

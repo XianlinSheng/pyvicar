@@ -9,8 +9,8 @@ class ParallelConfiguration(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.npx = Field("npx", 2, "n processes in x")
-        self._children.npy = Field("npy", 2, "n processes in y")
+        self._children.npx = Field("npx", 4, "n processes in x")
+        self._children.npy = Field("npy", 4, "n processes in y")
 
         self._children.ngl = Field("ngl", 2, "ghost layer thickness")
 

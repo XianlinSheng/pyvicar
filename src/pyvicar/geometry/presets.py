@@ -35,6 +35,6 @@ def create_cyl_2d(r, dx, xy=None, dz=None, file=None):
     curv = np.vstack([x, y]).T + xy[np.newaxis, :]
 
     if file is not None:
-        Spanned2DCurve.from_2d_xy(curv, 3, dz, cycled=True).to_stl(file)
+        np.savez(file, xy=curv)
 
     return curv

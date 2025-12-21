@@ -28,6 +28,17 @@ class TriSurface:
     def nElem(self):
         return self._nElem
 
+    @property
+    def startidx(self):
+        return self._xyz.startidx
+
+    def copy(self):
+        return TriSurface(self._xyz.copy(), self._conn.copy())
+
+    def translate(self, dxyz):
+        self._xyz.arr += np.array(dxyz)
+        return self
+
     def show(self):
         self.to_pyvista().plot(show_edges=True, color="lightblue")
 
@@ -45,13 +56,14 @@ class TriSurface:
             vertices=self._xyz.arr, faces=(self._conn.arr - self._xyz.startidx)
         )
 
+    def to_numpy(self, toStartIdx: int = 0):
+        return self._xyz.arr, self._conn.arr + (toStartIdx - self._xyz.startidx)
+
     def to_stl(self, filename):
-        mesh = self.to_trimesh()
-        mesh.export(f"{filename}.stl")
+        self.to_trimesh().export(f"{filename}.stl")
 
     def to_obj(self, filename):
-        mesh = self.to_trimesh()
-        mesh.export(f"{filename}.obj")
+        self.to_trimesh().export(f"{filename}.obj")
 
     def from_xyz_conn(
         xyz: np.ndarray, conn: np.ndarray, fromStartIdx: int = 0, toStartIdx: int = 1
