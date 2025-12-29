@@ -20,17 +20,22 @@ def refine_grid(
         raise Exception(
             f"Expected keys have 3 elements: [x1, x2, xout], but encountered {keypoints}"
         )
-    x1, x2, l = keypoints
+    k1, k2, l = keypoints
     log.log(
-        f"Refine {dir} axis keypoints {[0, x1, x2, l]}, left right growth rate {[lgrow, rgrow]}"
+        f"Refine {dir} axis keypoints {[0, k1, k2, l]}, left right growth rate {[lgrow, rgrow]}"
     )
 
-    x2 = Segment.uniform_dx(x1, x2, dx)
-    x1 = x2.grow_toward_left(0, lgrow)
-    x3 = x2.grow_toward_right(l, rgrow)
-    x1.smooth(lslope=x1.lslope(), rslope=x2.lslope(), iter=smooth_iter)
-    x3.smooth(lslope=x2.rslope(), rslope=x3.rslope(), iter=smooth_iter)
-    x = connect_segs([x1, x2, x3])
+    x2 = Segment.uniform_dx(k1, k2, dx)
+    segs = [x2]
+    if k1 > 0:
+        x1 = x2.grow_toward_left(0, lgrow)
+        x1.smooth(lslope=x1.lslope(), rslope=x2.lslope(), iter=smooth_iter)
+        segs = [x1] + segs
+    if k2 < l:
+        x3 = x2.grow_toward_right(l, rgrow)
+        x3.smooth(lslope=x2.rslope(), rslope=x3.rslope(), iter=smooth_iter)
+        segs = segs + [x3]
+    x = connect_segs(segs)
 
     if isinstance(resample_n, str):
         match resample_n.lower():
