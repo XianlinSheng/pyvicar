@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from dataclasses import dataclass
 import pyvicar.tools.log as log
+from pyvicar._format import Table
 
 
 def get_grid(c, dir):
@@ -55,32 +56,6 @@ def prime_comb_str(counter):
 
 
 @dataclass
-class Table:
-    data: list[list]
-
-    def add(self, row):
-        self.data.append(row)
-        return self
-
-    def format(self):
-        # Step 1: compute max width for each column
-        cols = list(zip(*self.data))  # transpose
-        col_widths = [max(len(str(item)) for item in col) for col in cols]
-
-        # Step 2: print each row with padding
-        out = []
-        for row in self.data:
-            out.append([str(item).ljust(width) for item, width in zip(row, col_widths)])
-
-        self.data = out
-        return self
-
-    def log(self):
-        for row in self.data:
-            log.log(" ".join(row))
-
-
-@dataclass
 class Grid:
     xyz: tuple
     nxyz: tuple
@@ -120,7 +95,7 @@ def stat_grid_impl(grid, dim2):
         ]
 
     (
-        Table([])
+        Table.create()
         .add(report_axis("X", nx, nxc))
         .add(report_axis("Y", ny, nyc))
         .add(report_axis("Z", nz, nzc))

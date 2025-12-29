@@ -1,4 +1,4 @@
-from pyvicar.tools.physics_setter.common import set_inlet, set_re
+from pyvicar.tools.physics_setter.common import set_inlet, set_re, stat_tstep
 import pyvicar.geometry.case_setter.common as geom
 import pyvicar.grid.case_setter.common as grid
 from pyvicar.grid.previewer.common import show_grid, stat_grid
@@ -7,6 +7,7 @@ from pyvicar.grid.previewer.common import show_grid, stat_grid
 def link_common_tools(cls):
     cls.set_inlet = set_inlet
     cls.set_re = set_re
+    cls.stat_tstep = stat_tstep
 
     cls.append_solid = geom.append_solid
     cls.append_solid_2d = geom.append_solid_2d
