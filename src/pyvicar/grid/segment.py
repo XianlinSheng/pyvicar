@@ -31,20 +31,31 @@ def find_n_growth_rate(a0, length, q0):
 
 
 def next_restricted_num(n, allowed):
-    allowed = sorted(allowed)
-    seen = set()
-    heap = [1]
+    k = len(allowed)
+
+    # (value, exponents_tuple)
+    start_exp = (0,) * k
+    heap = [(1, start_exp)]
+    seen = {start_exp}
 
     while heap:
-        x = heapq.heappop(heap)
-        if x >= n:
-            return x
+        value, exp = heapq.heappop(heap)
 
-        for p in allowed:
-            y = x * p
-            if y not in seen:
-                seen.add(y)
-                heapq.heappush(heap, y)
+        if value >= n:
+            return value
+
+        for i, p in enumerate(allowed):
+            # ordering constraint
+            if i > 0 and exp[i - 1] < exp[i] + 1:
+                continue
+
+            new_exp = list(exp)
+            new_exp[i] += 1
+            new_exp = tuple(new_exp)
+
+            if new_exp not in seen:
+                seen.add(new_exp)
+                heapq.heappush(heap, (value * p, new_exp))
 
     raise RuntimeError("next_restricted_num search failed")
 

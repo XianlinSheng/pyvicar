@@ -57,12 +57,12 @@ class GridModel:
         ndim = 2 if dim2 else 3
 
         l0d = fill_ll_broadcast(1, [ndim, 2])
-        domlx = [[10, 6]]
-        domly = [[10, 10]]
-        reflx = [[1.5, 3]]
-        refly = [[1.5, 1.5]]
-        growx = [[1.05, 1.01]]
-        growy = [[1.05, 1.05]]
+        domlx = [[20, 5]]
+        domly = [[20, 20]]
+        reflx = [[1, 2.5]]
+        refly = [[1, 1]]
+        growx = [[1.4, 1.02]]
+        growy = [[1.4, 1.4]]
 
         domld = domlx + domly
         refld = reflx + refly
