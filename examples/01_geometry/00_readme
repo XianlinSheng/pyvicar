@@ -2,4 +2,4 @@
 
 1-2: directly emplace presets, 3D and 2D
 3-4: from files, 3D stl and 2D npz
-5-6:
+5-6: from raw data structures

@@ -366,7 +366,7 @@ def gen_slicecontour_video(
         plotter.add_axes()
         plotter.show_grid()
 
-        plotter = plotter_f(plotter)
+        plotter = plotter_f(plotter, vtk, marker)
 
         a.frames.frame_by_pyvista(vtk.seriesi, plotter, window_size=[3840, 2160])
 
@@ -387,3 +387,28 @@ def gen_slicecontour_video(
     mpi.barrier()
 
     return a
+
+
+# oclock is the position of camera relative to target, 12 oclock x+ downstream, z+ up
+def calc_cam_position(target, l0=1, r=3, oclock=2, pitch=30, downstream_shift=1):
+    target = target + np.asarray([downstream_shift, 0, 0]) * l0
+
+    pitchrad = pitch * np.pi / 180
+    r *= np.cos(pitchrad)
+    h = r * np.sin(pitchrad)
+
+    xyrad = -oclock * np.pi / 6
+    xy = np.asarray([np.cos(xyrad), np.sin(xyrad)]) * r * l0
+    xyz = np.asarray([xy[0], xy[1], h])
+
+    cam = np.asarray(target) + xyz
+
+    return [cam, target, [0, 0, 1]]
+
+
+def set_cam_compass(target, **kwargs):
+    def plotter_f(plotter, vtk, marker):
+        plotter.camera_position = calc_cam_position(target, **kwargs)
+        return plotter
+
+    return plotter_f

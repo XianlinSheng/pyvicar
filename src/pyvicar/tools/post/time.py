@@ -153,11 +153,11 @@ def append_body_series(out, bodyout):
 def proc_draglift(
     cdraglift,
     cut=None,
-    filter_cutoff_period=None,
     sum_force=False,
     sum_moment=False,
     sum_power=False,
     sum_area=False,
+    filter_cutoff_period=None,
     output=StructSetter(),
 ):
     if not isinstance(output, OutputSetter):
