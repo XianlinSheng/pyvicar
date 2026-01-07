@@ -7,9 +7,6 @@ def create_restart_obj(case):
         [
             {"prefix": "flow"},
             {"prefix": "body"},
-            {"prefix": "scalar"},
-            {"prefix": "fim"},
             {"prefix": "fsi"},
-            {"prefix": "rhm"},
         ],
     )

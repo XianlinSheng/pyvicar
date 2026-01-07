@@ -37,6 +37,8 @@ plt.title("Drag")
 plt.tight_layout()
 
 plt.show()
+# plt.savefig("draglift.png")
+
 
 # one job is only done if its arg is specified,
 # if call it empty c.draglift.proc(), it will give raw series
