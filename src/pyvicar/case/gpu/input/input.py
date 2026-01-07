@@ -2,6 +2,8 @@ from pyvicar._tree import Group
 from pyvicar.file import Writable
 from pyvicar._format import write_banner
 from pyvicar.case.common.input.input import add_basics, write_basics
+from .time_step import TimeStepControl
+from .internal_boundary import InternalBoundary
 from .laplace import LaplaceSolver
 from .fsi import FSI
 from .misc import Misc
@@ -18,6 +20,10 @@ class Input(Group, Writable):
 
         # all subgroups
         add_basics(self._children, self._f)
+
+        # basics override, mainly change some default values
+        self._children.timeStep = TimeStepControl(self._f)
+        self._children.ib = InternalBoundary(self._f)
 
         self._children.laplace = LaplaceSolver(self._f)
         self._children.fsi = FSI(self._f)
