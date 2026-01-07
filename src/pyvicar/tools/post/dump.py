@@ -172,6 +172,7 @@ def gen_isoq_video(
     iso_opacity=0.5,
     iso_color=Color.field(Field.vector("VEL")),
     keep_frames=True,
+    resolution="4k",
     out_name="q",
 ):
     if not isinstance(iso_color, ColorBase):
@@ -236,9 +237,13 @@ def gen_isoq_video(
         plotter.add_axes()
         plotter.show_grid()
 
-        plotter = plotter_f(plotter)
+        plotter = plotter_f(plotter, vtk, marker)
 
-        a.frames.frame_by_pyvista(vtk.seriesi, plotter, window_size=[3840, 2160])
+        a.frames.frame_by_pyvista(
+            vtk.seriesi,
+            plotter,
+            window_size=resolution_to_size(resolution),
+        )
 
         plotter.close()
         plotter.deep_clean()
@@ -299,6 +304,7 @@ def gen_slicecontour_video(
     plotter_f=lambda p: p,
     contour_color=Color.field(Field.vector("VEL")),
     keep_frames=True,
+    resolution="4k",
     out_name="vel",
 ):
     if not isinstance(contour_color, ColorBase):
@@ -368,7 +374,11 @@ def gen_slicecontour_video(
 
         plotter = plotter_f(plotter, vtk, marker)
 
-        a.frames.frame_by_pyvista(vtk.seriesi, plotter, window_size=[3840, 2160])
+        a.frames.frame_by_pyvista(
+            vtk.seriesi,
+            plotter,
+            window_size=resolution_to_size(resolution),
+        )
 
         plotter.close()
         plotter.deep_clean()
@@ -387,6 +397,21 @@ def gen_slicecontour_video(
     mpi.barrier()
 
     return a
+
+
+def resolution_to_size(resolution):
+    presets = {
+        "hd720": [1280, 720],
+        "hd1080": [1920, 1080],
+        "4k": [3840, 2160],
+        "8k": [7680, 4320],
+    }
+    if isinstance(resolution, str):
+        resolution = presets[resolution.lower()]
+    elif isinstance(resolution, int):
+        resolution = [resolution, resolution]
+
+    return resolution
 
 
 # oclock is the position of camera relative to target, 12 oclock x+ downstream, z+ up

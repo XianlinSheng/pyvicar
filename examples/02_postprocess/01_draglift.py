@@ -13,32 +13,40 @@ pvmpl.set_default(plt_kwargs=pvmpl.font_sizes_l())
 c = Case("tut_draglift")
 c.draglift.read()
 
-# one may need further postprocessing, or arrange them in better layout
-# some common processes are already included by one simple call
-forces = c.draglift.proc(
-    cut=[0.1, None],
-    sum_force=True,
-    sum_moment=False,
-    sum_power=False,
-    sum_area=False,
-    filter_cutoff_period=0.1,
-)
+forces = c.draglift.proc()
+
+# # the following is a full version of the capabilities, see bottom for argument descriptions
+# forces = c.draglift.proc(
+#     cut=[0.1, None],
+#     sum_force=True,
+#     sum_moment=False,
+#     sum_power=False,
+#     sum_area=False,
+#     filter_cutoff_period=0.1,
+# )
 
 # now retrieve series simply by:
 # forces.cx[0] means the series for the first body
-plt.plot(forces.time, forces.cx[0])
+fig = plt.figure()
+ax = fig.add_subplot()
 
-plt.axis([None, None, None, None])
-plt.grid(True)
-plt.legend()
-plt.xlabel("Time")
-plt.ylabel("CD")
-plt.title("Drag")
-plt.tight_layout()
+ax.plot(forces.time, forces.cx[0], label="drag")
+
+ax.axis([None, None, None, None])
+ax.grid(True)
+ax.legend()
+ax.set_xlabel("Time")
+ax.set_ylabel("CD")
+ax.set_title("Drag")
+fig.tight_layout()
 
 plt.show()
-# plt.savefig("draglift.png")
 
+# # or savefig
+# fig.savefig("draglift.png")
+
+# # or using pyvicar managed postprocessing file structure, at case/Post/Reports/...
+# c.create_matplotlib_fig(fig, "draglift")
 
 # one job is only done if its arg is specified,
 # if call it empty c.draglift.proc(), it will give raw series

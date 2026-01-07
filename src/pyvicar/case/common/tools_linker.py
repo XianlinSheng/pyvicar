@@ -7,6 +7,7 @@ from pyvicar.tools.physics_setter.common import (
 import pyvicar.geometry.case_setter.common as geom
 import pyvicar.grid.case_setter.common as grid
 from pyvicar.grid.previewer.common import show_grid, stat_grid
+from pyvicar.tools.post.case_setter.common import create_matplotlib_fig
 
 
 def link_common_tools(cls):
@@ -31,4 +32,6 @@ def link_common_tools(cls):
 
     cls.show_grid = show_grid
     cls.stat_grid = stat_grid
+
+    cls.create_matplotlib_fig = create_matplotlib_fig
     return cls

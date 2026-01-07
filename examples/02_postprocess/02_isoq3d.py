@@ -9,16 +9,31 @@ from pyvicar.tools.post.dump import gen_isoq_video, Color, Field, set_cam_compas
 c = Case("tut_isoq3d")
 c.dump.read()
 
-a = gen_isoq_video(
+center = [20, 20, 20]
+
+a2 = gen_isoq_video(
     c.dump.vtm,
     c.dump.marker,
-    plotter_f=set_cam_compass([20, 20, 20], l0=1),
+    plotter_f=set_cam_compass(center, l0=1),
+    # plotter_f=set_cam_compass(center, l0=1, r=3, oclock=2, downstream_shift=1),
     iso_color=Color.field(Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
     # iso_color=Color.field(Field.vector("VEL", "mag"), clim=[0, 1.5]),
     # iso_color=Color.field(Field.scalar("P"), clim=[-0.5, 0.5]),
     keep_frames=True,
-    out_name="q_w",
+    # resolution="4k",
+    out_name="q_w_2oclock",
 )
+
+# or change a view angle if you want
+a10 = gen_isoq_video(
+    c.dump.vtm,
+    c.dump.marker,
+    plotter_f=set_cam_compass(center, l0=1, oclock=10),
+    iso_color=Color.field(Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
+    keep_frames=True,
+    out_name="q_w_10oclock",
+)
+
 
 # this is generally used to checkout total processing time
 mpi.print_elapsed_time()
@@ -45,5 +60,7 @@ mpi.print_elapsed_time()
 #           clim=[l,h] sets the colorbar limits, default None for auto scale at every frame
 #           clim is recommended to set explicitly since auto scale has no global knowledge and it changes thru time
 # keep_frames will keep the generated frame images, set to False to keep only the mp4, default True
+# resolution is the output frame size, accpet [w, h], or single w int for square, or string in 'hd720', 'hd1080', '4k', '8k',
+#            default '4k', note that fontsize needs to be changed accordingly if changing frame size
 # out_name is the frames and animation name, output to Post/Animations.
 #          file structure is in pyvicar post standard, readable and manageable with other post results
