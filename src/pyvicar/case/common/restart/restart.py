@@ -1,7 +1,7 @@
 from pyvicar._tree import Group
 from pyvicar.file import Readable
 from pyvicar._utilities import Optional
-from .restart_lists import RestartLists
+from .restart_pack import RestartPackPool
 
 
 class Restart(Group, Readable, Optional):
@@ -16,7 +16,7 @@ class Restart(Group, Readable, Optional):
             setattr(
                 self._children,
                 config["prefix"],
-                RestartLists(case, config["prefix"], config["partitioned"]),
+                RestartPackPool(case, config["prefix"]),
             )
 
         self._finalize_init()
@@ -50,17 +50,17 @@ class Restart(Group, Readable, Optional):
                     f"Time idx must be 1, 2, or None (latest), default None"
                 )
 
-        def list_to_restart_in(obj):
+        def pool_to_restart_in(obj):
             if obj:
-                rlist = tidx_to_attr(obj)
-                if not rlist:
+                rpool = tidx_to_attr(obj)
+                if not rpool:
                     raise ValueError(
-                        f"Restart {obj.prefix} out has no given time idx {tidx}"
+                        f"Restart out pool {obj.prefix} has no given time idx {tidx}"
                     )
-                rlist.to_restart_in()
+                rpool.to_restart_in()
 
         if not self:
             raise Exception(f"No active restart files")
 
         for obj in self._children.values():
-            list_to_restart_in(obj)
+            pool_to_restart_in(obj)
