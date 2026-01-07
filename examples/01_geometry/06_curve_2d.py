@@ -39,12 +39,12 @@ c.srj.set_params()
 
 c.show_grid(gm.center)
 
-c.write()
-
-
-# c.mpirun()
-
 # c.job.enable()
 # c.job.jobName = "tut_curve_2d"
 # c.job.account = "account"
+
+c.write()
+
+# c.mpirun()
+
 # c.sbatch()

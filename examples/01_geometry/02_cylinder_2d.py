@@ -29,12 +29,13 @@ c.srj.set_params()
 
 c.show_grid(gm.center)
 
+# c.job.enable()
+# c.job.jobName = "tut_cyl2d"
+# c.job.account = "account"
+
 c.write()
 
 
 # c.mpirun()
 
-# c.job.enable()
-# c.job.jobName = "tut_cyl2d"
-# c.job.account = "account"
 # c.sbatch()

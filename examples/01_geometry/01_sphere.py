@@ -35,6 +35,10 @@ c.srj.set_params()
 # show grid preview and statistics, use c.stat_grid() to print statistics alone
 c.show_grid(gm.center)
 
+# c.job.enable()
+# c.job.jobName = "tut_sphere"
+# c.job.account = "account"
+
 # write the case input files
 c.write()
 
@@ -44,7 +48,4 @@ c.write()
 
 # c.mpirun()
 
-# c.job.enable()
-# c.job.jobName = "tut_sphere"
-# c.job.account = "account"
 # c.sbatch()

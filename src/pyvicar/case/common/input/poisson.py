@@ -16,7 +16,7 @@ class PoissonSolver(Group, Writable):
             "red_black", False, "", Field.vmapPresets.bool2int
         )
 
-        self._children.omega = Field("omega", 1.5)
+        self._children.omega = Field("omega", 1.0)
 
         self._children.itermaxPoisson = Field("itermaxPoisson", 10000)
         self._children.resmaxPoisson = Field("resmaxPoisson", 1e-4)
