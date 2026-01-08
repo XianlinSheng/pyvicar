@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from enum import Enum
 import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
+from collections.abc import Iterable
 
 
 class QBase:
@@ -163,12 +164,44 @@ def prep_field(mesh, field):
             return mesh, comp_name
 
 
+def get_vtks_markers(c, vtks, markers):
+    if vtks is None:
+        c.dump.vtm.read()
+        if c.dump.vtm:
+            vtks = c.dump.vtm.latest
+        else:
+            raise Exception(
+                f"Create Video: No VTM available, or pass VTK lists by vtks=..."
+            )
+
+    if markers is None:
+        c.dump.marker.read()
+        if c.dump.marker:
+            markers = c.dump.markers.latest
+        else:
+            markers = [None] * len(vtks)
+
+    if not isinstance(vtks, Iterable):
+        vtks = [vtks]
+
+    if not isinstance(markers, Iterable):
+        markers = [markers]
+
+    if len(vtks) != len(markers):
+        raise Exception(
+            f"Length of vtk and marker list not match: {len(vtks)} and {len(markers)}"
+        )
+
+    return c, vtks, markers
+
+
 # quick generate
-def gen_isoq_video(
-    vtklist,
+def create_isoq_video(
+    c,
+    vtks=None,
     markers=None,
     marker_f=lambda m: m,
-    plotter_f=lambda p: p,
+    plotter_f=lambda p, c, i, v, m: p,
     iso_opacity=0.5,
     iso_color=Color.field(Field.vector("VEL")),
     keep_frames=True,
@@ -179,23 +212,19 @@ def gen_isoq_video(
         raise TypeError(
             f"Use Color wizard to create argument, but encounter {type(iso_color)}"
         )
-    c = vtklist.case
+
     c.post.enable()
     c.post.animations.enable()
     a = c.post.animations.get_or_create(out_name)
     a.frames.enable()
 
-    if not vtklist:
-        return a
+    c, vtks, markers = get_vtks_markers(c, vtks, markers)
 
     mpi.set_async()
 
-    if markers is None:
-        markers = [None] * len(vtklist)
-
-    for vtk, marker in mpi.dispatch(zip(vtklist, markers)):
+    for i, (vtk, marker) in mpi.dispatch(enumerate(zip(vtks, markers))):
         log.log(
-            f"gen_isoq_video: posting frame {vtk}{f' with {marker}' if marker is not None else ''}"
+            f"ISOQ Video: Posting frame {i} {vtk}{f' with {marker}' if marker is not None else ''}"
         )
 
         mesh = vtk.to_pyvista()
@@ -209,7 +238,7 @@ def gen_isoq_video(
 
         contours = create_isoq(mesh)
         if contours.n_points == 0 or contours.n_cells == 0:
-            log.log(f"gen_isoq_video: No q isosurfaces after calculation")
+            log.log(f"ISOQ Video: No q isosurfaces after calculation")
         else:
             match iso_color:
                 case ColorUniform():
@@ -237,10 +266,10 @@ def gen_isoq_video(
         plotter.add_axes()
         plotter.show_grid()
 
-        plotter = plotter_f(plotter, vtk, marker)
+        plotter = plotter_f(plotter, c, i, vtk, marker)
 
         a.frames.frame_by_pyvista(
-            vtk.seriesi,
+            i,
             plotter,
             window_size=resolution_to_size(resolution),
         )
@@ -294,14 +323,15 @@ def normal_to_plane(normal):
 
 
 # quick generate
-def gen_slicecontour_video(
-    vtklist,
+def create_slicecontour_video(
+    c,
+    vtks,
     markers=None,
     normal="z",
     origin=[None, None, None],
     clip=None,
     marker_f=lambda m: m,
-    plotter_f=lambda p: p,
+    plotter_f=lambda p, c, i, v, m: p,
     contour_color=Color.field(Field.vector("VEL")),
     keep_frames=True,
     resolution="4k",
@@ -311,23 +341,19 @@ def gen_slicecontour_video(
         raise TypeError(
             f"Use Color wizard to create argument, but encounter {type(contour_color)}"
         )
-    c = vtklist.case
+
     c.post.enable()
     c.post.animations.enable()
     a = c.post.animations.get_or_create(out_name)
     a.frames.enable()
 
-    if not vtklist:
-        return a
+    c, vtks, markers = get_vtks_markers(c, vtks, markers)
 
     mpi.set_async()
 
-    if markers is None:
-        markers = [None] * len(vtklist)
-
-    for vtk, marker in mpi.dispatch(zip(vtklist, markers)):
+    for i, (vtk, marker) in mpi.dispatch(enumerate(zip(vtks, markers))):
         log.log(
-            f"gen_slicecontour_video: posting frame {vtk}{f' with {marker}' if marker is not None else ''}"
+            f"Slice Contour Video: Posting frame {i} {vtk}{f' with {marker}' if marker is not None else ''}"
         )
 
         mesh = vtk.to_pyvista()
@@ -345,7 +371,7 @@ def gen_slicecontour_video(
 
         slice = create_slice(mesh, normal, origin, clip)
         if slice.n_points == 0 or slice.n_cells == 0:
-            log.log(f"gen_slicecontour_video: Empty slice")
+            log.log(f"Slice Contour Video: Empty slice")
         else:
             match contour_color:
                 case ColorUniform():
@@ -372,10 +398,10 @@ def gen_slicecontour_video(
         plotter.add_axes()
         plotter.show_grid()
 
-        plotter = plotter_f(plotter, vtk, marker)
+        plotter = plotter_f(plotter, c, i, vtk, marker)
 
         a.frames.frame_by_pyvista(
-            vtk.seriesi,
+            i,
             plotter,
             window_size=resolution_to_size(resolution),
         )
@@ -415,7 +441,7 @@ def resolution_to_size(resolution):
 
 
 # oclock is the position of camera relative to target, 12 oclock x+ downstream, z+ up
-def calc_cam_position(target, l0=1, r=3, oclock=2, pitch=30, downstream_shift=1):
+def calc_cam_position(target, l0=1, r=4, oclock=2, pitch=30, downstream_shift=1):
     target = target + np.asarray([downstream_shift, 0, 0]) * l0
 
     pitchrad = pitch * np.pi / 180
@@ -432,7 +458,7 @@ def calc_cam_position(target, l0=1, r=3, oclock=2, pitch=30, downstream_shift=1)
 
 
 def set_cam_compass(target, **kwargs):
-    def plotter_f(plotter, vtk, marker):
+    def plotter_f(plotter, c, i, vtk, marker):
         plotter.camera_position = calc_cam_position(target, **kwargs)
         return plotter
 

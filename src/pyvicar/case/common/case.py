@@ -60,6 +60,10 @@ class Case(Group, Writable):
             "runpath", "~/Vicar3D/versions/common/src/Vicar3D"
         )
 
+        # common version must have an srj input
+        self._children.srj.enable()
+        self._children.srj.set_params()
+
         self._finalize_init()
 
     @property

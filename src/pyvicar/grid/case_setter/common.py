@@ -21,9 +21,6 @@ def refine_grid(
             f"Expected keys have 3 elements: [x1, x2, xout], but encountered {keypoints}"
         )
     k1, k2, l = keypoints
-    log.log(
-        f"Refine {dir} axis keypoints {[0, k1, k2, l]}, left right growth rate {[lgrow, rgrow]}"
-    )
 
     x2 = Segment.uniform_dx(k1, k2, dx)
     segs = [x2]
@@ -79,6 +76,10 @@ def grid_2d(case, dz):
 
 
 def apply_grid_model(c, gm, dx):
+    log.log(f"Apply Grid Model: {gm}")
+    log.log(f"Apply Grid Model: Emplacement center: {gm.center}")
+    log.log(f"Apply Grid Model: Spacing dx = {dx}, L0 / dx = {gm.l0 / dx}")
+
     doml = gm.l0 * gm.doml
     refl = gm.l0 * gm.refl
     cent = doml[:, 0]

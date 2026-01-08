@@ -27,11 +27,6 @@ body, surf = c.append_sphere(d / 2, dx, gm.center)
 c.set_inlet("x1", [U, 0, 0])
 c.set_re(re, U=U, L=d)  # U and L are needed since solver uses 1/nu
 
-# enable and set SRJ solver params (needed in pbicgstab)
-# one can use other configs like set_params("P3N128"), which will first generate a database if not exist
-c.srj.enable()
-c.srj.set_params()
-
 # show grid preview and statistics, use c.stat_grid() to print statistics alone
 c.show_grid(gm.center)
 

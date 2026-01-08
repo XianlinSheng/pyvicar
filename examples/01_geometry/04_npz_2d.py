@@ -29,9 +29,6 @@ body, surf = c.append_npz_solid_2d("tut_npz_cyl.npz", gm.center)
 c.set_inlet("x1", [U, 0, 0])
 c.set_re(re, U=U, L=d)
 
-c.srj.enable()
-c.srj.set_params()
-
 c.show_grid(gm.center)
 
 # c.job.enable()

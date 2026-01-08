@@ -1,0 +1,21 @@
+#!/bin/bash
+#SBATCH --job-name='post'
+#SBATCH --partition=parallel
+#SBATCH --time=2-00:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=48
+#SBATCH --account=jsmith01
+
+# Here starts script
+mpirun -np 16 python compress.py > log.post
+mpirun -np 16 python post_isoq.py > log.post
+
+# by default, this is run after simulation finishes and start to compress and check
+# to perform a realtime check during running, modify post_isoq.py accordingly and comment out the compress.py
+
+# notice the memory, normally 16 parallel vtk will take up all memory, 
+# larger grids allow even fewer processes
+# if out of memory, either it is explicitly killed, or ffmpeg will run into trouble and cannot return normally
+# only one process is running ffmpeg, so if its killed other processes cannot return normally 
+
+# this can directly be copied and modified from case/job, but make sure the settings, partitions

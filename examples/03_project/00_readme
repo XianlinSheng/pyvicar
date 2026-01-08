@@ -1,0 +1,89 @@
+3. project: project full cases setup, all scripts and layout for parameter space
+
+A standard project generally includes:
+1. params.py: define basic variables, objects, and parameter space
+2. gen.py: generate a specific case
+3. run.py: generate and run a specific case or all cases
+4. run_test.py: generate and run a test case, smaller grid and decomposition, one or few time steps
+5. run_xxx.py: optional, typically to run a single case separately
+6. compress.py: compress the output vtm to vtr/vtk binary.
+7. post_force.py: postprocess drag lift forces
+8. post_isoq.py: postprocess isoq animation
+9. post_xxx.py: other needed postprocesses
+
+1 defines a gen_params() function returns a struct with needed objects.
+  Certain vars can be overridden by passing kwargs into the function, typically for run_test.
+2 defines a gen_case() function returns a Case object and written, need to pass a params struct.
+3-5 are separate procedures and specific requirements to generate params and cases
+6-9 are separate utilities and one can refer to chapter 02_postprocess for details
+
+
+
+follow these standard operating procedures to check the case in run_test before run:
+1. config checks: use formal parameters (no or comment params override), but no run
+                  go thru generated input files and see if its whats expected.
+                  for detailed numbers, those are analyzed in the next step by stat_xxx
+
+2. pre-run numerical checks: use formal parameters (no or comment params override), but no run
+
+2-1. show_grid gives the correct and reasonable mesh:
+
+2-1-1. body                   : mesh uniform and isotropic enough,
+                                otherwise may bring IB topology issue
+2-1-2. body and grid          : match in resolution and correctly placed in refined region
+                                otherwise may waste resources
+2-1-3. coverage               : uniform refined region fully
+                                but not too much cover the body movement region,
+                                otherwise may bring IB topology issue
+2-1-4. wake aspect ratio      : ~ 5 at max in entire wake region (vortex / high-shear region),
+                                like the example case shows at wake outlet,
+                                otherwise may bring instabilities
+2-1-5. wake length            : ~ 5x of vortex spacing before outlet,
+                                like the example case shows at wake outlet,
+                                otherwise may affect body forces (too short),
+                                or significantly waste resources (too long)
+2-1-6. upstream/lateral length: ~ 20x of charasteristic length,
+                                like the example case shows at inlet and lateral far field,
+                                otherwise may affect body forces (too short),
+                                growth rate can be large so feel safe to enlarge
+
+2-2. stat_xxx quality checks pass, if no, change the args in gen_params default (the formal params)
+
+2-2-1. stat_grid total cells: 5-10M should be an acceptable simulation,
+                              20-50M should be decent (see y+ stats)
+2-2-2. stat_grid xy nseg    : should be good number divisible by npx npy
+                              grid generator already try to optimize this number
+                              so improve your npx npy choice
+2-2-3. stat_tstep CFL       : < 0.5, typically ~ 0.2 for safety,
+                              make sure using the estimated max velocity.
+                              adjust dt (T_by_dt) accordingly
+2-2-4. stat_tstep T/dt      : should be a good number.
+                              Its not fatal but brings you complexity
+2-2-5. stat_tstep Ndmp      : (num of dumps within a T) should be an integer (if periodic).
+                              Otherwise your postprocess does not close loop
+2-2-6. stat_viscosity re    : is correct as wanted
+2-2-7. stat_viscosity y+    : ~ 0.3-1 for good quality (DNS)
+                              ~ 2 is still acceptable
+                              > 5 will be too coarse for a decent result
+
+3. test run: override partitioning and grid sizes, check if simulation works as expected
+
+4. formal run: copy the run_test script to a formal run script and remove all overrides
+
+
+
+Note that the object placement might not seem like how a common FVM solver does it:
+FVM might leave a long wake while here we make it very short
+This is normal because first both:
+   refine the necessary region (complex flow, near body and some wake vortex)
+   enlarge the necessary domain (p propagatable, upstream & lateral blocking)
+   keep isotropy (high-shear, near body, and the wake vortex that is included in simulation)
+but:
+   FVM can keep isotropy when growing in vortex region
+   Cartesian grid will definitely become skewed when growing
+so:
+   FVM can keep a long in wake under accetable resources by reducing far downstream fidelity
+   Cartesian grid must either resolve it all well or stop here
+and:
+   one can certainly make the wake long like FVM,
+   just keep resolving all of it at the finest level with the resources you will need

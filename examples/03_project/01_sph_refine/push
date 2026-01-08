@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# used to push pull to from cluster
+
+REMOTE_HOST="host"
+REMOTE_PATH="~"
+
+
+set -euo pipefail
+
+if [ "$#" -ne 0 ]; then
+  echo "Usage: $0"
+  exit 1
+fi
+
+scp -- job_post rmvtm *.py *.h5 "${REMOTE_HOST}:${REMOTE_PATH}"
+

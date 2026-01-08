@@ -74,7 +74,7 @@ def create_ijs_from_forxy(npx, npy):
 
 
 def remove_vtm(vtmpath, basename):
-    log(f"Removing original vtm {vtmpath}")
+    log(f"Compress: Removing original vtm {vtmpath}")
     if vtmpath.exists():
         vtmpath.unlink()
     vtrfolder = vtmpath.parent / Path(f"{basename}")
@@ -84,7 +84,7 @@ def remove_vtm(vtmpath, basename):
 
 def compress_to_vtk(vtms, keep_vtms=True):
     for vtm in mpi.dispatch(vtms):
-        log(f"Compressing {vtm.path}")
+        log(f"Compress VTK: Compressing {vtm.path}")
         basename = vtm.path.stem
         mesh = pv.read(vtm.path)
 
@@ -105,7 +105,7 @@ def compress_to_vtk(vtms, keep_vtms=True):
 
 def compress_to_vtr(vtms, ijs, keep_vtms=True):
     for vtm in mpi.dispatch(vtms):
-        log(f"Compressing {vtm.path}")
+        log(f"Compress VTR: Compressing {vtm.path}")
         basename = vtm.path.stem
         mesh = pv.read(vtm.path)
 

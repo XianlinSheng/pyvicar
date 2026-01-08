@@ -29,9 +29,6 @@ body, surf = c.append_stl_solid("tut_stl_sphere.stl", gm.center)
 c.set_inlet("x1", [U, 0, 0])
 c.set_re(re, U=U, L=d)
 
-c.srj.enable()
-c.srj.set_params()
-
 c.show_grid(gm.center)
 
 # c.job.enable()

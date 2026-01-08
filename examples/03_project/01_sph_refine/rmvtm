@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# used when one wants to 
+# compress but keep original -> post -> check -> rm original
+# this is a bash script because it simply rm original files 
+# and one can even manually do it
+
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: $0 name"
+  exit 1
+fi
+
+name="$1"
+
+rm -r -- "$name/FieldsFiles/fields.*[0-9]" "$name/FieldsFiles/fields.*[0-9].vtm"
