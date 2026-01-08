@@ -56,6 +56,10 @@ class SRJ(Group, Writable, Optional):
         self.nomega = p.nomega
         self.omegas = p.omegas
 
+    def set_jacobi(self):
+        self.nomega = 1
+        self.omegas = np.array([[1]], dtype=float)
+
 
 def read_params(key, gridN, db, rdb):
     if not Path(rdb).exists():

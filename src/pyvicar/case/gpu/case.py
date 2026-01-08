@@ -58,9 +58,9 @@ class Case(Group, Writable):
 
         self._children.runpath = Field("runpath", "~/Vicar3D/versions/gpu/src/Vicar3D")
 
-        # gpu version must use srj for ad solver
+        # gpu version must use srj for ad solver, jacobi enough for AD solve
         self._children.srjad.enable()
-        self._children.srjad.set_params()
+        self._children.srjad.set_jacobi()
 
         self._finalize_init()
 

@@ -39,8 +39,6 @@ if __name__ == "__main__":
         yplus={"y": p.dx, "tau": {"U": p.U, "L": p.d}},
     )
 
-    c.write()
-
     # args in these two stat can be removed and the corresponding print will become N/A
     # the required keys in a dict can be inferred from the print info
     # tau in yplus can either be specified or estimated,

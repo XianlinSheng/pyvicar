@@ -33,7 +33,5 @@ if __name__ == "__main__":
         yplus={"y": p.dx, "tau": {"U": p.U, "L": p.d}},
     )
 
-    c.write()
-
     # c.mpirun()
     c.sbatch()
