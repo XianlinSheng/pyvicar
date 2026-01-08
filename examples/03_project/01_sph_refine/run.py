@@ -7,7 +7,7 @@ p40 = gen_params(
     d_by_dx=40,
 )
 
-p40 = gen_params(
+p20 = gen_params(
     # --- formal options --- #
     name="r20",
     d_by_dx=20,

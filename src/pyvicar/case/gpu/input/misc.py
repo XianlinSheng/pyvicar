@@ -15,6 +15,7 @@ class Misc(Group, Writable):
         )
 
         self._children.fr = Field("fr", 1.0)
+        self._children.stopTime = Field("stopTime", 9e99)
 
         self._children.nonInertial = Field(
             "nonInertial", False, "", Field.vmapPresets.bool2int
@@ -33,6 +34,7 @@ class Misc(Group, Writable):
         self._formatter.write()
 
         self._formatter += self._children.fr
+        self._formatter += self._children.stopTime
         self._formatter.write()
 
         self._formatter += self._children.nonInertial
