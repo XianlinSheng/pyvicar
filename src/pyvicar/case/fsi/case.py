@@ -10,7 +10,7 @@ from pyvicar.case.common.srj import SRJ
 from .srj2 import SRJ2
 from .rhm import RHM
 from .cspline import CSpline
-from .ib2 import IB2
+from pyvicar.case.common.ib2 import IB2
 from .poisson_history import PoissonHistory
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from pyvicar.case.common.job import Job

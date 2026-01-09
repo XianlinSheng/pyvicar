@@ -7,6 +7,7 @@ from pyvicar.case.common.probe import Probe
 from .canonical_body import CanonicalBody
 from pyvicar.case.common.unstruc_surface import UnstrucSurface
 from pyvicar.case.common.srj import SRJ
+from pyvicar.case.common.ib2 import IB2
 from pyvicar.case.common.nonuniform_grid import NonuniformGrid
 from .job import Job
 from pyvicar.case.common.drag_lift import DragLiftList
@@ -46,6 +47,8 @@ class Case(Group, Writable):
         self._children.srj = SRJ(self._path / "SRJ_params_in.dat")
         self._children.srjad = SRJ(self._path / "SRJ_params_in_AD.dat")
 
+        self._children.ib2 = IB2(self._path / "ib2_in.dat")
+
         self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
         self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
         self._children.zgrid = NonuniformGrid(self._path / "zgrid.dat")
@@ -78,6 +81,8 @@ class Case(Group, Writable):
             self._children.srj.write()
         if self._children.srjad:
             self._children.srjad.write()
+        if self._children.ib2:
+            self._children.ib2.write()
         if self._children.xgrid:
             self._children.xgrid.write()
         if self._children.ygrid:

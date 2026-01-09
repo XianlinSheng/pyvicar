@@ -18,7 +18,7 @@ class Body(Group, Writable):
 
         self._children.general = General(
             f,
-            extMotionTypes={},
+            extMotionTypes={"ib2": 14},
         )
         self._children.position = Position(f)
         self._children.motion = Motion(f)

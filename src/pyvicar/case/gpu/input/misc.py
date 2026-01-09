@@ -9,7 +9,7 @@ class Misc(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.iComm = Field("iComm", "mpi", "", {"mpi": 0, "nccl": 1})
+        self._children.iComm = Field("iComm", "nccl", "", {"mpi": 0, "nccl": 1})
         self._children.itSolverTypeAD = Field(
             "itSolverTypeAD", "srj", "", {"lsor": 1, "srj": 4}
         )
