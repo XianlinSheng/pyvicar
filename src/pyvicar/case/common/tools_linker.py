@@ -26,6 +26,9 @@ def link_common_tools(cls):
     cls.append_cyl_2d = geom.append_cyl_2d
     cls.append_stl_solid = geom.append_stl_solid
     cls.append_npz_solid_2d = geom.append_npz_solid_2d
+    cls.append_membrane = geom.append_membrane
+    cls.append_plane = geom.append_plane
+    cls.append_ib2_membrane = geom.append_ib2_membrane
 
     cls.refine_grid = grid.refine_grid
     cls.uniform_grid_n = grid.uniform_grid_n
