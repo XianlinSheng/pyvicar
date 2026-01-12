@@ -1,5 +1,6 @@
 from pyvicar.case.common import Case
 import pyvicar.tools.mpi as mpi
+import pyvicar.tools.log as log
 from pyvicar.tools.post.dump import Color, Field, set_cam_compass
 
 
@@ -34,6 +35,7 @@ def post_isoq(p, run_type="run_check"):
     # iso full domain view,
     # first use the latest vtm frame for quick check and adjust camera angle, keep the only frame
     # can be run during running to check latest progress
+    log.log_host(f"Post ISOQ: ISO Angle")
     iso = c.create_isoq_video(
         vtks,
         markers,
@@ -43,6 +45,7 @@ def post_isoq(p, run_type="run_check"):
     )
 
     # assume already compressed, using c.dump.vtr
+    log.log_host(f"Post ISOQ: Angle 1")
     a2 = c.create_isoq_video(
         vtks,
         markers,
@@ -56,6 +59,7 @@ def post_isoq(p, run_type="run_check"):
     )
 
     # or change a view angle if you want
+    log.log_host(f"Post ISOQ: Angle 2")
     a10 = c.create_isoq_video(
         vtks,
         markers,

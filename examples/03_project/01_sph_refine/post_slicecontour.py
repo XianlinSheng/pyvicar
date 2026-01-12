@@ -1,5 +1,6 @@
 from pyvicar.case.common import Case
 import pyvicar.tools.mpi as mpi
+import pyvicar.tools.log as log
 from pyvicar.tools.post.dump import Color, Field
 
 
@@ -44,6 +45,7 @@ def post_slicecontour(p, run_type="run_check", field="vel"):
     # iso full domain view,
     # first use the latest vtm frame for quick check and adjust camera angle, keep the only frame
     # can be run during running to check latest progress
+    log.log_host(f"Post Contour: Full Slice")
     full = c.create_slicecontour_video(
         vtks,
         markers,
@@ -59,6 +61,7 @@ def post_slicecontour(p, run_type="run_check", field="vel"):
     xyz2[0] = p.gm.center[0] + p.gm.doml[0, 1] * p.gm.l0[0, 1]
     clip_box = [xyz1[0], xyz2[0], xyz1[1], xyz2[1], xyz1[2], xyz2[2]]
 
+    log.log_host(f"Post Contour: Clipped Slice")
     clip = c.create_slicecontour_video(
         vtks,
         markers,
