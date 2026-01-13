@@ -1,10 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name='post'
-#SBATCH --partition=parallel
+# CASE CHECK
+#SBATCH --partition=parallel 
 #SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=48
-#SBATCH --account=jsmith01
+# CASE CHECK
+#SBATCH --account=jsmith01 
 
 # Here starts script
 mpirun -np 16 python compress.py > log.post

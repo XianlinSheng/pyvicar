@@ -4,18 +4,17 @@ A standard project generally includes:
 1. params.py: define basic variables, objects, and parameter space
 2. gen.py: generate a specific case
 3. run.py: generate and run a specific case or all cases
-4. run_test.py: generate and run a test case, smaller grid and decomposition, one or few time steps
-5. run_xxx.py: optional, typically to run a single case separately
-6. compress.py: compress the output vtm to vtr/vtk binary.
-7. post_force.py: postprocess drag lift forces
-8. post_isoq.py: postprocess isoq animation
-9. post_xxx.py: other needed postprocesses
+4. run_xxx.py: optional, typically to run a type of single cases separately
+5. compress.py: compress the output vtm to vtr/vtk binary.
+6. post_force.py: postprocess drag lift forces
+7. post_isoq.py: postprocess isoq animation
+8. post_xxx.py: other needed postprocesses
 
 1 defines a gen_params() function returns a struct with needed objects.
   Certain vars can be overridden by passing kwargs into the function, typically for run_test.
 2 defines a gen_case() function returns a Case object and written, need to pass a params struct.
-3-5 are separate procedures and specific requirements to generate params and cases
-6-9 are separate utilities and one can refer to chapter 02_postprocess for details
+3-4 are separate procedures and specific requirements to generate params and cases
+5-8 are separate utilities and one can refer to chapter 02_postprocess for details
 
 
 

@@ -17,9 +17,11 @@ def post_slicecontour(p, run_type="run_check", field="vel"):
             vtks, markers = c.dump.vtr.latest, c.dump.marker.latest
             keep_frames = True
         case "full":
+            # CASE CHECK: vtr or vtm?
             vtks, markers = c.dump.vtr, c.dump.marker
             keep_frames = False
         case "partial":
+            # CASE CHECK: vtr or vtm?
             # vtks, markers = c.dump.vtr[-100:], c.dump.marker[-100:]
             vtks, markers = c.dump.vtr[::10], c.dump.marker[::10]
             keep_frames = False
@@ -39,6 +41,7 @@ def post_slicecontour(p, run_type="run_check", field="vel"):
         case _:
             raise Exception(f"Unrecognized field {field}")
 
+    # CASE CHECK: slice orientation and position
     normal = "y"
     origin = [None, None, None]
 
@@ -74,7 +77,11 @@ def post_slicecontour(p, run_type="run_check", field="vel"):
     )
 
 
-from run_test import p
+# CASE CHECK: the params struct to use
+from run import p40
+
+# CASE CHECK: the params struct to use
+p = p40
 
 # use run_check during running to check status, angle (latest frame)
 # use compress_check after compress to check compress, results, angle (latest frame)

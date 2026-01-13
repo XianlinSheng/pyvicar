@@ -1,4 +1,12 @@
 #!/usr/bin/env bash
+
+
+# CASE CHECK
+REMOTE_HOST="host"
+REMOTE_FILE="*.csv"
+REMOTE_PATH="~"
+
+
 set -euo pipefail
 
 if [ "$#" -lt 1 ]; then
@@ -6,9 +14,6 @@ if [ "$#" -lt 1 ]; then
   exit 1
 fi
 
-REMOTE_HOST="host"
-REMOTE_FILE="*.csv"
-REMOTE_PATH="~"
 
 REMOTE_FILE_PARENT="${REMOTE_FILE%/*}"
 if [[ "$REMOTE_FILE" == "$REMOTE_FILE_PARENT" ]] 
@@ -21,6 +26,6 @@ do
   remote_path="${REMOTE_HOST}:${REMOTE_PATH}/${dir}/${REMOTE_FILE}"
   local_dir="./${dir}/${REMOTE_FILE_PARENT}"
 
-  mkdir -p -- "${dir}"
+  mkdir -p -- "${local_dir}"
   scp -r -- "$remote_path" "$local_dir/"
 done

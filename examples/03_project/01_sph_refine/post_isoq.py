@@ -17,9 +17,11 @@ def post_isoq(p, run_type="run_check"):
             vtks, markers = c.dump.vtr.latest, c.dump.marker.latest
             keep_frames = True
         case "full":
+            # CASE CHECK: vtr or vtm?
             vtks, markers = c.dump.vtr, c.dump.marker
             keep_frames = False
         case "partial":
+            # CASE CHECK: vtr or vtm?
             # vtks, markers = c.dump.vtr[-100:], c.dump.marker[-100:]
             vtks, markers = c.dump.vtr[::10], c.dump.marker[::10]
             keep_frames = False
@@ -49,6 +51,7 @@ def post_isoq(p, run_type="run_check"):
     a2 = c.create_isoq_video(
         vtks,
         markers,
+        # CASE CHECK: length scale
         plotter_f=set_cam_compass(p.gm.center, l0=p.d),
         # plotter_f=set_cam_compass(
         #     p.gm.center, l0=p.d, r=4, oclock=2, pitch=30, downstream_shift=1
@@ -63,6 +66,7 @@ def post_isoq(p, run_type="run_check"):
     a10 = c.create_isoq_video(
         vtks,
         markers,
+        # CASE CHECK: length scale
         plotter_f=set_cam_compass(p.gm.center, l0=p.d, oclock=10),
         iso_color=color,
         keep_frames=keep_frames,
@@ -70,7 +74,11 @@ def post_isoq(p, run_type="run_check"):
     )
 
 
-from run_test import p
+# CASE CHECK: the params struct to use
+from run import p40
+
+# CASE CHECK: the params struct to use
+p = p40
 
 # use run_check during running to check status, angle (latest frame)
 # use compress_check after compress to check compress, results, angle (latest frame)

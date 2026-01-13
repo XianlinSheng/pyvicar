@@ -11,8 +11,11 @@ def compress(p):
     c.dump.vtm.to_vtrs(npx=p.npx, npy=p.npy, keep_vtms=True)
 
 
-# p fully defines a case
-from run_test import p
+# CASE CHECK: the params struct to use
+from run import p40
+
+# CASE CHECK: the params struct to use
+p = p40
 
 compress(p)
 

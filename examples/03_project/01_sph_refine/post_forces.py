@@ -9,6 +9,7 @@ def post_forces(p):
     c = Case(p.name)
     c.draglift.read()
 
+    # CASE CHECK: what postprocesses to use
     forces = c.draglift.proc()
 
     # forces = c.draglift.proc(
@@ -40,6 +41,10 @@ def post_forces(p):
     # fig.savefig("draglift.png")
 
 
-from run_test import p
+# CASE CHECK: the params struct to use
+from run import p40
+
+# CASE CHECK: the params struct to use
+p = p40
 
 post_forces(p)

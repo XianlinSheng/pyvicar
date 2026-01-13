@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# used to push pull to from cluster
 
+# CASE CHECK
 REMOTE_HOST="host"
 REMOTE_PATH="~"
 

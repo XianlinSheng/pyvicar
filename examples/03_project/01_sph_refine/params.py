@@ -8,7 +8,7 @@ from pyvicar.geometry import create_sphere
 def gen_params(
     # --- case --- #
     name="test",
-    allow_restart=False,
+    allow_restart=True,
     # --- device --- #
     npx=12,
     npy=8,
@@ -70,5 +70,8 @@ def gen_params(
     p.nDump = nDump
     p.nRestart = nRestart
     p.gcss = gcss
+
+    # will be [gmcenter[0], gmcenter[1], dx] for 2d case
+    p.center3d = p.gm.center
 
     return p
