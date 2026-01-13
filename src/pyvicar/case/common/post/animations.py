@@ -178,10 +178,13 @@ class Animation(Group, Dict, Readable):
 
         if run:
             (
-                video.output(f"{self._path}/{self._name}.{outformat}", threads=threads)
+                video.output(f"{self._path}/{self._name}.{outformat}")
                 .overwrite_output()
                 .run(quiet=quiet)
             )
+        # use this to specify maximum threads, but may encounter memory issue
+        # video.output(f"{self._path}/{self._name}.{outformat}", threads=threads)
+
         mpi.barrier_or_async()
 
 
