@@ -85,9 +85,7 @@ p = p40
 # use full after compress to post formal full video
 # use partial after compress to post formal partial, speeded video
 
-# post_isoq(p, run_type="run_check")
+# CASE CHECK: select run type: run_check, compress_check, full, partial
 post_isoq(p, run_type="compress_check")
-# post_isoq(p, run_type="full")
-# post_isoq(p, run_type="partial")
 
 mpi.print_elapsed_time()

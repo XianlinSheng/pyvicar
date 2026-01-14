@@ -14,4 +14,4 @@ fi
 
 name="$1"
 
-rm -r -- "$name/FieldsFiles/fields.*[0-9]" "$name/FieldsFiles/fields.*[0-9].vtm"
+rm -r -- "$name/FieldsFiles"/fields.*[0-9] "$name/FieldsFiles"/fields.*[0-9].vtm

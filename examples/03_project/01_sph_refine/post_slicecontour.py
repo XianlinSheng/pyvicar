@@ -88,9 +88,8 @@ p = p40
 # use full after compress to post formal full video
 # use partial after compress to post formal partial, speeded video
 
-# post_slicecontour(p, run_type="run_check", field="vel")
+
+# CASE CHECK: select run type: run_check, compress_check, full, partial
 post_slicecontour(p, run_type="compress_check", field="vel")
-# post_slicecontour(p, run_type="full", field="vel")
-# post_slicecontour(p, run_type="partial", field="vel")
 
 mpi.print_elapsed_time()
