@@ -36,7 +36,7 @@ class Body(Group, Writable):
         self._formatter = KV1Formatter(f)
         self._f = f
 
-        add_basics(self._children, self._f)
+        add_basics(self._children, self._f, extMotionTypes={"ib2": 15})
 
         self._finalize_init()
 

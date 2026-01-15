@@ -152,7 +152,6 @@ class SurfTypeWing(Surface):
         self._children.hmrs_l = Field("hmrs_l", 0.0)
         self._children.ulna_l = Field("ulna_l", 0.0)
         self._children.hand_l = Field("hand_l", 0.0)
-        self._children.wing_w = Field("wing_w", 0.0)
 
         # feathers keyframing at joints
         self._children.hmrs_fth_n = Field("hmrs_fth_n", 0)
@@ -163,6 +162,11 @@ class SurfTypeWing(Surface):
         self._children.elbw_fth_l = Field("elbw_fth_l", 0.0)
         self._children.wrst_fth_l = Field("wrst_fth_l", 0.0)
         self._children.wtip_fth_l = Field("wtip_fth_l", 0.0)
+
+        self._children.shdr_fth_w = Field("shdr_fth_w", 0.0)
+        self._children.elbw_fth_w = Field("elbw_fth_w", 0.0)
+        self._children.wrst_fth_w = Field("wrst_fth_w", 0.0)
+        self._children.wtip_fth_w = Field("wtip_fth_w", 0.0)
 
         self._children.f = Field("f", 0.0)
         self._children.shdr_flap_amp = Field("shdr_flap_amp", 0.0)
@@ -237,7 +241,6 @@ class SurfTypeWing(Surface):
         self._headerFormatter += self._children.hmrs_l
         self._headerFormatter += self._children.ulna_l
         self._headerFormatter += self._children.hand_l
-        self._headerFormatter += self._children.wing_w
         self._headerFormatter.write()
 
         self._headerFormatter += self._children.hmrs_fth_n
@@ -249,6 +252,12 @@ class SurfTypeWing(Surface):
         self._headerFormatter += self._children.elbw_fth_l
         self._headerFormatter += self._children.wrst_fth_l
         self._headerFormatter += self._children.wtip_fth_l
+        self._headerFormatter.write()
+
+        self._headerFormatter += self._children.shdr_fth_w
+        self._headerFormatter += self._children.elbw_fth_w
+        self._headerFormatter += self._children.wrst_fth_w
+        self._headerFormatter += self._children.wtip_fth_w
         self._headerFormatter.write()
 
         self._headerFormatter += self._children.f

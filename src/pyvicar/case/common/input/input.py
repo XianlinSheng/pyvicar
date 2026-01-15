@@ -14,6 +14,7 @@ from .multigrid import MultigridMethod
 from .les import LES
 from .fea import FEA
 from .wall_time import WallTime
+from .misc import Misc
 from .mg_comments import write_mg_comment
 
 
@@ -87,12 +88,17 @@ class Input(Group, Writable):
         # all subgroups
         add_basics(self._children, self._f)
 
+        self._children.misc = Misc(self._f)
+
         self._finalize_init()
 
     def write(self):
         f = self._f
 
         write_basics(self._children, f)
+
+        write_banner(f, "Version Specific Miscellaneous (misc)")
+        self._children.misc.write()
 
         write_mg_comment(f)
 

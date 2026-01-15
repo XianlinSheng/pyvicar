@@ -3,7 +3,7 @@ from pyvicar._tree import Group, List, Field
 from pyvicar._utilities import Optional
 from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter, write_banner
-from pyvicar.tools.bcic_setter.common import set_scalar_inlet
+from pyvicar.tools.physics_setter.common import set_scalar_inlet
 
 
 class Scalar(Group, Writable, Optional):
