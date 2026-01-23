@@ -183,6 +183,9 @@ class SurfTypeWing(Surface):
         self._children.elbw_flex_deg0 = Field("elbw_flex_deg0", 0.0)
         self._children.wrst_sweep_deg0 = Field("wrst_sweep_deg0", 0.0)
 
+        self._children.wrst_flex_amp = Field("wrst_flex_amp", 0.0)
+        self._children.wrst_flex_deg0 = Field("wrst_flex_deg0", 0.0)
+
         self._children.shdr_fth_amp = Field("shdr_fth_amp", 0.0)
         self._children.elbw_fth_amp = Field("elbw_fth_amp", 0.0)
         self._children.wrst_fth_amp = Field("wrst_fth_amp", 0.0)
@@ -280,6 +283,10 @@ class SurfTypeWing(Surface):
 
         self._headerFormatter += self._children.elbw_flex_deg0
         self._headerFormatter += self._children.wrst_sweep_deg0
+        self._headerFormatter.write()
+
+        self._headerFormatter += self._children.wrst_flex_amp
+        self._headerFormatter += self._children.wrst_flex_deg0
         self._headerFormatter.write()
 
         self._headerFormatter += self._children.shdr_fth_amp
