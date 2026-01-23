@@ -20,6 +20,7 @@ class IB2(Group, Writable, Optional):
         self._formatter = KV1Formatter(self._f)
 
         self._children.nib2 = Field("nib2", 0)
+        self._children.iRestart = Field("iRestart", False, "", Field.vmapPresets.bool2int)
         self._children.ib2s = Surfaces(self._f)
 
         self._finalize_init()
@@ -35,6 +36,7 @@ class IB2(Group, Writable, Optional):
         f = self._f
 
         self._formatter += self._children.nib2
+        self._formatter += self._children.iRestart
         self._formatter.write()
 
         f.write("\n")
@@ -99,6 +101,8 @@ class Surface(Group, Writable):
         self._children.type = Field("type", 0, "", {"user": 1, "wing": 2})
         self._children.nu = Field("nu", 0)
         self._children.nv = Field("nv", 0)
+        self._children.du = Field("du", 0.0)
+        self._children.dv = Field("dv", 0.0)
 
     def write(self):
         f = self._f
@@ -108,6 +112,8 @@ class Surface(Group, Writable):
 
         self._headerFormatter += self._children.nu
         self._headerFormatter += self._children.nv
+        self._headerFormatter += self._children.du
+        self._headerFormatter += self._children.dv
         self._headerFormatter.write()
 
         self._headerFormatter += self._children.type

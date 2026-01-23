@@ -8,5 +8,6 @@ def create_restart_obj(case):
             {"prefix": "flow"},
             {"prefix": "body"},
             {"prefix": "scalar"},
+            {"prefix": "ib2"},
         ],
     )
