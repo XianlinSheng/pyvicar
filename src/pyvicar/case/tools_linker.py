@@ -1,4 +1,3 @@
-from .case_setter import allow_restart
 from pyvicar.tools.physics_setter.common import (
     set_inlet,
     set_re,
@@ -13,8 +12,6 @@ from pyvicar.tools.post.dump import create_isoq_video, create_slicecontour_video
 
 
 def link_common_tools(cls):
-    cls.allow_restart = allow_restart
-
     cls.set_inlet = set_inlet
     cls.set_re = set_re
     cls.stat_tstep = stat_tstep

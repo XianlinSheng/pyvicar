@@ -64,4 +64,4 @@ class Job(Group, Writable, Optional):
         nproc = self._case.nproc
         self._children.nodes = int(np.ceil(nproc / self._children.ntasksPerNode.value))
         self._children.mpinp = nproc
-        self._children.runpath = self._case._children.runpath.value
+        self._children.runpath = self._case.runpath
