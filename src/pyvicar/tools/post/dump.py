@@ -97,7 +97,7 @@ class Field:
         return FieldVectorVORFromVEL(
             "VOR", component=VecComp[component.upper()], vel_name=vel_name
         )
-
+    
 
 class ColorBase:
     pass
@@ -200,6 +200,7 @@ def create_isoq_video(
     c,
     vtks=None,
     markers=None,
+    q_name=None,
     marker_f=lambda m: m,
     plotter_f=lambda p, c, i, v, m: p,
     iso_opacity=0.5,
@@ -236,7 +237,11 @@ def create_isoq_video(
             for body in bodies:
                 plotter.add_mesh(body)
 
-        contours = create_isoq(mesh)
+        if q_name is None:
+            contours = create_isoq(mesh)
+        else:
+            contours = create_isoq(mesh, q=Q.use_exist(q_name))
+
         if contours.n_points == 0 or contours.n_cells == 0:
             log.log(f"ISOQ Video: No q isosurfaces after calculation")
         else:
