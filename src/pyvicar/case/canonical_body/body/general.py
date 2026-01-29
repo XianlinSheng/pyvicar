@@ -5,36 +5,66 @@ from pyvicar.tools.miscellaneous import args
 
 
 class General(Group, Writable):
-    def __init__(self, f, extMotionTypes={}):
+    def __init__(self, f, config):
         Group.__init__(self)
         Writable.__init__(self)
         self._formatter = KV1Formatter(f)
 
-        self._children.bodyType = Field("body_type", "unstruc", "", {"unstruc": 4})
+        config = args.add_default(
+            config,
+            {
+                "body_types": {
+                    "default": "unstruc",
+                    "vmap": {
+                        "unstruc": 4,
+                    },
+                },
+                "motion_types": {
+                    "default": "stationary",
+                    "vmap": {
+                        "stationary": 0,
+                        "forced": 1,
+                        "flow_induced": 2,
+                        "prescribed": 3,
+                    },
+                },
+                "membrane_types": {
+                    "default": "open",
+                    "vmap": {"open": 1, "closed": 2, "diff": 3},
+                },
+                "wall_types": {
+                    "default": "noslip_nonporous",
+                    "vmap": {"noslip_nonporous": 0, "slip_porous": 1},
+                },
+            },
+            recursive=True,
+        )
+
+        self._children.bodyType = Field(
+            "body_type",
+            config["body_types"]["default"],
+            "",
+            config["body_types"]["vmap"],
+        )
         self._children.bodyDim = Field("body_dim", 3)
         self._children.motionType = Field(
             "motionType",
-            "stationary",
+            config["motion_types"]["default"],
             "",
-            args.add_default(
-                extMotionTypes,
-                {
-                    "stationary": 0,
-                    "forced": 1,
-                    "flow_induced": 2,
-                    "prescribed": 3,
-                },
-            ),
+            config["motion_types"]["vmap"],
         )
         self._children.membraneType = Field(
-            "membraneType", "open", "", {"open": 1, "closed": 2, "diff": 3}
+            "membraneType",
+            config["membrane_types"]["default"],
+            "",
+            config["membrane_types"]["vmap"],
         )
 
         self._children.wallType = Field(
             "wallType",
-            "noslip_nonporous",
+            config["wall_types"]["default"],
             "",
-            {"noslip_nonporous": 0, "slip_porous": 1},
+            config["wall_types"]["vmap"],
         )
 
         self._children.nPoint = Field("nPoint", 0)

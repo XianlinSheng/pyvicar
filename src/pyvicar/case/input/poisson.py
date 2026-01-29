@@ -1,16 +1,31 @@
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter
+from pyvicar.tools.miscellaneous import args
 
 
 class PoissonSolver(Group, Writable):
-    def __init__(self, f):
+    def __init__(self, f, config={}):
         Group.__init__(self)
         Writable.__init__(self)
+
+        config = args.add_default(
+            config,
+            {
+                "solver_types": {
+                    "default": "pbicgstab",
+                    "vmap": {"linesor": 1, "mg": 2, "pbicgstab": 3},
+                }
+            },
+            recursive=True,
+        )
         self._formatter = KV2Formatter(f)
 
         self._children.itSolverType = Field(
-            "itSolverType", "pbicgstab", "", {"linesor": 1, "mg": 2, "pbicgstab": 3}
+            "itSolverType",
+            config["solver_types"]["default"],
+            "",
+            config["solver_types"]["vmap"],
         )
         self._children.redblack = Field(
             "red_black", False, "", Field.vmapPresets.bool2int

@@ -1,48 +1,20 @@
-from pathlib import Path
-from pyvicar._tree import Group, Field
+from pyvicar._tree import Group
 from pyvicar.file import Writable
-from pyvicar._format import KV1Formatter
-from .bodies import Bodies
-
-
-axisMap = {"aligned": 0, "x": 1, "y": 2, "z": 3}
+from .linker import BasicsLinker
 
 
 class CanonicalBody(Group, Writable):
-    def __init__(self, path):
+    def __init__(self, path, config={}):
         Group.__init__(self)
         Writable.__init__(self)
-        self._path = Path(path)
-        self._f = open(self._path, "w")
-        self._headerFormatter = KV1Formatter(self._f)
 
-        self._children.nBody = Field("nBody", 0)
-        self._children.nBodySolid = Field("nBodySolid", 0)
-        self._children.nBodyMembrane = Field("nBodyMembrane", 0)
+        BasicsLinker.def_path(self, path)
 
-        self._children.bodies = Bodies(self._f)
-
-        self._children.iBodyFrameX = Field("iBodyFrameX", "aligned", "", axisMap)
-        self._children.iBodyFrameY = Field("iBodyFrameY", "aligned", "", axisMap)
-        self._children.iBodyFrameZ = Field("iBodyFrameZ", "aligned", "", axisMap)
+        BasicsLinker.def_children(self, config=config)
 
         self._finalize_init()
 
     def write(self):
-        f = self._f
+        BasicsLinker.write_children(self)
 
-        self._headerFormatter += self._children.nBody
-        self._headerFormatter += self._children.nBodySolid
-        self._headerFormatter += self._children.nBodyMembrane
-        self._headerFormatter.write()
-
-        f.write("\n")
-
-        self._children.bodies.write()
-
-        self._headerFormatter += self._children.iBodyFrameX
-        self._headerFormatter += self._children.iBodyFrameY
-        self._headerFormatter += self._children.iBodyFrameZ
-        self._headerFormatter.write()
-
-        f.flush()
+        self._f.flush()

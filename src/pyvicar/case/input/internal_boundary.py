@@ -1,17 +1,33 @@
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter
+from pyvicar.tools.miscellaneous import args
 
 
 class InternalBoundary(Group, Writable):
-    def __init__(self, f):
+    def __init__(self, f, config={}):
         Group.__init__(self)
         Writable.__init__(self)
+
+        config = args.add_default(
+            config,
+            {
+                "iblank_types": {
+                    "default": "fast",
+                    "vmap": {"slow": 0, "fast": 1},
+                }
+            },
+            recursive=True,
+        )
+
         self._formatter = KV2Formatter(f)
 
         self._children.iib = Field("iib", False, "", Field.vmapPresets.bool2int)
         self._children.iBlank = Field(
-            "iBlank", "fast", "", {"slow": 0, "fast": 1, "faster": 10}
+            "iBlank",
+            config["iblank_types"]["default"],
+            "",
+            config["iblank_types"]["vmap"],
         )
         self._children.iCC = Field("iCC", False, "Cut Cell", Field.vmapPresets.bool2int)
         self._children.iSSMP = Field("iSSMP", False, "", Field.vmapPresets.bool2int)

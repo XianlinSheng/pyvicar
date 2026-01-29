@@ -9,10 +9,15 @@ class Misc(Group, Writable):
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
-        self._children.stopTime = Field("stopTime", 9e99)
+        self._children.iMisc = Field(
+            "iMisc",
+            False,
+            "default test entry in api, not a version specific misc group",
+            Field.vmapPresets.bool2int,
+        )
 
         self._finalize_init()
 
     def write(self):
-        self._formatter += self._children.stopTime
+        self._formatter += self._children.iMisc
         self._formatter.write()

@@ -121,7 +121,7 @@ class Field:
         return ", ".join(kvstrs)
 
     def rmap_str(self):
-        kvstrs = [f"{k}: {v}" for k, v in self._rmap.items()]
+        kvstrs = [f"{k}: {self._rmap[k]}" for k in sorted(self._rmap.keys())]
         return ", ".join(kvstrs)
 
     def key_len(self, verbose=Verbose()):

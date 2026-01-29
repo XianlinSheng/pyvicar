@@ -15,9 +15,30 @@ def split_into_n(total, n):
 
 
 class args:
-    def add_default(new, default):
+    # recursive: if an item is a subdict, add default values to it from its counterpart in default dict
+    def add_default(new, default, recursive=False, inplace=True):
+        if recursive:
+            for k, subdict in new.items():
+                if not isinstance(subdict, dict):
+                    continue
+                if k not in default:
+                    continue
+                if not isinstance(default[k], dict):
+                    raise Exception(
+                        f"add_default recursive is specified, but for the key {k} the specified subdict {subdict} expects also a subdict for default dict, but encountered {default[k]}"
+                    )
+                new[k] = args.add_default(subdict, default[k], recursive=True)
+
         default.update(new)
-        return default
+
+        if inplace:
+            for k, v in default.items():
+                new[k] = v
+            out = new
+        else:
+            out = default
+
+        return out
 
     def choose(kwargs, chosen):
         return {k: kwargs[k] for k in kwargs if k in chosen}
