@@ -6,7 +6,6 @@ from pyvicar.case.probe import Probe
 from pyvicar.case.canonical_body import CanonicalBody
 from pyvicar.case.unstruc_surface import UnstrucSurface
 from pyvicar.case.srj import SRJ
-from pyvicar.case.ib2 import IB2
 from pyvicar.case.nonuniform_grid import NonuniformGrid
 from pyvicar.case.job import Job
 from pyvicar.case.drag_lift import DragLiftList
@@ -62,7 +61,6 @@ class BasicsLinker:
         "cbody": True,
         "usurf": True,
         "srj": True,
-        "ib2": True,
         "grids": True,
         "job": True,
     }
@@ -119,9 +117,6 @@ class BasicsLinker:
         if def_list["srj"]:
             self._children.srj = SRJ(self._path / "SRJ_params_in.dat")
 
-        if def_list["ib2"]:
-            self._children.ib2 = IB2(self._path / "ib2_in.dat")
-
         if def_list["grids"]:
             self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
             self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
@@ -165,9 +160,6 @@ class BasicsLinker:
 
         if def_list["srj"] and self._children.srj:
             self._children.srj.write()
-
-        if def_list["ib2"] and self._children.ib2:
-            self._children.ib2.write()
 
         if def_list["grids"]:
             if self._children.xgrid:
