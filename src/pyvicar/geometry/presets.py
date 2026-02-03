@@ -54,7 +54,7 @@ def create_plane(uxyz, vxyz, dx, xyz0=None, file=None):
     us = np.linspace(0, lu, nu + 1, endpoint=True)
     ws = np.zeros_like(us)
     uws = np.stack((us, ws)).T
-    uwv, conn = Spanned2DCurve.from_2d_xy(uws, nv, lv / nv, cycled=False).to_numpy()
+    uwv, conn = Spanned2DCurve.from_2d_xy(uws, nv + 1, lv / nv, cycled=False).to_numpy()
 
     A = np.hstack((uxyz[:, None] / lu, vxyz[:, None] / lv))
 
