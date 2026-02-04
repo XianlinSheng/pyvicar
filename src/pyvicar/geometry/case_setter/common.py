@@ -107,6 +107,13 @@ def append_plane(c, uxyz, vxyz, dx, xyz0=None):
     return append_membrane(c, mesh)
 
 
+def append_stl_membrane(case, file, xyz=None):
+    mesh = TriSurface.from_stl(file)
+    if xyz is not None:
+        mesh.xyz.arr += np.array(xyz)
+    return append_membrane(case, mesh)
+
+
 # append an IB2 membrane
 def append_ib2_membrane(
     c,
