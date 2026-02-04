@@ -102,6 +102,13 @@ def append_membrane(case, mesh=None):
     return body, surf
 
 
+def append_stl_membrane(case, file, xyz=None):
+    mesh = TriSurface.from_stl(file)
+    if xyz is not None:
+        mesh.xyz.arr += np.array(xyz)
+    return append_membrane(case, mesh)
+
+
 def append_plane(c, uxyz, vxyz, dx, xyz0=None):
     mesh = create_plane(uxyz, vxyz, dx, xyz0)
     return append_membrane(c, mesh)

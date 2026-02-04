@@ -24,6 +24,7 @@ class ToolsLinker:
         cls.append_npz_solid_2d = geom.append_npz_solid_2d
         cls.append_membrane = geom.append_membrane
         cls.append_plane = geom.append_plane
+        cls.append_stl_membrane = geom.append_stl_membrane
         cls.append_ib2_membrane = geom.append_ib2_membrane
 
         cls.refine_grid = grid.refine_grid
