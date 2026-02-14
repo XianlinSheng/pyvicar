@@ -1,11 +1,11 @@
-from pyvicar.case.common import Case
+import pyvicar as pvc
 import pyvicar.tools.mpi as mpi
 import pyvicar.tools.log as log
 from pyvicar.tools.post.dump import Color, Field
 
 
 def post_slicecontour(p, run_type="run_check", field="vel"):
-    c = Case(p.name)
+    c = p.Case(p.name)
     c.dump.read()
 
     # None, None is default run check, using the latest vtm

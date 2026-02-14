@@ -1,10 +1,11 @@
-from pyvicar.case.common import Case
+import pyvicar as pvc
 import pyvicar.tools.mpi as mpi
 from pyvicar.tools.post.dump import Color, Field
 
 # 3. slice contour
 # this script reads the case vtk dump and generate a quick animation of contour on a slice
 
+Case = pvc.case.import_version("~/opt/Vicar3D/common")
 
 c = Case("tut_slice_contour")
 c.dump.read()

@@ -1,4 +1,4 @@
-from pyvicar.case.common import Case
+import pyvicar as pvc
 from pyvicar.geometry.presets import create_sphere
 from pyvicar.geometry import TriSurface
 
@@ -6,6 +6,8 @@ from pyvicar.geometry import TriSurface
 # this script generate the case file for a flow past sphere at Re=200, run for one time step,
 # where the sphere is described by 2 np arrays, xyz coords and connectivity.
 # connectivity is in shape [nelem, 3], [[point idx 1,p2,p3] for elem1,[p1,p2,p3] for elem2, ...]
+
+Case = pvc.case.import_version("~/opt/Vicar3D/common")
 
 d = 1
 U = 1

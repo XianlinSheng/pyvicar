@@ -1,4 +1,4 @@
-from pyvicar.case.common import Case
+import pyvicar as pvc
 import pyvicar.tools.matplotlib as pvmpl
 import matplotlib.pyplot as plt
 
@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 # font_sizes_l() is the default (without importing pvmpl) and will be friendly for plot screen
 # font_sizes_xl() will be friendly for illustration included in another canvas
 pvmpl.set_default(plt_kwargs=pvmpl.font_sizes_l())
+
+Case = pvc.case.import_version("~/opt/Vicar3D/common")
 
 c = Case("tut_draglift")
 c.draglift.read()

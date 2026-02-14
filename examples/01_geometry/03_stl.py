@@ -1,8 +1,10 @@
-from pyvicar.case.common import Case
+import pyvicar as pvc
 from pyvicar.geometry.presets import create_sphere
 
 # 3. stl
 # this script generate the case file for a flow past stl sphere at Re=200, run for one time step
+
+Case = pvc.case.import_version("~/opt/Vicar3D/common")
 
 d = 1
 U = 1

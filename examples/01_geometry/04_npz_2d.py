@@ -1,8 +1,10 @@
-from pyvicar.case.common import Case
+import pyvicar as pvc
 from pyvicar.geometry.presets import create_cyl_2d
 
 # 4. npz
 # this script generate the case file for a flow past 2D cylinder from npz coord array at Re=200, run for one time step
+
+Case = pvc.case.import_version("~/opt/Vicar3D/common")
 
 d = 1
 U = 1

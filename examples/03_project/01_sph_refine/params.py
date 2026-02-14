@@ -1,12 +1,13 @@
+import pyvicar as pvc
 from pyvicar.tools.collections import struct  # for containers, like python collections
 from pyvicar.grid import GridModel
-from pyvicar.geometry import create_sphere
 
 
 # the default kwargs are for formal running, but can be overriden like in test
 # only pass the ones that might need special overriding, directly specify in function if fixed, like U
 def gen_params(
     # --- case --- #
+    version="common",
     name="test",
     allow_restart=True,
     # --- device --- #
@@ -30,6 +31,7 @@ def gen_params(
 
     # --- case --- #
 
+    p.Case = pvc.case.import_version(f"~/opt/Vicar3D/versions/{version}")
     p.name = name
     p.allow_restart = allow_restart
 

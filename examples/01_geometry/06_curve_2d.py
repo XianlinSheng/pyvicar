@@ -1,11 +1,13 @@
 import numpy as np
-from pyvicar.case.common import Case
+import pyvicar as pvc
 from pyvicar.geometry.presets import create_cyl_2d
 
 # 6. curve 2D
 # this script generate the case file for a flow past 2D cylinder at Re=200, run for one time step,
 # where the cylinder is described by a np array, xy coords for points.
 # in shape [npoint, 2], [[x1, y1], ..., [xn, yn]], same format as the npz xy array in example 4
+
+Case = pvc.case.import_version("~/opt/Vicar3D/common")
 
 d = 1
 U = 1
