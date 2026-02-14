@@ -88,6 +88,11 @@ class Group(Container):
     def items(self):
         return self._children.items()
 
+    def set_children(self, itemable):
+        for k, v in itemable.items():
+            if k in self._children.keys():
+                setattr(self, k, v)
+
 
 # List contains dynamic childrenlist that can be accessed as a list
 class List(MutableSequence, Container):

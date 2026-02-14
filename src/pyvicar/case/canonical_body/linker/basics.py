@@ -6,8 +6,6 @@ from pyvicar.case.canonical_body.bodies import Bodies
 
 
 class BasicsLinker:
-    __version__ = "1.0"
-
     @staticmethod
     def def_path(self, path):
         self._path = Path(path)

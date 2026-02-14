@@ -16,8 +16,6 @@ from pyvicar.tools.miscellaneous import args
 
 
 class BasicsLinker:
-    __version__ = "1.0"
-
     @staticmethod
     def def_path(
         self,
