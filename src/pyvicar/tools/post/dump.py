@@ -97,7 +97,7 @@ class Field:
         return FieldVectorVORFromVEL(
             "VOR", component=VecComp[component.upper()], vel_name=vel_name
         )
-    
+
 
 class ColorBase:
     pass
@@ -201,7 +201,7 @@ def create_isoq_video(
     vtks=None,
     markers=None,
     q_name=None,
-    marker_f=lambda m: m,
+    marker_f=lambda c, i, v, m: m,
     plotter_f=lambda p, c, i, v, m: p,
     iso_opacity=0.5,
     iso_color=Color.field(Field.vector("VEL")),
@@ -233,7 +233,7 @@ def create_isoq_video(
 
         if marker is not None:
             bodies = marker.to_pyvista_multiblocks()
-            bodies = marker_f(bodies)
+            bodies = marker_f(c, i, vtk, bodies)
             for body in bodies:
                 plotter.add_mesh(body)
 
@@ -335,8 +335,10 @@ def create_slicecontour_video(
     normal="z",
     origin=[None, None, None],
     clip=None,
-    marker_f=lambda m: m,
+    marker_f=lambda c, i, v, m: m,
     plotter_f=lambda p, c, i, v, m: p,
+    origin_f=None,
+    clip_f=None,
     contour_color=Color.field(Field.vector("VEL")),
     keep_frames=True,
     resolution="4k",
@@ -354,6 +356,12 @@ def create_slicecontour_video(
 
     c, vtks, markers = get_vtks_markers(c, vtks, markers)
 
+    if origin_f is None:
+        origin_f = lambda c, i, v, m: origin
+
+    if clip_f is None:
+        clip_f = lambda c, i, v, m: clip
+
     mpi.set_async()
 
     for i, (vtk, marker) in mpi.dispatch(enumerate(zip(vtks, markers))):
@@ -367,14 +375,16 @@ def create_slicecontour_video(
 
         if marker is not None:
             bodies = marker.to_pyvista_multiblocks()
-            bodies = marker_f(bodies)
+            bodies = marker_f(c, i, vtk, bodies)
             for body in bodies:
                 plotter.add_mesh(body)
 
         if isinstance(contour_color, ColorField):
             mesh, field_name = prep_field(mesh, contour_color.field)
 
-        slice = create_slice(mesh, normal, origin, clip)
+        origin_t = origin_f(c, i, vtk, marker)
+        clip_t = clip_f(c, i, vtk, marker)
+        slice = create_slice(mesh, normal, origin_t, clip_t)
         if slice.n_points == 0 or slice.n_cells == 0:
             log.log(f"Slice Contour Video: Empty slice")
         else:
@@ -398,7 +408,7 @@ def create_slicecontour_video(
 
         # looking at the positive side, normal points to camera
         plotter.camera_position = normal_to_plane(normal)
-        plotter.camera.ParallelProjectionOn()
+        # plotter.camera.ParallelProjectionOn()
         # plotter.camera.zoom(1.5)
         plotter.add_axes()
         plotter.show_grid()
@@ -445,26 +455,113 @@ def resolution_to_size(resolution):
     return resolution
 
 
+def f_or_uniform(f, v):
+    if f is None:
+
+        def uniform_f(*args, **kwargs):
+            return v
+
+        return uniform_f
+
+    return f
+
+
 # oclock is the position of camera relative to target, 12 oclock x+ downstream, z+ up
-def calc_cam_position(target, l0=1, r=4, oclock=2, pitch=30, downstream_shift=1):
+def calc_cam_position(target, l0, r, oclock, pitch, downstream_shift):
+    target = np.asarray(target)
+
     target = target + np.asarray([downstream_shift, 0, 0]) * l0
 
     pitchrad = pitch * np.pi / 180
-    r *= np.cos(pitchrad)
     h = r * np.sin(pitchrad)
+    r *= np.cos(pitchrad)
 
     xyrad = -oclock * np.pi / 6
     xy = np.asarray([np.cos(xyrad), np.sin(xyrad)]) * r * l0
     xyz = np.asarray([xy[0], xy[1], h])
 
-    cam = np.asarray(target) + xyz
+    cam = target + xyz
 
-    return [cam, target, [0, 0, 1]]
+    up_pitchrad = (90 - pitch) * np.pi / 180
+    up_xyrad = xyrad + np.pi
+    up = np.asarray(
+        [
+            np.cos(up_pitchrad) * np.cos(up_xyrad),
+            np.cos(up_pitchrad) * np.sin(up_xyrad),
+            np.sin(up_pitchrad),
+        ]
+    )
+
+    return [cam, target, up]
 
 
-def set_cam_compass(target, **kwargs):
+def set_cam_compass(
+    target=[0, 0, 0],
+    l0=1,
+    r=4,
+    oclock=2,
+    pitch=30,
+    downstream_shift=1,
+    target_f=None,
+    l0_f=None,
+    r_f=None,
+    oclock_f=None,
+    pitch_f=None,
+    downstream_shift_f=None,
+):
+    target_f = f_or_uniform(target_f, target)
+    l0_f = f_or_uniform(l0_f, l0)
+    r_f = f_or_uniform(r_f, r)
+    oclock_f = f_or_uniform(oclock_f, oclock)
+    pitch_f = f_or_uniform(pitch_f, pitch)
+    downstream_shift_f = f_or_uniform(downstream_shift_f, downstream_shift)
+
     def plotter_f(plotter, c, i, vtk, marker):
-        plotter.camera_position = calc_cam_position(target, **kwargs)
+        target_t = target_f(c, i, vtk, marker)
+        l0_t = l0_f(c, i, vtk, marker)
+        r_t = r_f(c, i, vtk, marker)
+        oclock_t = oclock_f(c, i, vtk, marker)
+        pitch_t = pitch_f(c, i, vtk, marker)
+        downstream_shift_t = downstream_shift_f(c, i, vtk, marker)
+
+        plotter.camera_position = calc_cam_position(
+            target_t, l0_t, r_t, oclock_t, pitch_t, downstream_shift_t
+        )
+        return plotter
+
+    return plotter_f
+
+
+def set_cam_hovering(
+    target=[0, 0, 0],
+    l0=1,
+    r=4,
+    downstream_shift=1,
+    target_f=None,
+    l0_f=None,
+    r_f=None,
+    downstream_shift_f=None,
+):
+    target_f = f_or_uniform(target_f, target)
+    l0_f = f_or_uniform(l0_f, l0)
+    r_f = f_or_uniform(r_f, r)
+    downstream_shift_f = f_or_uniform(downstream_shift_f, downstream_shift)
+
+    def plotter_f(plotter, c, i, vtk, marker):
+        target_t = target_f(c, i, vtk, marker)
+        l0_t = l0_f(c, i, vtk, marker)
+        r_t = r_f(c, i, vtk, marker)
+        downstream_shift_t = downstream_shift_f(c, i, vtk, marker)
+
+        cam0, target0, up = plotter.camera_position
+        up = np.asarray(up)
+        up /= np.linalg.norm(up)
+        normal = np.asarray(cam0) - np.asarray(target0)
+        normal /= np.linalg.norm(normal)
+        right = np.cross(up, normal)
+        target_t = target_t + right * l0_t * downstream_shift_t
+        cam = target_t + normal * l0_t * r_t
+        plotter.camera_position = [cam, target_t, up]
         return plotter
 
     return plotter_f

@@ -12,6 +12,7 @@ from pyvicar.case.drag_lift import DragLiftList
 from pyvicar.case.dump import Dump
 from pyvicar.case.post import Post
 from pyvicar.case.restart import Restart
+from pyvicar.case.report import Report
 from pyvicar.tools.miscellaneous import args
 
 
@@ -67,6 +68,7 @@ class BasicsLinker:
         "draglift": True,
         "dump": True,
         "restart": True,
+        "report": True,
         "post": True,
     }
 
@@ -88,6 +90,7 @@ class BasicsLinker:
                 "cbody": {},
                 "input": {},
                 "restart": [],
+                "report": [],
             },
         )
 
@@ -131,6 +134,9 @@ class BasicsLinker:
 
         if def_list["restart"]:
             self._children.restart = Restart(self, configs=config["restart"])
+
+        if def_list["report"]:
+            self._children.report = Report(self, configs=config["report"])
 
         if def_list["post"]:
             self._children.post = Post(self)
@@ -187,6 +193,9 @@ class BasicsLinker:
 
         if def_list["restart"]:
             self._children.restart.read()
+
+        if def_list["report"]:
+            self._children.report.read()
 
         if def_list["post"]:
             self._children.post.read()
