@@ -16,6 +16,7 @@ def split_into_n(total, n):
 
 class args:
     # recursive: if an item is a subdict, add default values to it from its counterpart in default dict
+    @staticmethod
     def add_default(new, default, recursive=False, inplace=True):
         if recursive:
             for k, subdict in new.items():
@@ -40,8 +41,22 @@ class args:
 
         return out
 
+    @staticmethod
     def choose(kwargs, chosen):
         return {k: kwargs[k] for k in kwargs if k in chosen}
+
+    @staticmethod
+    def none_to_default_impl(pds_it):
+        for passv, defaultv, setter in pds_it:
+            if passv is None:
+                setter(defaultv)
+
+    @staticmethod
+    def none_to_default(pass_list, default_list):
+        return [
+            defaultv if passv is None else passv
+            for passv, defaultv in zip(pass_list, default_list)
+        ]
 
 
 def broadcast_ops(cls, ops):
