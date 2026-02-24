@@ -49,6 +49,9 @@ def append_solid_2d(case, curv, cycled=True):
 
 
 def append_sphere(case, r, dx, xyz):
+    """
+    add a sphere as solid 3d body
+    """
     mesh = create_sphere(r, dx, xyz)
     return append_solid(case, mesh)
 

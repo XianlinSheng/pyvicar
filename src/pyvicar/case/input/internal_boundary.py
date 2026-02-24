@@ -22,15 +22,30 @@ class InternalBoundary(Group, Writable):
 
         self._formatter = KV2Formatter(f)
 
-        self._children.iib = Field("iib", False, "", Field.vmapPresets.bool2int)
+        self._children.iib = Field(
+            "iib",
+            False,
+            "whether there is an internal boundary",
+            Field.vmapPresets.bool2int,
+        )
         self._children.iBlank = Field(
             "iBlank",
             config["iblank_types"]["default"],
-            "",
+            "the iblanking (rasterization) algorithm of internal boundary",
             config["iblank_types"]["vmap"],
         )
-        self._children.iCC = Field("iCC", False, "Cut Cell", Field.vmapPresets.bool2int)
-        self._children.iSSMP = Field("iSSMP", False, "", Field.vmapPresets.bool2int)
+        self._children.iCC = Field(
+            "iCC",
+            False,
+            "whether to use Cut Cell method for internal boundary",
+            Field.vmapPresets.bool2int,
+        )
+        self._children.iSSMP = Field(
+            "iSSMP",
+            False,
+            "whether to use SSM method for internal boundary but only for pressure equation",
+            Field.vmapPresets.bool2int,
+        )
         self._children.iMergeType = Field(
             "iMergeType", False, "", Field.vmapPresets.bool2int
         )
@@ -42,7 +57,12 @@ class InternalBoundary(Group, Writable):
         self._children.nCheckBI = Field("nCheckBI", 3)
         self._children.nCheckIBlank = Field("nCheckIBlank", 3)
 
-        self._children.form = Field("form", "gcm", "", {"ssm": 1, "gcm": 2})
+        self._children.form = Field(
+            "form",
+            "gcm",
+            "the algorithm to deal with bc of the internal boundary",
+            {"ssm": 1, "gcm": 2},
+        )
         self._children.extOutflow = Field(
             "extOutflow", False, "", Field.vmapPresets.bool2int
         )

@@ -58,6 +58,10 @@ class Field:
     def value(self):
         return self._value
 
+    @property
+    def valueType(self):
+        return self._valueType
+
     @value.setter
     def value(self, new):
         # implicit extract value from another Field
@@ -116,6 +120,14 @@ class Field:
 
         return str(value)
 
+    @property
+    def vmap(self):
+        return self._vmap
+
+    @property
+    def rmap(self):
+        return self._rmap
+
     def vmap_str(self):
         kvstrs = [f"{k}: {v}" for k, v in self._vmap.items()]
         return ", ".join(kvstrs)
@@ -168,6 +180,14 @@ class Field:
             b = self._vmap[b]
 
         return self.value == b
+
+    def to_dict(self):
+        return {
+            "key": self.key,
+            "value": self.value,
+            "dscrp": self.dscrp,
+            "vmap": self.vmap,
+        }
 
 
 Field.vmapPresets.bool2int = {False: 0, True: 1}

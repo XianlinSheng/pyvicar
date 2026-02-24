@@ -99,6 +99,9 @@ def apply_grid_model(c, gm, dx):
 
 
 def create_grid(c, l0=None, doml=None, refl=None, grow=None, dx=None, dim2=False):
+    """
+    create grid model
+    """
     if l0 is None:
         l0 = 1
     if dx is None:
