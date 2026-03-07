@@ -42,10 +42,7 @@ def get_vtks_markers(c, vtks, markers):
 
     if markers is None:
         c.dump.marker.read()
-        if c.dump.marker:
-            markers = c.dump.marker.latest
-        else:
-            markers = [None] * len(vtks)
+        markers = [None] * len(vtks)
 
     if not isinstance(vtks, Iterable):
         vtks = [vtks]

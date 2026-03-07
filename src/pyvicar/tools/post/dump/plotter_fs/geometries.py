@@ -58,3 +58,14 @@ def make_polyline_plotter_f(xyz_fs, color="black", line_width=5):
         return plotter
 
     return plotter_f
+
+
+def make_arrow_plotter_f(start_f, direction_f, color="black", scale=1):
+    def plotter_f(plotter, c, i, v, m):
+        arrow = pv.Arrow(
+            start=start_f(c, i, v, m), direction=direction_f(c, i, v, m), scale=scale
+        )
+        plotter.add_mesh(arrow, color=color)
+        return plotter
+
+    return plotter_f
