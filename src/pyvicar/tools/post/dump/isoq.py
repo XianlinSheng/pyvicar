@@ -162,4 +162,6 @@ def create_isoq_video(
         del a.frames
     mpi.barrier()
 
+    a.read()  # update the new video
+
     return a
