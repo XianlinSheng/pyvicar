@@ -2,6 +2,7 @@ import ffmpeg
 import shutil
 import matplotlib.pyplot as plt
 from pyvicar._utilities import Optional
+from pyvicar.tools.ffmpeg import Canvas
 from pyvicar._tree import Group, Dict, List
 from pyvicar.file import Readable
 from pyvicar.file import Series, Siblings
@@ -178,7 +179,10 @@ class Animation(Group, Dict, Readable):
 
         if run:
             (
-                video.output(f"{self._path}/{self._name}.{outformat}")
+                video.output(
+                    f"{self._path}/{self._name}.{outformat}",
+                    pix_fmt="yuv420p",  # cross-platform compatibility
+                )
                 .overwrite_output()
                 .run(quiet=quiet)
             )
@@ -282,7 +286,6 @@ class Frames(List, Readable, Optional):
                 self.to_ffmpeg(framerate)
                 .output(
                     f"{self._animation.path}/{self._name}.{outformat}",
-                    threads=threads,
                     pix_fmt="yuv420p",  # cross-platform compatibility
                 )
                 .overwrite_output()
@@ -323,3 +326,6 @@ class Video(Group):
 
     def to_ffmpeg(self):
         return ffmpeg.input(f"{self._path}")
+
+    def to_canvas(self, row_height=0.25):
+        return Canvas(self.path, row_height=row_height)
