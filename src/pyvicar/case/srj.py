@@ -56,6 +56,18 @@ class SRJ(Group, Writable, Optional):
         self.nomega = p.nomega
         self.omegas = p.omegas
 
+    def set_chebyshev(self, N, kmin, kmax):
+        if not self:
+            raise Exception(f"SRJ is not active, call .enable() to enable it")
+
+        self.nomega = N
+        i = np.arange(N)
+        omegas = 2 / (
+            (kmax + kmin) - (kmax - kmin) * np.cos(np.pi * (2 * i + 1) / (2 * N))
+        )
+        omegas = srj.rearrange_omegas(omegas, np.ones(N, dtype=int), N)
+        self.omegas = omegas[:, np.newaxis]
+
     def set_jacobi(self):
         self.nomega = 1
         self.omegas = np.array([[1]], dtype=float)

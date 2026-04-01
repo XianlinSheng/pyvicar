@@ -26,6 +26,9 @@ class Struct(Iterable):
     def items(self):
         return vars(self).items()
 
+    def deffield(self, k, v):
+        setattr(self, k, Field(k, v))
+
 
 # group contains static children, defined compile-time (mod init)
 class Group(Container):
