@@ -9,8 +9,6 @@ from pyvicar.tools.miscellaneous import args
 
 
 class BasicsLinker:
-    __version__ = "1.0"
-
     @staticmethod
     def def_file(self, f):
         self._formatter = KV1Formatter(f)

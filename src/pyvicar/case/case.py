@@ -4,7 +4,6 @@ from pyvicar.case.linker.tools import ToolsLinker
 from pyvicar.case.linker.basics import BasicsLinker
 
 
-@ToolsLinker.link_addons()
 @ToolsLinker.link()
 @BasicsLinker.def_methods()
 class Case(Group, Writable, Readable):
@@ -17,10 +16,12 @@ class Case(Group, Writable, Readable):
 
         BasicsLinker.def_children(
             self,
-            restart_configs=[
-                {"prefix": "flow"},
-                {"prefix": "body"},
-            ],
+            config={
+                "restart": [
+                    {"prefix": "flow"},
+                    {"prefix": "body"},
+                ]
+            },
         )
 
         self._finalize_init()
