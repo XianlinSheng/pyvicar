@@ -1,4 +1,4 @@
-import pyvicar as pvc
+import pyvicar
 from pyvicar.tools.collections import struct  # for containers, like python collections
 from pyvicar.grid import GridModel
 
@@ -31,7 +31,7 @@ def gen_params(
 
     # --- case --- #
 
-    p.Case = pvc.case.import_version(f"~/opt/Vicar3D/versions/{version}")
+    p.Case = pyvicar.import_case(f"~/opt/Vicar3D/versions/{version}")
     p.name = name
     p.allow_restart = allow_restart
 

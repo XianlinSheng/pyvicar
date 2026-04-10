@@ -1,11 +1,11 @@
-import pyvicar as pvc
+import pyvicar
 import pyvicar.tools.mpi as mpi
 from pyvicar.tools.post.dump import Color, Field, set_cam_compass
 
 # 2. isoq3d
 # this script reads the case vtk dump and generate a quick animation of Q criterion iso surfaces
 
-Case = pvc.case.import_version("~/opt/Vicar3D/common")
+Case = pyvicar.import_case("~/opt/Vicar3D/common")
 
 c = Case("tut_isoq3d")
 c.dump.read()

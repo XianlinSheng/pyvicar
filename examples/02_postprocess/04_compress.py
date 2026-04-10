@@ -1,4 +1,4 @@
-import pyvicar as pvc
+import pyvicar
 import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
 
@@ -6,7 +6,7 @@ import pyvicar.tools.mpi as mpi
 # 4. compress
 # this script reads the case vtk dump and compress to vtr binary
 
-Case = pvc.case.import_version("~/opt/Vicar3D/common")
+Case = pyvicar.import_case("~/opt/Vicar3D/common")
 
 name = "tut_compress"
 npx, npy = 4, 4

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyvicar"
 version = "1.0.0"
-description = "Python Shell for Vicar3D"
+description = "Python Shell for ViCar3D"
 authors = [{ name = "Xianlin Sheng" }]
 readme = "README.md"
 requires-python = ">=3.8,<3.13"

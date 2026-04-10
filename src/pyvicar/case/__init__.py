@@ -1,1 +1,1 @@
-from .case_importer import import_version
+from .case_importer import import_case

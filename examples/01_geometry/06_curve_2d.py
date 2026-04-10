@@ -1,5 +1,5 @@
 import numpy as np
-import pyvicar as pvc
+import pyvicar
 from pyvicar.geometry.presets import create_cyl_2d
 
 # 6. curve 2D
@@ -7,7 +7,7 @@ from pyvicar.geometry.presets import create_cyl_2d
 # where the cylinder is described by a np array, xy coords for points.
 # in shape [npoint, 2], [[x1, y1], ..., [xn, yn]], same format as the npz xy array in example 4
 
-Case = pvc.case.import_version("~/opt/Vicar3D/common")
+Case = pyvicar.import_case("~/opt/Vicar3D/common")
 
 d = 1
 U = 1

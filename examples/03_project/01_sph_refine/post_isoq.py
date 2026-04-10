@@ -1,4 +1,4 @@
-import pyvicar as pvc
+import pyvicar
 import pyvicar.tools.mpi as mpi
 import pyvicar.tools.log as log
 from pyvicar.tools.post.dump import Color, Field, set_cam_compass
