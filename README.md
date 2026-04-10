@@ -160,7 +160,7 @@ U = 1
 re = 200
 dx = d / 20
 
-c = Case('case_folder_path')
+c = Case("case_folder_path")
 gm = c.create_grid(l0=d, dx=dx)
 body, surf = c.append_sphere(d / 2, dx, gm.center)
 c.set_inlet("x1", [U, 0, 0])
@@ -191,7 +191,7 @@ U = 1
 re = 200
 dx = d / 20
 
-c = Case('case_folder_path')
+c = Case("case_folder_path")
 gm = c.create_grid(l0=d, dx=dx)
 body, surf = c.append_sphere(d / 2, dx, gm.center)
 c.set_inlet("x1", [U, 0, 0])
@@ -210,6 +210,16 @@ and tool functions too.
 However, note that one can ONLY use either built-in default layout
 or an imported distribution during the runtime of entire python program.
 Dynamic switch is allowed as long as the program is based on only one.
+Furthermore, since the built-in Case is not linked to any distributed binaries,
+it cannot be run using:
+<pre>
+from pyvicar.case import Case
+c = Case("case_folder_path")
+# these wont work saying there is no attribute runpath
+# c.mpirun()
+# c.job.enable()
+# c.sbatch() does not need runpath but it needs job to be generated
+</pre>
 
 Further examples are located in the examples folder 
 covering how to generate 2D/3D bodies, make common postprocessings, 

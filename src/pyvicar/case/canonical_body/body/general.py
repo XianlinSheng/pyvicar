@@ -41,12 +41,12 @@ class General(Group, Writable):
         )
 
         self._children.bodyType = Field(
-            "body_type",
+            "bodyType",
             config["body_types"]["default"],
             "",
             config["body_types"]["vmap"],
         )
-        self._children.bodyDim = Field("body_dim", 3)
+        self._children.bodyDim = Field("bodyDim", 3)
         self._children.motionType = Field(
             "motionType",
             config["motion_types"]["default"],
