@@ -1,6 +1,11 @@
 import sys
 import importlib
 from pathlib import Path
+from packaging.version import Version
+
+
+def api_version():
+    return Version("1.0.0")
 
 
 def import_version(install_prefix):
@@ -24,11 +29,35 @@ def import_version(install_prefix):
     finally:
         sys.path.pop(0)
 
+    ver_self = api_version()
+    try:
+        ver_min = addons_mod.min_api_version()
+    except AttributeError:
+        raise RuntimeError(
+            "Target not correctly installed, expecting a min_api_version function in lib/pyvicar_addons module root"
+        )
+    try:
+        ver_max = addons_mod.max_api_version()
+    except AttributeError:
+        raise RuntimeError(
+            "Target not correctly installed, expecting a max_api_version function in lib/pyvicar_addons module root"
+        )
+
+    if ver_self < ver_min:
+        raise RuntimeError(
+            f"Not compatible with the target, requiring higher pyvicar version >= v{ver_min}, but using v{ver_self}"
+        )
+
+    if ver_self >= ver_max:
+        raise RuntimeError(
+            f"Not compatible with the target, requiring lower pyvicar version < v{ver_max}, but using v{ver_self}"
+        )
+
     try:
         Case = addons_mod.case.Case
     except AttributeError:
         raise RuntimeError(
-            "Target version not compatible or not correctly installed, expecting a Case class in lib/pyvicar/case module"
+            "Target not correctly installed, expecting a Case class in lib/pyvicar_addons/case module"
         )
 
     @property
