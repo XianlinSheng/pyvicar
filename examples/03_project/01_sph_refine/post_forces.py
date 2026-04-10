@@ -1,4 +1,3 @@
-from pyvicar.case.common import Case
 import pyvicar.tools.matplotlib as pvmpl
 import matplotlib.pyplot as plt
 
@@ -6,7 +5,7 @@ pvmpl.set_default(plt_kwargs=pvmpl.font_sizes_l())
 
 
 def post_forces(p):
-    c = Case(p.name)
+    c = p.Case(p.name)
     c.draglift.read()
 
     # CASE CHECK: what postprocesses to use

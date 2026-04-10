@@ -1,0 +1,53 @@
+from pyvicar._tree import Group, Field
+from pyvicar.file import Writable
+from pyvicar._format import KV2Formatter
+from pyvicar.tools.miscellaneous import args
+
+
+class PoissonSolver(Group, Writable):
+    def __init__(self, f, config={}):
+        Group.__init__(self)
+        Writable.__init__(self)
+
+        config = args.add_default(
+            config,
+            {
+                "solver_types": {
+                    "default": "pbicgstab",
+                    "vmap": {"linesor": 1, "mg": 2, "pbicgstab": 3},
+                }
+            },
+            recursive=True,
+        )
+        self._formatter = KV2Formatter(f)
+
+        self._children.itSolverType = Field(
+            "itSolverType",
+            config["solver_types"]["default"],
+            "",
+            config["solver_types"]["vmap"],
+        )
+        self._children.redblack = Field(
+            "red_black", False, "", Field.vmapPresets.bool2int
+        )
+
+        self._children.omega = Field("omega", 1.0)
+
+        self._children.itermaxPoisson = Field("itermaxPoisson", 10000)
+        self._children.resmaxPoisson = Field("resmaxPoisson", 1e-4)
+        self._children.iterresPoisson = Field("iterresPoisson", 5)
+
+        self._finalize_init()
+
+    def write(self):
+        self._formatter += self._children.itSolverType
+        self._formatter += self._children.redblack
+        self._formatter.write()
+
+        self._formatter += self._children.omega
+        self._formatter.write()
+
+        self._formatter += self._children.itermaxPoisson
+        self._formatter += self._children.resmaxPoisson
+        self._formatter += self._children.iterresPoisson
+        self._formatter.write()

@@ -29,7 +29,6 @@ def link_common_tools(cls):
     cls.append_membrane = geom.append_membrane
     cls.append_plane = geom.append_plane
     cls.append_stl_membrane = geom.append_stl_membrane
-    cls.append_ib2_membrane = geom.append_ib2_membrane
 
     cls.refine_grid = grid.refine_grid
     cls.uniform_grid_n = grid.uniform_grid_n

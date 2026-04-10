@@ -26,6 +26,9 @@ class Struct(Iterable):
     def items(self):
         return vars(self).items()
 
+    def deffield(self, k, v):
+        setattr(self, k, Field(k, v))
+
 
 # group contains static children, defined compile-time (mod init)
 class Group(Container):
@@ -87,6 +90,11 @@ class Group(Container):
 
     def items(self):
         return self._children.items()
+
+    def set_children(self, itemable):
+        for k, v in itemable.items():
+            if k in self._children.keys():
+                setattr(self, k, v)
 
 
 # List contains dynamic childrenlist that can be accessed as a list

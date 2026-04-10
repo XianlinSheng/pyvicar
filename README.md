@@ -16,23 +16,7 @@ and provides tools to generate grids and surface mesh.
 - matplotlib (visualize dataset)
 - mpi4py (parallel postprocessing)
 - ffmpeg (convert frames to video files, can be auto handled by conda)
-- ffmpeg-python (python controller of above) Important:
-*ffmpeg executable is not handled by pip dependencies and should be visible
-at the point of installing pyvicar.
-Recommand directly using conda,
-and this one line will install ffmpeg and its python wrapper*
-<pre>
-conda install -c conda-forge ffmpeg-python
-</pre>
-- pyvista (mesh visualization and postprocessing) Important:
-*on an off-screen server, 
-a specific osmesa build of vtk needs to be installed before pyvista*:
-<pre>
-conda install -c conda-forge vtk=*=osmesa*
-conda install -c conda-forge pyvista # or pip install pyvista
-</pre>
-conda forge might not have the newest python build for pyvista, 
-but pip install will work too.
+- ffmpeg-python (python controller of above)
 
 ## Install
 Before installing pyvicar, 
@@ -41,30 +25,24 @@ make sure the following dependencies are handled well
 ### mpi, mpi4py
 
 If using existing MPI library, 
-make sure the mpi4py links against it correctly:
+make sure the mpi4py wrapper links against it correctly:
 <pre>
 which mpicc
 pip install --no-binary mpi4py --no-cache-dir --force-reinstall mpi4py
 python -c "from mpi4py import MPI; print(MPI.Get_library_version())"
 </pre>
 
-For a full new environment automatically, simply use conda:
+For a full new MPI environment handled by conda, simply:
 <pre>
 conda install -c conda-forge mpi4py
 </pre>
+and conda will auto install an MPI impl.
+But ViCar3D relies on intel toolchain so typically 
+one will need to pip build and link to intel MPI.
 
 ### ffmpeg, ffmpeg-python
 
-If using existing ffmpeg executable, 
-make sure the ffmpeg-python can use it:
-<pre>
-which ffmpeg
-pip install --no-cache-dir --force-reinstall ffmpeg-python
-
-python -c "import ffmpeg; ffmpeg.input('testsrc=size=128x128:rate=1', f='lavfi', t=1).output('-', f='null').run()"
-</pre>
-
-For a full new environment automatically, simply use conda:
+Use conda to install ffmpeg backend and python wrapper together:
 <pre>
 conda install -c conda-forge ffmpeg-python
 </pre>
@@ -73,7 +51,13 @@ conda install -c conda-forge ffmpeg-python
 
 VTK can use X server, off-screen CPU, or off-screen GPU,
 but pip does not provide full pre-builts on these backends,
-so recommend using conda directly:
+so recommend using conda directly.
+Typically one need to install osmesa build on cluster 
+otherwise it will be stuck in endless wait for an X server.
+When postprocessing is taking too much time while 
+still generating nothing, it might be in a deadlock 
+waiting for the response from an X server that does not even exists. 
+egl is not tested and x/osmesa based on cpu are the stable recommended approach. 
 <pre>
 conda install -c conda-forge vtk           # normal with x server
 conda install -c conda-forge vtk=*=osmesa* # headless cpu
@@ -81,81 +65,65 @@ conda install -c conda-forge vtk=*=egl*    # headless gpu
 
 python -c "import vtk; rw = vtk.vtkRenderWindow(); print(rw.GetClassName())"
 </pre>
+Especially on cluster or X display server is not available, 
+make sure this shows an OS (Off Screen) type.
 
-<!-- If installing without conda is necessary, 
-one can still choose to build VTK library from cmake,
-and expose the library in PYTHONPATH:
-<pre>
-git clone https://github.com/Kitware/VTK
-cd VTK
-git checkout v9.1.0
-
-cmake -S . -B build \
- -DCMAKE_BUILD_TYPE=Release \   
- -DVTK_BUILD_TESTING=OFF \
- -DVTK_BUILD_DOCUMENTATION=OFF \
- -DVTK_BUILD_EXAMPLES=OFF \
- -DVTK_MODULE_ENABLE_VTK_PythonInterpreter:STRING=NO \
- -DVTK_WHEEL_BUILD=ON \
- -DVTK_PYTHON_VERSION=3 \
- -DVTK_WRAP_PYTHON=ON \
- -DVTK_OPENGL_HAS_EGL:BOOL=ON \
- -DVTK_USE_X:BOOL=OFF \
- -DVTK_USE_COCOA:BOOL=OFF \
- -DVTK_DEFAULT_RENDER_WINDOW_HEADLESS:BOOL=ON \
- -DPython3_EXECUTABLE=$(which python) \
- -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \ 
- -DCMAKE_INSTALL_PREFIX=~/opt/vtk
-
-cmake --build build -j $(nproc)
-cmake --install build
-
-cd build
-python setup.py bdist_wheel
-</pre> -->
-
-Then, pyvista can be installed easily in either way with vtk package visible by python
+Then, pyvista is available on conda-forge 
+so it can be installed in either way.
 <pre>
 conda install -c conda-forge pyvista # conda forge
 pip install pyvista                  # pip install
 </pre>
-or it will be pip installed automatically when pip install pyvicar
+or it will be pip installed automatically 
+when directly calling pip install pyvicar
 
 ### pyvicar
 <pre>
 git clone https://github.com/XianlinSheng/pyvicar.git
-pip install ./pyvicar
+cd pyvicar
+git checkout v1.0.0 # or other release tag
+pip install .
 </pre>
-If required dependencies do not exist, 
-pip install automatically install the newest version.
+pip can install the rest automatically.
+If one want to keep consistency with conda:
+<pre>
+conda install -c conda-forge    \
+    numpy scipy numpy-stl       \
+    trimesh pandas h5py matplotlib
+</pre>
 
 
 
 ## Examples
 
-### Input
-
-#### Config
-
-Configuration is set in the style of:
+Foundamentally, configuration is set in the style of:
 <pre>
-from pyvicar.case.version import Case
+from pyvicar.case import Case
 
-c = Case('casepath')
+c = Case('case_folder_path')
 
 c.input.parallel.npx = 4
 c.input.parallel.npy = 4
+
+c.input.domain.xout = 10
+c.input.domain.yout = 5
+c.input.domain.zout = 5
+
+c.input.domain.nx = 129
+c.input.domain.ny = 65
+c.input.domain.nz = 65
+
 c.input.bc.x1.bcx1 = 'dirichlet'
 c.input.bc.x1.ux1 = 1.0
 
 c.write()
 </pre>
+Default values will apply if not specified,
+check the generated files to see the defaults.
 
-#### Grid
-
-To setup nonuniform grid:
+To setup custom grid:
 <pre>
-from pyvicar.case.version import Case
+from pyvicar.case import Case
 from pyvicar.grid import Segment
 
 middle = Segment.uniform_dx(start=1, end=2, dx=0.01)
@@ -163,7 +131,7 @@ left = Segment.grow_toward_left(rterminal=middle, lend=0, growthrate=1.05)
 right = Segment.grow_toward_right(lterminal=middle, rend=3, growthrate=1.05)
 xaxis = left + middle + right
 
-c = Case('casepath')
+c = Case('case_folder_path')
 
 c.xgrid.enable()
 c.xgrid.nodes = xaxis
@@ -171,175 +139,81 @@ c.xgrid.nodes = xaxis
 c.write()
 </pre>
 
-#### Geometry
+These basic operations are equivalent of setting input files but programmable.
+When starting to set multiple bodies, cases, and optimize grid refinements and generations,
+these might seem too low-level, so in fact pyvicar already wraps up 
+some frequently-used operations into tool functions
+and can accomplish a human-level command by one function call.
 
-To import an .stl 3D surface:
+For example, the following short script 
+can setup a flow past sphere at given resolution
+in 10 lines of code, with a sphere mesh being made, 
+a suitable and locally refined grid being generated,
+multiple coupled body element and placement entries being handled,
+several lines of BC type and values being compressed,
+and physical parameters being transformed.
 <pre>
-from pyvicar.case.version import Case
-from pyvicar.geometry import TriSurface
+from pyvicar.case import Case
 
-# startIdx = 1 by default, same as input file
-surf = TriSurface.from_stl('geometry.stl', startIdx=1)
-# TriSurface.from_xyz_conn is also provided for raw data
+d = 1
+U = 1
+re = 200
+dx = d / 20
 
-c = Case('casepath')
-
-c.unstrucSurface.enable()
-c.unstrucSurface.surfaces.resetnew(1)
-# this index starts at 1 by default (can be set), same as input file
-unstruc1 = c.unstrucSurface.surfaces[1]
-unstruc1.nPoint = surface.xyz.shape[0]
-unstruc1.nElem = surface.conn.shape[0]
-unstruc1.xyz = surface.xyz
-unstruc1.conn = surface.conn
+c = Case('case_folder_path')
+gm = c.create_grid(l0=d, dx=dx)
+body, surf = c.append_sphere(d / 2, dx, gm.center)
+c.set_inlet("x1", [U, 0, 0])
+c.set_re(re, U=U, L=d)
 
 c.write()
 </pre>
 
-or create an extruded surface based on 2D curve:
+ViCar3D has multiple versions for different or special uses,
+and pyvicar provides the ability to use them in the same API
+for common jobs.
+Even for unique features it will still keep a 
+consistent style of using and help query.
+A standard ViCar3D distribution contains a 
+bin/ for executables, and a lib/ for internal dependencies 
+and pyvicar_addons support.
+In the above few examples we were using the minimal common
+built-in config formats and entry options, 
+and to work on a specific distribution,
+simply change how to import the Case class:
 <pre>
-from pyvicar.case.version import Case
-from pyvicar.geometry import Spanned2DCurve
+import pyvicar
 
-x = np.arange(0, 1.1, 0.1)
-y = np.arange(0, 1.1, 0.1)
-points = np.concatenate((x[:,np.newaxis], y[:,np.newaxis]), axis=1)
+Case = pyvicar.import_case("your/path/to/distribution")
 
-# Spanned2DCurve inherits TriSurface with more properties like nz
-surf = Spanned2DCurve.from_2d_xy(points, nz=3, dz=0.1, startIdx=1)
+d = 1
+U = 1
+re = 200
+dx = d / 20
 
-...
+c = Case('case_folder_path')
+gm = c.create_grid(l0=d, dx=dx)
+body, surf = c.append_sphere(d / 2, dx, gm.center)
+c.set_inlet("x1", [U, 0, 0])
+c.set_re(re, U=U, L=d)
+
+c.write()
 </pre>
+The distribution path is the root folder that sees root/bin, root/lib.
+Sanity and version check will be done during importing,
+and it will throw exceptions if the installation
+is not complete, the support is corrupted, 
+or the support relies on features too old or too new in this pyvicar framework.
+Different distributions may vary in the available options 
+of the entries, may provide additional models or features, 
+and tool functions too.
 
-
-### Output
-
-#### Drag Lift Forces
-<pre>
-import matplotlib.pyplot as plt
-from pyvicar.case.version import Case
-
-c = Case('casepath')
-
-c.read()
-
-# if no output is available
-if not c.draglift:
-    return
-
-# .ravel() is used because the underlying dataset is a n*1 2d array
-time = c.draglift[1].time.ravel()
-cyp = np.zeros_like(c.draglift[1].cyp.ravel())
-# compute the sum of the lift on all bodies
-for body in c.draglift:
-    cyp += body.cyp.ravel()
-
-plt.plot(time, cyp, label="sum", color="k", linewidth=2)
-plt.legend()
-plt.show()
-</pre>
-
-#### Animations
-<pre>
-import pyvista as pv
-from itertools import product
-import pyvicar.tools.mpi as mpi
-from pyvicar.case.version import Case
-
-
-# sync mode (default): all processors working on same case
-mpi.set_sync()
-
-
-cases = ["case1", "..."]
-for case in cases:
-    c = Case(case)
-
-    c.read()
-    c.post.enable()
-    c.post.animations.enable()
-    c.post.animations.del_animations()
-    anivel = c.post.animations.add_new("vel")
-    anivel.frames.enable()
-
-    for vtk in c.dump.vtk.mpi_dispatch():
-        mesh = vtk.to_pyvista()
-        # here starts pyvista
-
-        plotter = pv.Plotter(off_screen=True)
-        # contour scalar bar
-        scalar_bar_args = {
-            "title_font_size": 40,
-            "label_font_size": 36,
-            "position_x": 0.9,      # horizontal position (0 to 1)
-            "position_y": 0.05,     # vertical position (0 to 1)
-            "width": 0.05,
-            "height": 0.3,
-            "vertical": True,       # or False for horizontal bar
-            "color": "white",
-        }
-        plotter.add_mesh(
-            clipped_slice,
-            scalars="VEL",
-            cmap="coolwarm",
-            clim=[0, 1.2],
-            scalar_bar_args=scalar_bar_args,
-        )
-
-        plotter.view_xy()           # Set view to XY plane
-        plotter.set_background("white")
-        plotter.camera.parallel_projection = True
-        plotter.camera.zoom(2.2)
-
-        # save to a frame png
-        anivel.frames.from_pyvista(
-            vtk.seriesi, plotter, window_size=[3840, 2160]
-        )
-
-
-# async mode: processors are irrelavant to each other
-# this is necessary if running mpi async
-mpi.set_async()
-
-
-anis = ["vel", "..."]
-span = list(product(cases, anis))       # cartesian product (flatten nested loops)
-for case, aniname in mpi.dispatch(span):
-    c = Case(case)
-
-    c.read()
-    # convert frames to videos
-    c.post.animations[aniname].frames.to_video(quiet=True)
-
-</pre>
-where MPI is used to postprocess in parallel. 
-The script with MPI is fully compatible with pure serial one:
-<pre>
-python post_with_mpi.py
-</pre>
-is equivalent to a serial code. To run in parallel, use:
-<pre>
-mpirun -np x python post_with_mpi.py
-</pre>
-
-Two parallel modes are shown in the example: sync and async.
-
-Sync mode is used when all processors work on the same directory (case), 
-so they need to be synchronized to update any changes in the folder 
-and the tree structure of Case.
-All processors are aligned: 
-
-- upon mpi.set_sync() ends (initial alignment)
-- upon mpi.set_async() starts (final alignment)
-- right after folder / file changes (all necessary middle keypoints)
-
-The keypoints during the process are handled internally, 
-and at the beginning there is an implicitly set_sync(),
-so one may ignore setting modes when all processors are always modifying same cases.
-For example, in the same case, use multiple processors to generate frames in parallel.
-
-However, when trying to modify different cases, Case needs to know that it does not need to 
-wait for others when it is modifying something, so explicit set_async() is mandatory
-before starting an async block.
-
+Further examples are located in the examples folder 
+covering how to generate 2D/3D bodies, make common postprocessings, 
+and to manage a complete project with multiple simulations 
+and batched postprocessings.
+These examples shown in this pyvicar main framework are considered
+common jobs and are supported in all distributions.
+Examples of unique features will be bundled with the 
+pyvicar_addons in a specific ViCar3D version.
 

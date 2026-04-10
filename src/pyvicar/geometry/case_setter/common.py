@@ -49,6 +49,9 @@ def append_solid_2d(case, curv, cycled=True):
 
 
 def append_sphere(case, r, dx, xyz):
+    """
+    add a sphere as solid 3d body
+    """
     mesh = create_sphere(r, dx, xyz)
     return append_solid(case, mesh)
 
@@ -102,11 +105,6 @@ def append_membrane(case, mesh=None):
     return body, surf
 
 
-def append_plane(c, uxyz, vxyz, dx, xyz0=None):
-    mesh = create_plane(uxyz, vxyz, dx, xyz0)
-    return append_membrane(c, mesh)
-
-
 def append_stl_membrane(case, file, xyz=None):
     mesh = TriSurface.from_stl(file)
     if xyz is not None:
@@ -114,43 +112,6 @@ def append_stl_membrane(case, file, xyz=None):
     return append_membrane(case, mesh)
 
 
-# append an IB2 membrane
-def append_ib2_membrane(
-    c,
-    type,
-    nuv,
-    xyz0,
-    uxyz=[1, 0, 0],
-    vxyz=[0, 1, 0],
-):
-    if not c.ib2:
-        c.ib2.enable()
-
-    body, surf = append_membrane(c, None)
-    iBody = c.canonicalBody.nBody.value
-
-    nu, nv = nuv
-
-    body.general.nPoint = nu * nv + (nu - 1) * (nv - 1)
-    body.general.nElem = 4 * (nu - 1) * (nv - 1)
-    body.general.motionType = "ib2"
-
-    c.ib2.nib2 = c.ib2.nib2.value + 1
-    ib2 = c.ib2.ib2s.appendnew(type)
-    ib2.iBody = iBody
-    ib2.nu = nu
-    ib2.nv = nv
-
-    ib2.x0 = xyz0[0]
-    ib2.y0 = xyz0[1]
-    ib2.z0 = xyz0[2]
-
-    ib2.ux = uxyz[0]
-    ib2.uy = uxyz[1]
-    ib2.uz = uxyz[2]
-
-    ib2.vx = vxyz[0]
-    ib2.vy = vxyz[1]
-    ib2.vz = vxyz[2]
-
-    return body, surf, ib2
+def append_plane(c, uxyz, vxyz, dx, xyz0=None):
+    mesh = create_plane(uxyz, vxyz, dx, xyz0)
+    return append_membrane(c, mesh)

@@ -1,7 +1,9 @@
-from pyvicar.case.common import Case
+import pyvicar
 
 # 2. cylinder 2d
 # this script generate the case file for a flow past 2D cylinder at Re=200, run for one time step
+
+Case = pyvicar.import_case("~/opt/Vicar3D/common")
 
 d = 1
 U = 1

@@ -1,8 +1,5 @@
-from pyvicar.case.common import Case
-
-
 def gen_case(p):
-    c = Case(p.name)
+    c = p.Case(p.name)
 
     if p.allow_restart:
         # restart simulation if there are restart files
