@@ -12,7 +12,7 @@ class Misc(Group, Writable):
         self._children.iMisc = Field(
             "iMisc",
             False,
-            "default test entry in api, not a version specific misc group",
+            "when seeing this it means the Misc is a default built-in dummy group not specialized by any distribution",
             Field.vmapPresets.bool2int,
         )
 

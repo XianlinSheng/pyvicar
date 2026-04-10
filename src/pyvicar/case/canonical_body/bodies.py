@@ -9,8 +9,6 @@ class Bodies(List, Writable):
         List.__init__(self)
         Writable.__init__(self)
 
-        config = args.add_default(config, {"body_cls": Body})
-
         self._f = f
         self._body_cls = config["body_cls"]
         self._body_config = config

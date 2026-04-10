@@ -85,29 +85,33 @@ class BasicsLinker:
         config = args.add_default(
             config,
             {
-                "cbody_cls": CanonicalBody,
-                "input_cls": Input,
-                "cbody": {},
-                "input": {},
+                "input": {"cls": Input, "def_list": {}, "config": {}},
+                "cbody": {"cls": CanonicalBody, "def_list": {}, "config": {}},
                 "restart": [],
                 "report": [],
             },
+            recursive=True,
         )
 
         self._config = config
 
         if def_list["input"]:
-            self._children.input = config["input_cls"](
-                self._path / "input.dat", config=config["input"]
+            config_input = config["input"]
+            self._children.input = config_input["cls"](
+                self._path / "input.dat",
+                def_list=config_input["def_list"],
+                config=config_input["config"],
             )
 
         if def_list["probe"]:
             self._children.probe = Probe(self._path / "probe_in.dat")
 
         if def_list["cbody"]:
-            self._children.canonicalBody = config["cbody_cls"](
+            config_cbody = config["cbody"]
+            self._children.canonicalBody = config_cbody["cls"](
                 self._path / "canonical_body_in.dat",
-                config=config["cbody"],
+                def_list=config_cbody["def_list"],
+                config=config_cbody["config"],
             )
 
         if def_list["usurf"]:

@@ -207,6 +207,9 @@ or the support relies on features too old or too new in this pyvicar framework.
 Different distributions may vary in the available options 
 of the entries, may provide additional models or features, 
 and tool functions too.
+However, note that one can ONLY use either built-in default layout
+or an imported distribution during the runtime of entire python program.
+Dynamic switch is allowed as long as the program is based on only one.
 
 Further examples are located in the examples folder 
 covering how to generate 2D/3D bodies, make common postprocessings, 

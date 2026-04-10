@@ -47,7 +47,8 @@ class BasicsLinker:
         def_list = args.add_default(def_list, BasicsLinker._default_children)
 
         config = args.add_default(
-            config, {"misc_cls": Misc, "bc": {}, "ib": {}, "poisson": {}}
+            config,
+            {"misc_cls": Misc, "bc": {}, "ib": {}, "poisson": {}},
         )
 
         f = self._f

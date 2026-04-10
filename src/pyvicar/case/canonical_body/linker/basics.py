@@ -3,6 +3,7 @@ from pyvicar._format import KV1Formatter
 from pyvicar._tree import Field
 from pyvicar.tools.miscellaneous import args
 from pyvicar.case.canonical_body.bodies import Bodies
+from pyvicar.case.canonical_body.body import Body
 
 
 class BasicsLinker:
@@ -20,6 +21,7 @@ class BasicsLinker:
     @staticmethod
     def def_children(self, def_list={}, config={}):
         def_list = args.add_default(def_list, BasicsLinker._default_children)
+        config = args.add_default(config, {"body_cls": Body})
 
         if def_list["nbody"]:
             self._children.nBody = Field("nBody", 0)
