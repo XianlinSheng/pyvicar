@@ -32,13 +32,13 @@ pip install --no-binary mpi4py --no-cache-dir --force-reinstall mpi4py
 python -c "from mpi4py import MPI; print(MPI.Get_library_version())"
 </pre>
 
-For a full new environment automatically, simply use conda:
+For a full new MPI environment handled by conda, simply:
 <pre>
 conda install -c conda-forge mpi4py
 </pre>
 and conda will auto install an MPI impl.
-But ViCar3D relies on intel tool chain so typically 
-one will need to pip build and link to intel mpi.
+But ViCar3D relies on intel toolchain so typically 
+one will need to pip build and link to intel MPI.
 
 ### ffmpeg, ffmpeg-python
 
@@ -80,7 +80,9 @@ when directly calling pip install pyvicar
 ### pyvicar
 <pre>
 git clone https://github.com/XianlinSheng/pyvicar.git
-pip install ./pyvicar
+cd pyvicar
+git checkout v1.0.0 # or other release tag
+pip install .
 </pre>
 pip can install the rest automatically.
 If one want to keep consistency with conda:
