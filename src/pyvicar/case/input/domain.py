@@ -1,14 +1,25 @@
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter
+from pyvicar.tools.miscellaneous import args
 
 
 class ComputationalDomainConfiguration(Group, Writable):
-    def __init__(self, f):
+    def __init__(self, f, config={}):
         Group.__init__(self)
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
 
+        config = args.add_default(
+            config,
+            {
+                "fulldev_profile": {
+                    "default": "uniform",
+                    "vmap": {"uniform": 0},
+                }
+            },
+            recursive=True,
+        )
         self._children.iRestart = Field(
             "iRestart", False, "", Field.vmapPresets.bool2int
         )
@@ -51,7 +62,10 @@ class ComputationalDomainConfiguration(Group, Writable):
         self._children.winit = Field("winit", 0.0)
         self._children.perturbation = Field("perturbation", 0.0)
         self._children.fullyDevelopedProfile = Field(
-            "fullyDevelopedProfile", False, "", Field.vmapPresets.bool2int
+            "fullyDevelopedProfile",
+            config["fulldev_profile"]["default"],
+            "",
+            config["fulldev_profile"]["vmap"],
         )
         self._children.ICIn = Field("ICIn", False, "", Field.vmapPresets.bool2int)
 

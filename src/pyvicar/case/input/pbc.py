@@ -1,23 +1,33 @@
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter, write_banner
-
-pbcTypes = {"dirichlet": 1, "neumann": 2}
+from pyvicar.tools.miscellaneous import args
 
 
 class PressureBoundaryConditions(Group):
-    def __init__(self, f):
+    def __init__(self, f, config={}):
         Group.__init__(self)
         Writable.__init__(self)
         self._formatter = KV2Formatter(f)
         self._f = f
 
-        self._children.x1 = X1(f)
-        self._children.x2 = X2(f)
-        self._children.y1 = Y1(f)
-        self._children.y2 = Y2(f)
-        self._children.z1 = Z1(f)
-        self._children.z2 = Z2(f)
+        config = args.add_default(
+            config,
+            {
+                "pbc_types": {
+                    "default": "neumann",
+                    "vmap": {"dirichlet": 1, "neumann": 2},
+                }
+            },
+            recursive=True,
+        )
+
+        self._children.x1 = PBC1(f, "x1", config)
+        self._children.x2 = PBC1(f, "x2", config)
+        self._children.y1 = PBC1(f, "y1", config)
+        self._children.y2 = PBC1(f, "y2", config)
+        self._children.z1 = PBC1(f, "z1", config)
+        self._children.z2 = PBC1(f, "z2", config)
 
         self._finalize_init()
 
@@ -43,127 +53,31 @@ class PressureBoundaryConditions(Group):
         self._children.z2.write()
 
 
-class X1(Group, Writable):
-    def __init__(self, f):
+class PBC1(Group, Writable):
+    def __init__(self, f, pos, config):
         Group.__init__(self)
         Writable.__init__(self)
+
         self._formatter = KV2Formatter(f)
 
-        self._children.pbcx1 = Field("pbcx1", "neumann", "", pbcTypes)
-        self._children.pppx1 = Field("pppx1", 0.0)
-        self._children.userFlag = Field(
-            "userFlag", False, "", Field.vmapPresets.bool2int
-        )
+        self._pos = pos
+
+        def set_children(children, name, *args):
+            setattr(children, name, Field(name, *args))
+
+        def set_children_config(children, name, config):
+            setattr(children, name, Field(name, config["default"], "", config["vmap"]))
+
+        set_children_config(self._children, f"pbc{pos}", config["pbc_types"])
+        set_children(self._children, f"ppp{pos}", 0.0)
+        set_children(self._children, f"iUser", False, "", Field.vmapPresets.bool2int)
 
         self._finalize_init()
 
     def write(self):
-        self._formatter += self._children.pbcx1
-        self._formatter += self._children.pppx1
-        self._formatter += self._children.userFlag
-        self._formatter.write()
+        pos = self._pos
 
-
-class X2(Group, Writable):
-    def __init__(self, f):
-        Group.__init__(self)
-        Writable.__init__(self)
-        self._formatter = KV2Formatter(f)
-
-        self._children.pbcx2 = Field("pbcx2", "neumann", "", pbcTypes)
-        self._children.pppx2 = Field("pppx2", 0.0)
-        self._children.userFlag = Field(
-            "userFlag", False, "", Field.vmapPresets.bool2int
-        )
-
-        self._finalize_init()
-
-    def write(self):
-        self._formatter += self._children.pbcx2
-        self._formatter += self._children.pppx2
-        self._formatter += self._children.userFlag
-        self._formatter.write()
-
-
-class Y1(Group, Writable):
-    def __init__(self, f):
-        Group.__init__(self)
-        Writable.__init__(self)
-        self._formatter = KV2Formatter(f)
-
-        self._children.pbcy1 = Field("pbcy1", "neumann", "", pbcTypes)
-        self._children.pppy1 = Field("pppy1", 0.0)
-        self._children.userFlag = Field(
-            "userFlag", False, "", Field.vmapPresets.bool2int
-        )
-
-        self._finalize_init()
-
-    def write(self):
-        self._formatter += self._children.pbcy1
-        self._formatter += self._children.pppy1
-        self._formatter += self._children.userFlag
-        self._formatter.write()
-
-
-class Y2(Group, Writable):
-    def __init__(self, f):
-        Group.__init__(self)
-        Writable.__init__(self)
-        self._formatter = KV2Formatter(f)
-
-        self._children.pbcy2 = Field("pbcy2", "neumann", "", pbcTypes)
-        self._children.pppy2 = Field("pppy2", 0.0)
-        self._children.userFlag = Field(
-            "userFlag", False, "", Field.vmapPresets.bool2int
-        )
-
-        self._finalize_init()
-
-    def write(self):
-        self._formatter += self._children.pbcy2
-        self._formatter += self._children.pppy2
-        self._formatter += self._children.userFlag
-        self._formatter.write()
-
-
-class Z1(Group, Writable):
-    def __init__(self, f):
-        Group.__init__(self)
-        Writable.__init__(self)
-        self._formatter = KV2Formatter(f)
-
-        self._children.pbcz1 = Field("pbcz1", "neumann", "", pbcTypes)
-        self._children.pppz1 = Field("pppz1", 0.0)
-        self._children.userFlag = Field(
-            "userFlag", False, "", Field.vmapPresets.bool2int
-        )
-
-        self._finalize_init()
-
-    def write(self):
-        self._formatter += self._children.pbcz1
-        self._formatter += self._children.pppz1
-        self._formatter += self._children.userFlag
-        self._formatter.write()
-
-
-class Z2(Group, Writable):
-    def __init__(self, f):
-        Group.__init__(self)
-        Writable.__init__(self)
-        self._formatter = KV2Formatter(f)
-
-        self._children.pbcz2 = Field("pbcz2", "neumann", "", pbcTypes)
-        self._children.pppz2 = Field("pppz2", 0.0)
-        self._children.userFlag = Field(
-            "userFlag", False, "", Field.vmapPresets.bool2int
-        )
-
-        self._finalize_init()
-
-    def write(self):
-        self._formatter += self._children.pbcz2
-        self._formatter += self._children.pppz2
-        self._formatter += self._children.userFlag
+        self._formatter += getattr(self._children, f"pbc{pos}")
+        self._formatter += getattr(self._children, f"ppp{pos}")
+        self._formatter += getattr(self._children, f"iUser")
         self._formatter.write()

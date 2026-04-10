@@ -48,7 +48,14 @@ class BasicsLinker:
 
         config = args.add_default(
             config,
-            {"misc_cls": Misc, "bc": {}, "ib": {}, "poisson": {}},
+            {
+                "misc_cls": Misc,
+                "domain": {},
+                "bc": {},
+                "pbc": {},
+                "ib": {},
+                "poisson": {},
+            },
         )
 
         f = self._f
@@ -57,13 +64,15 @@ class BasicsLinker:
             self._children.parallel = ParallelConfiguration(f)
 
         if def_list["domain"]:
-            self._children.domain = ComputationalDomainConfiguration(f)
+            self._children.domain = ComputationalDomainConfiguration(
+                f, config=config["domain"]
+            )
 
         if def_list["bc"]:
             self._children.bc = BoundaryConditions(f, config=config["bc"])
 
         if def_list["pbc"]:
-            self._children.pbc = PressureBoundaryConditions(f)
+            self._children.pbc = PressureBoundaryConditions(f, config=config["pbc"])
 
         if def_list["timeStep"]:
             self._children.timeStep = TimeStepControl(f)

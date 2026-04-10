@@ -15,7 +15,11 @@ class InternalBoundary(Group, Writable):
                 "iblank_types": {
                     "default": "fast",
                     "vmap": {"slow": 0, "fast": 1},
-                }
+                },
+                "imerge_types": {
+                    "default": "none",
+                    "vmap": {"none": 0, "vol": 1, "area": 2},
+                },
             },
             recursive=True,
         )
@@ -47,7 +51,10 @@ class InternalBoundary(Group, Writable):
             Field.vmapPresets.bool2int,
         )
         self._children.iMergeType = Field(
-            "iMergeType", False, "", Field.vmapPresets.bool2int
+            "iMergeType",
+            config["imerge_types"]["default"],
+            "",
+            config["imerge_types"]["vmap"],
         )
 
         self._children.bodyType = Field(
