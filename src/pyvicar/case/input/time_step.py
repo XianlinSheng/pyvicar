@@ -1,12 +1,24 @@
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
 from pyvicar._format import KV2Formatter
+from pyvicar.tools.miscellaneous import args
 
 
 class TimeStepControl(Group, Writable):
-    def __init__(self, f):
+    def __init__(self, f, config={}):
         Group.__init__(self)
         Writable.__init__(self)
+
+        config = args.add_default(
+            config,
+            {
+                "ad_scheme_types": {
+                    "default": "cn2",
+                    "vmap": {"ab2": 1, "cn1": 2, "cn2": 3},
+                }
+            },
+            recursive=True,
+        )
 
         self._formatter = KV2Formatter(f)
 
@@ -33,7 +45,10 @@ class TimeStepControl(Group, Writable):
             "fracStep", "nonvankan", "", {"nonvankan": 0, "vankan": 1}
         )
         self._children.advecScheme = Field(
-            "advecScheme", "cn2", "", {"ab2": 1, "cn1": 2, "cn2": 3}
+            "advecScheme",
+            config["ad_scheme_types"]["default"],
+            "",
+            config["ad_scheme_types"]["vmap"],
         )
         self._children.iMomentumCC = Field(
             "iMomentumCC", False, "", Field.vmapPresets.bool2int

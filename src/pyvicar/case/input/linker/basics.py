@@ -53,6 +53,7 @@ class BasicsLinker:
                 "domain": {},
                 "bc": {},
                 "pbc": {},
+                "time_step": {},
                 "ib": {},
                 "poisson": {},
             },
@@ -75,7 +76,7 @@ class BasicsLinker:
             self._children.pbc = PressureBoundaryConditions(f, config=config["pbc"])
 
         if def_list["timeStep"]:
-            self._children.timeStep = TimeStepControl(f)
+            self._children.timeStep = TimeStepControl(f, config=config["time_step"])
 
         if def_list["hybridization"]:
             self._children.hybridization = Hybridization(f)
