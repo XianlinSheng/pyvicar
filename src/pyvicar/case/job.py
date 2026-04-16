@@ -3,13 +3,25 @@ from pathlib import Path
 from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
 from pyvicar.file import Writable
+from pyvicar.tools.miscellaneous import args
 
 
 class Job(Group, Writable, Optional):
-    def __init__(self, case, path):
+    def __init__(self, case, path, config={}):
         Group.__init__(self)
         Writable.__init__(self)
         Optional.__init__(self)
+
+        config = args.add_default(
+            config,
+            {
+                "ntasks": {"default": 48},
+                "partition": {"default": "parallel"},
+            },
+            recursive=True,
+        )
+        self._config = config
+
         self._case = case
         self._path = Path(path)
         if self:
@@ -19,11 +31,16 @@ class Job(Group, Writable, Optional):
         self._f = open(self._path, "w")
 
         self._children.jobName = Field("jobName", "unnamed")
+        self._children.partition = Field(
+            "partition", self._config["partition"]["default"]
+        )
         self._children.nodes = Field("nodes", 1)
-        self._children.ntasksPerNode = Field("ntasksPerNode", 48)
-        self._children.account = Field("account", "")
-        self._children.mpinp = Field("mpinp", 48)
-        self._children.runpath = Field("runpath", "~/Vicar3D/versions/version/src/Vicar3D")
+        self._children.ntasksPerNode = Field(
+            "ntasksPerNode", self._config["ntasks"]["default"]
+        )
+        self._children.account = Field("account", "jsmith01")
+        self._children.mpinp = Field("mpinp", self._config["ntasks"]["default"])
+        self._children.runpath = Field("runpath", "/path/to/executable")
         self._children.logfile = Field("logfile", "log.std")
 
         self._finalize_init()
@@ -45,7 +62,7 @@ class Job(Group, Writable, Optional):
 
         f.write(f"#!/bin/bash\n")
         f.write(f"#SBATCH --job-name='{self._children.jobName}'\n")
-        f.write(f"#SBATCH --partition=parallel\n")
+        f.write(f"#SBATCH --partition={self._children.partition}\n")
         f.write(f"#SBATCH --time=2-00:00:00\n")
         f.write(f"#SBATCH --nodes={self._children.nodes}\n")
         f.write(f"#SBATCH --ntasks-per-node={self._children.ntasksPerNode}\n")

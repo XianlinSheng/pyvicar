@@ -87,6 +87,7 @@ class BasicsLinker:
             {
                 "input": {"cls": Input, "def_list": {}, "config": {}},
                 "cbody": {"cls": CanonicalBody, "def_list": {}, "config": {}},
+                "job": {},
                 "restart": [],
                 "report": [],
             },
@@ -128,7 +129,7 @@ class BasicsLinker:
             self._children.zgrid = NonuniformGrid(self._path / "zgrid.dat")
 
         if def_list["job"]:
-            self._children.job = Job(self, self._path / "job")
+            self._children.job = Job(self, self._path / "job", config=config["job"])
 
         if def_list["draglift"]:
             self._children.draglift = DragLiftList(self)
