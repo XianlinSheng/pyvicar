@@ -1,14 +1,23 @@
 from dataclasses import dataclass
 from enum import Enum
+from abc import abstractmethod
 
 
+# name is the base name for the field, but without possible suffix like vec components
+# fullname is promised full access name for the field that field prep needs to obey
+# and other dependant settings can rely on without touching prep details
 @dataclass
 class FieldBase:
     name: str
 
+    @abstractmethod
+    def fullname(self):
+        pass
+
 
 class FieldScalar(FieldBase):
-    pass
+    def fullname(self):
+        return self.name
 
 
 class VecComp(Enum):
@@ -21,6 +30,9 @@ class VecComp(Enum):
 @dataclass
 class FieldVector(FieldBase):
     component: VecComp
+
+    def fullname(self):
+        return f"{self.name}({self.component.name})"
 
 
 @dataclass

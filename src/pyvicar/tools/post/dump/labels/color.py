@@ -1,14 +1,20 @@
 from dataclasses import dataclass
 from .field import FieldBase
+from abc import abstractmethod
 
 
 class ColorBase:
-    pass
+    @abstractmethod
+    def add_mesh_kwargs(self):
+        pass
 
 
 @dataclass
 class ColorUniform(ColorBase):
     name: str
+
+    def add_mesh_kwargs(self):
+        return {"color": self.name}
 
 
 @dataclass
@@ -17,6 +23,15 @@ class ColorField(ColorBase):
     cmap: str
     clim: None | list
     scalar_bar_args: None | dict
+
+    def add_mesh_kwargs(self):
+        return {
+            "scalars": self.field.fullname(),
+            "cmap": self.cmap,
+            "clim": self.clim,
+            "show_scalar_bar": True,
+            "scalar_bar_args": self.scalar_bar_args,
+        }
 
 
 class Color:

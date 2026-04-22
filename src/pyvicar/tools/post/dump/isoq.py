@@ -116,21 +116,17 @@ def create_isoq_video(
                 case lb.ColorUniform():
                     plotter.add_mesh(
                         contours,
-                        color=iso_color.name,
                         opacity=iso_opacity,
                         smooth_shading=True,
+                        **iso_color.add_mesh_kwargs(),
                     )
                 case lb.ColorField():
                     contours, field_name = prep_field(contours, iso_color.field)
                     plotter.add_mesh(
                         contours,
-                        scalars=field_name,
-                        cmap=iso_color.cmap,
-                        clim=iso_color.clim,
-                        show_scalar_bar=True,
                         opacity=iso_opacity,
-                        scalar_bar_args=iso_color.scalar_bar_args,
                         smooth_shading=True,
+                        **iso_color.add_mesh_kwargs(),
                     )
 
         outline = mesh.outline()

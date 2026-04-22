@@ -25,7 +25,7 @@ def prep_field(mesh, field):
                     comp = vec[:, 2]
                 case lb.VecComp.MAG:
                     comp = np.linalg.norm(vec, axis=1)
-            comp_name = f"{field_name}({field.component.name})"
+            comp_name = field.fullname()
             mesh[comp_name] = comp
             return mesh, comp_name
 
