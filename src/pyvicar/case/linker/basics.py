@@ -215,6 +215,7 @@ class BasicsLinker:
                 "path": True,
                 "mpirun": True,
                 "sbatch": True,
+                "bash": True,
                 "nproc": True,
                 "config": True,
             },
@@ -230,6 +231,10 @@ class BasicsLinker:
             os.system(
                 f"cd {self._path}; mpirun -np {np} {self.runpath} {f'> {outfile}' if not outfile is None else f''}; cd - > /dev/null"
             )
+
+        def bash(self):
+            log = self.job.logfile
+            os.system(f"(cd {self._path}; sed 's/> {log}//g' job | bash)")
 
         def sbatch(self):
             os.system(f"cd {self._path}; sbatch job; cd - > /dev/null")
@@ -253,6 +258,8 @@ class BasicsLinker:
                 cls.mpirun = mpirun
             if def_list["sbatch"]:
                 cls.sbatch = sbatch
+            if def_list["bash"]:
+                cls.bash = bash
             if def_list["nproc"]:
                 cls.nproc = nproc
             if def_list["config"]:
