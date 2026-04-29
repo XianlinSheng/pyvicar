@@ -4,30 +4,28 @@ import pyvicar.tools.post.dump.labels as lb
 
 
 def prep_field(mesh, field):
-    if isinstance(field, lb.FieldVectorVORFromVEL):
-        mesh = mesh.compute_derivative(field.vel_name, vorticity=True)
-        mesh.rename_array("vorticity", "VOR")
-        field_name = "VOR"
-
-    field_name = field.name
-
     match field:
-        case lb.FieldScalar():
-            return mesh, field_name
-        case lb.FieldVector():
-            vec = mesh[field.name]
-            match field.component:
-                case lb.VecComp.X:
-                    comp = vec[:, 0]
-                case lb.VecComp.Y:
-                    comp = vec[:, 1]
-                case lb.VecComp.Z:
-                    comp = vec[:, 2]
-                case lb.VecComp.MAG:
-                    comp = np.linalg.norm(vec, axis=1)
-            comp_name = field.fullname()
-            mesh[comp_name] = comp
-            return mesh, comp_name
+        case lb.FieldRenameScalar():
+            mesh.rename_array(field.orig, field.name)
+        case lb.FieldVectorVORFromVEL():
+            mesh = mesh.compute_derivative(field.vel_name, vorticity=True)
+            mesh.rename_array("vorticity", field.name)
+
+    if isinstance(field, lb.FieldVector):
+        vec = mesh[field.name]
+        match field.component:
+            case lb.VecComp.X:
+                comp = vec[:, 0]
+            case lb.VecComp.Y:
+                comp = vec[:, 1]
+            case lb.VecComp.Z:
+                comp = vec[:, 2]
+            case lb.VecComp.MAG:
+                comp = np.linalg.norm(vec, axis=1)
+        comp_name = field.fullname()
+        mesh[comp_name] = comp
+
+    return mesh
 
 
 def get_vtks_markers(c, vtks, markers):

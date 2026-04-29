@@ -69,16 +69,30 @@ def create_isoq_video(
     q_name=None,
     marker_f=lambda c, i, v, m: m,
     plotter_f=lambda p, c, i, v, m: p,
-    iso_opacity=0.5,
+    iso_opacity=0.7,
     iso_color=lb.Color.field(lb.Field.vector("VEL")),
+    iso_texture=lb.Texture.specular(),
+    iso_kwargs={},
     marker_opacity=1,
+    marker_color=lb.Color.uniform("white"),
+    marker_texture=lb.Texture.specular(),
+    marker_kwargs={},
+    show_outline=False,
+    add_axes=False,
+    show_grid=False,
+    enable_anti_aliasing=True,
     keep_frames=True,
     resolution="4k",
     out_name="q",
 ):
     if not isinstance(iso_color, lb.ColorBase):
         raise TypeError(
-            f"Use Color wizard to create argument, but encounter {type(iso_color)}"
+            f"Use Color wizard to create argument, but encounter {type(iso_color)} for iso_color"
+        )
+
+    if not isinstance(marker_color, lb.ColorBase):
+        raise TypeError(
+            f"Use Color wizard to create argument, but encounter {type(marker_color)} for marker_color"
         )
 
     c.post.enable()
@@ -102,7 +116,18 @@ def create_isoq_video(
             bodies = marker.to_pyvista_multiblocks()
             bodies = marker_f(c, i, vtk, bodies)
             for body in bodies:
-                plotter.add_mesh(body, opacity=marker_opacity)
+
+                if isinstance(marker_color, lb.ColorField):
+                    body = prep_field(body, marker_color.field)
+
+                plotter.add_mesh(
+                    body,
+                    opacity=marker_opacity,
+                    smooth_shading=True,
+                    **marker_color.add_mesh_kwargs(),
+                    **marker_texture.add_mesh_kwargs(),
+                    **marker_kwargs,
+                )
 
         if q_name is None:
             contours = create_isoq(mesh)
@@ -112,27 +137,26 @@ def create_isoq_video(
         if contours.n_points == 0 or contours.n_cells == 0:
             log.log(f"ISOQ Video: No q isosurfaces after calculation")
         else:
-            match iso_color:
-                case lb.ColorUniform():
-                    plotter.add_mesh(
-                        contours,
-                        opacity=iso_opacity,
-                        smooth_shading=True,
-                        **iso_color.add_mesh_kwargs(),
-                    )
-                case lb.ColorField():
-                    contours, field_name = prep_field(contours, iso_color.field)
-                    plotter.add_mesh(
-                        contours,
-                        opacity=iso_opacity,
-                        smooth_shading=True,
-                        **iso_color.add_mesh_kwargs(),
-                    )
+            if isinstance(iso_color, lb.ColorField):
+                contours = prep_field(contours, iso_color.field)
+            plotter.add_mesh(
+                contours,
+                opacity=iso_opacity,
+                smooth_shading=True,
+                **iso_color.add_mesh_kwargs(),
+                **iso_texture.add_mesh_kwargs(),
+                **iso_kwargs,
+            )
 
-        outline = mesh.outline()
-        plotter.add_mesh(outline, color="black", line_width=1)
-        plotter.add_axes()
-        plotter.show_grid()
+        if show_outline:
+            outline = mesh.outline()
+            plotter.add_mesh(outline, color="black", line_width=1)
+        if add_axes:
+            plotter.add_axes()
+        if show_grid:
+            plotter.show_grid()
+        if enable_anti_aliasing:
+            plotter.enable_anti_aliasing()
 
         plotter = plotter_f(plotter, c, i, vtk, marker)
 

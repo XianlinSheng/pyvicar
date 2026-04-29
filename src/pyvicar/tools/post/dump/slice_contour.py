@@ -78,7 +78,7 @@ def create_slicecontour_video(
                 plotter.add_mesh(body, opacity=marker_opacity)
 
         if isinstance(contour_color, lb.ColorField):
-            mesh, field_name = prep_field(mesh, contour_color.field)
+            mesh = prep_field(mesh, contour_color.field)
 
         origin_t = origin_f(c, i, vtk, marker)
         clip_t = clip_f(c, i, vtk, marker)
@@ -86,23 +86,11 @@ def create_slicecontour_video(
         if slice.n_points == 0 or slice.n_cells == 0:
             log.log(f"Slice Contour Video: Empty slice")
         else:
-            match contour_color:
-                case lb.ColorUniform():
-                    plotter.add_mesh(
-                        slice,
-                        color=contour_color.name,
-                        smooth_shading=True,
-                    )
-                case lb.ColorField():
-                    plotter.add_mesh(
-                        slice,
-                        scalars=field_name,
-                        cmap=contour_color.cmap,
-                        clim=contour_color.clim,
-                        show_scalar_bar=True,
-                        scalar_bar_args=contour_color.scalar_bar_args,
-                        smooth_shading=True,
-                    )
+            plotter.add_mesh(
+                slice,
+                smooth_shading=True,
+                **contour_color.add_mesh_kwargs(),
+            )
 
         # looking at the positive side, normal points to camera
         plotter.camera_position = normal_to_plane(normal)

@@ -20,6 +20,11 @@ class FieldScalar(FieldBase):
         return self.name
 
 
+@dataclass
+class FieldRenameScalar(FieldScalar):
+    orig: str
+
+
 class VecComp(Enum):
     X = 0
     Y = 1
@@ -44,6 +49,10 @@ class Field:
     @staticmethod
     def scalar(name):
         return FieldScalar(name)
+
+    @staticmethod
+    def rename_scalar(name, orig):
+        return FieldRenameScalar(name, orig)
 
     @staticmethod
     def vector(name, component="mag"):
