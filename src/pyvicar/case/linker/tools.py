@@ -12,8 +12,12 @@ class ToolsLinker:
         def linker(cls):
             cls.set_inlet = phys.set_inlet
             cls.set_re = phys.set_re
+            cls.set_tstep = phys.set_tstep
+            cls.set_partition_total = phys.set_partition_total
+            cls.set_partition = phys.set_partition
             cls.stat_tstep = phys.stat_tstep
             cls.stat_viscosity = phys.stat_viscosity
+            cls.stat_partition = phys.stat_partition
 
             cls.append_solid = geom.append_solid
             cls.append_solid_2d = geom.append_solid_2d

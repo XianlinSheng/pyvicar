@@ -79,6 +79,8 @@ class Job(Group, Writable, Optional):
     # fill job np, mpi np, run path from current case config
     def autofill(self):
         nproc = self._case.nproc
-        self._children.nodes = int(np.ceil(nproc / self._children.ntasksPerNode.value))
-        self._children.mpinp = nproc
-        self._children.runpath = self._case.runpath
+        self._children.nodes.value = int(
+            np.ceil(nproc / self._children.ntasksPerNode.value)
+        )
+        self._children.mpinp.value = nproc
+        self._children.runpath.value = str(self._case.runpath)
