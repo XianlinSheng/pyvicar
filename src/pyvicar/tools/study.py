@@ -25,7 +25,7 @@ class SegVal:
 @dataclass
 class SegTypeInt(SegType):
     def decode(self, code):
-        pattern = re.compile(rf"^{self.label}(\d+)")
+        pattern = re.compile(rf"^{self.label}([+-]?\d+)")
         m = pattern.match(code)
 
         if m:
@@ -51,7 +51,7 @@ class SegTypeOptionalInt(SegType):
     off_value: int
 
     def decode(self, code):
-        pattern = re.compile(rf"^{self.label}(\d+)")
+        pattern = re.compile(rf"^{self.label}([+-]?\d+)")
         m = pattern.match(code)
 
         if m:

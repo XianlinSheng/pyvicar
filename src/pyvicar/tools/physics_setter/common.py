@@ -273,7 +273,10 @@ def mul_minmax(*minmaxs):
         else:
             minv *= minmax[0]
             maxv *= minmax[1]
-    return (minv, maxv)
+    if minv == maxv:
+        return (minv,)
+    else:
+        return (minv, maxv)
 
 
 def str_minmax(minmax):

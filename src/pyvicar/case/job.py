@@ -50,6 +50,8 @@ class Job(Group, Writable, Optional):
         return self._case
 
     def enable(self):
+        if self:
+            return
         Optional.enable(self)
         self._init()
         self.autofill()
