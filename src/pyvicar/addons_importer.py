@@ -9,6 +9,23 @@ def api_version():
     return Version("1.0.1")
 
 
+def assert_api_version(ver_min, ver_max):
+    if isinstance(ver_min, str):
+        ver_min = Version(ver_min)
+    if isinstance(ver_max, str):
+        ver_max = Version(ver_max)
+    ver_self = api_version()
+    if ver_self < ver_min:
+        raise RuntimeError(
+            f"API version not compatible, requiring higher pyvicar version >= v{ver_min}, but using v{ver_self}"
+        )
+
+    if ver_self >= ver_max:
+        raise RuntimeError(
+            f"API version not compatible, requiring lower pyvicar version < v{ver_max}, but using v{ver_self}"
+        )
+
+
 @dataclass
 class AddonsPaths:
     root: Path
@@ -80,14 +97,6 @@ def import_addons(install_prefix):
             "Corrupted addons, expecting a max_api_version function in lib/pyvicar_addons module root"
         )
 
-    if ver_self < ver_min:
-        raise RuntimeError(
-            f"Not compatible with the target, requiring higher pyvicar version >= v{ver_min}, but using v{ver_self}"
-        )
-
-    if ver_self >= ver_max:
-        raise RuntimeError(
-            f"Not compatible with the target, requiring lower pyvicar version < v{ver_max}, but using v{ver_self}"
-        )
+    assert_api_version(ver_min, ver_max)
 
     return addons_mod, AddonsPaths(root, bin, lib, exe, pva, pva_src, pva_examples)
