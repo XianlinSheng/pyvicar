@@ -1,5 +1,6 @@
 import pyvista as pv
 import numpy as np
+import xml.etree.ElementTree as ET
 import shutil
 from pathlib import Path
 import pyvicar.tools.mpi as mpi
@@ -116,6 +117,44 @@ def compress_to_vtr(vtms, ijs, keep_vtms=True):
 
         if not keep_vtms:
             remove_vtm(vtm.path, basename)
+
+
+def extract_subvtr_paths(vtm):
+    tree = ET.parse(vtm.path)
+    root = tree.getroot()
+
+    vtr_paths = []
+
+    for ds in root.iter("DataSet"):
+        if "file" in ds.attrib:
+            rel_path = ds.attrib["file"]
+            full_path = (vtm.path.parent / rel_path).resolve()
+            vtr_paths.append(full_path)
+
+    return vtr_paths
+
+
+def vtr_to_binary(vtr_path, inplace=True):
+    path = Path(vtr_path)
+    mesh = pv.read(path)
+
+    tmp_path = path.with_name(path.stem + ".bin" + path.suffix)
+    if tmp_path.exists():
+        tmp_path.unlink()
+
+    mesh.save(tmp_path, binary=True)
+    if inplace:
+        tmp_path.replace(path)
+
+
+def compress_to_binary(vtms, inplace=True):
+    for vtm in mpi.dispatch(vtms):
+        log(f"Compress binary: Compressing {vtm.path}")
+
+        vtr_files = extract_subvtr_paths(vtm)
+
+        for f in vtr_files:
+            vtr_to_binary(f, inplace=inplace)
 
 
 def stroke(mesh, dz):

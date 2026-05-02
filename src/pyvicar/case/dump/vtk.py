@@ -5,7 +5,12 @@ from pyvicar._tree import List
 from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
 from pyvicar.tools.test.fsi.vtk import is_test, SampleVTM, SampleVTK, SampleVTR
-from pyvicar.tools.vtk import compress_to_vtk, compress_to_vtr, create_ijs_from_forxy
+from pyvicar.tools.vtk import (
+    compress_to_vtk,
+    compress_to_vtr,
+    create_ijs_from_forxy,
+    compress_to_binary,
+)
 import pyvicar.tools.log as log
 
 
@@ -100,6 +105,15 @@ class VTMList(VTKListBase):
         compress_to_vtr(self, create_ijs_from_forxy(npx, npy), **kwargs)
         self.read()
         self._case.dump.vtr.read()
+
+    def to_binary(self, **kwargs):
+        if is_test():
+            log.log_host(
+                "VTM Debug: test still converts real fields, but will not overwrite sub vtrs. inplace has been forced to False"
+            )
+            kwargs["inplace"] = False
+        compress_to_binary(self, **kwargs)
+        # still the same vtm file, simply modifying sub vtrs it points to, so no read refresh
 
 
 class VTKList(VTKListBase):
