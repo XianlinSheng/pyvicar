@@ -81,8 +81,6 @@ def import_addons(install_prefix):
     finally:
         sys.path.pop(0)
 
-    ver_self = api_version()
-
     try:
         ver_min = addons_mod.min_api_version()
     except AttributeError:
