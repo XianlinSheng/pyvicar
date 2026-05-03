@@ -16,16 +16,17 @@ Umax = 2 * U
 
 c = Case("tut_cyl2d")
 
-gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[2, None], 2])
-#                                          ^~~~~~~~~~~~~~~~~~~ 2d pressure spreads in larger distance
-#                                                              so needs larger refine region to converge
+gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[3, None], 3])
+#                                          ^~~~~~~~~~~~~~~~~~~ needs to resolve pressure well to converge
+#                                                              no longer needed starting from d/50
+#                                                              typical decent sim. needs at least d/100
 #                               ^~~~~~~~~ different from example 1, this will create a 2D grid
 # 2D case is still using a 3d grid, but only 3 nodes (2 segments) in z direction
-# note that 2D is still explicit to solver, and it behaves slightly differently from 3D cases
-# [[2, None], 2] means:
-#             ^ refine 2*l0 in both y- and y+
+# note that 2D is still explicit to solver, and it behaves slightly differently from 3D cases.
+# [[3, None], 3] means:
+#             ^ refine 3*l0 in both y- and y+
 #      ^ keep the x+ refine len by default
-#   ^ refine 2*l0 length in x- direction from emplacement center (gm.center)
+#   ^ refine 3*l0 length in x- direction from emplacement center (gm.center)
 # this list-list notation is used in other arguments too, default values:
 # doml=[[20, 5], [20, 20], [20, 20] (in 3d)], * l0 = domain length in each direction from gm.center
 # refl=[[1, 2.5], [1, 1], [1, 1] (in 3d)] * l0 = refine box length ...
@@ -33,7 +34,7 @@ gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[2, None], 2])
 # these defaults create minimal working grid for 3d for efficiency,
 # and the above example gives the one for 2d
 # if one want to resolve more in the wake, increase doml in x+ and corresponding refl x+, e.g.
-# gm = c.create_grid(l0=d, dx=dx, dim2=True, doml=[[None, 10], None], refl=[[2, 6], 2])
+# gm = c.create_grid(l0=d, dx=dx, dim2=True, doml=[[None, 10], None], refl=[[None, 6], None])
 # this is easy in 2d but in 3d the need for resources increases much faster
 # generally, keep the default growth rate, and make sure aspect ratio is controlled in wake region
 # the default 1.02 x+ growth rate and short downstream length are both for a controlled aspect ratio

@@ -3,16 +3,20 @@ from pyvicar.geometry.presets import create_sphere
 from pyvicar.geometry import TriSurface
 
 # 5. trisurf
-# this script generate the case file for a flow past sphere at Re=200, run for one time step,
+# this script generate the case file for a flow past sphere at Re=200,
 # where the sphere is described by 2 np arrays, xyz coords and connectivity.
 # connectivity is in shape [nelem, 3], [[point idx 1,p2,p3] for elem1,[p1,p2,p3] for elem2, ...]
 
-Case = pyvicar.import_case("~/opt/Vicar3D/common")
+pyvicar.assert_api_version("1.0.1", "1.1.0")
+
+Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
 d = 1
 U = 1
 re = 200
 dx = d / 20
+T = d / U
+Umax = 2 * U
 
 # this preset gives a TriSurface
 trisurf = create_sphere(d / 2, dx, [0, 0, 0])
@@ -52,21 +56,32 @@ gm = c.create_grid(l0=d, dx=dx)
 # .translate(...) modifies the obj inplace, for a new obj, call .copy() first
 body, surf = c.append_solid(trisurf.translate(gm.center))
 
-
-# below is completely the same as example 1/2/3/4
-
 c.set_inlet("x1", [U, 0, 0])
+
 c.set_re(re, U=U, L=d)
 
-c.show_grid(gm.center)
+c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False)
 
-# c.job.enable()
-# c.job.jobName = "tut_trisurf"
-# c.job.account = "account"
+c.set_partition(nproc_node=16, nnode_max=1)
+
+c.job.enable()
+c.job.account = "account"
 
 c.write()
 
+# c.show_grid(gm.center)
 
-# c.mpirun()
+c.stat_grid()
+c.stat_tstep(
+    cfl={"U": Umax, "dx": dx},
+    tdt={"T": T},
+    ndmp={"T": T},
+)
+c.stat_viscosity(
+    re={"U": U, "L": d},
+    yplus={"y": dx, "tau": {"U": U, "L": d}},
+)
+c.stat_partition()
 
+# c.bash()
 # c.sbatch()

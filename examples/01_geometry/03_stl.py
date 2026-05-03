@@ -2,7 +2,7 @@ import pyvicar
 from pyvicar.geometry.presets import create_sphere
 
 # 3. stl
-# this script generate the case file for a flow past stl sphere at Re=200, run for one time step
+# this script generate the case file for a flow past stl sphere at Re=200
 
 pyvicar.assert_api_version("1.0.1", "1.1.0")
 

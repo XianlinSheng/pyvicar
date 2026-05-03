@@ -51,6 +51,7 @@ c.set_re(re, U=U, L=d)  # U and L are needed since solver uses 1/nu
 # other default values are
 # cfl_max=0.4, nsteps_unit=2000, nrestart_max=100, ndumps=50, divu_tol=1e-6, step_test=False
 # set step_test=True to run for only one step and dump to test
+# for an oscillation case setting T as period, one can typically leave args after nT default
 c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False)
 
 # partition is defined after grid because auto setter needs to read grid number to calc npx/npy
