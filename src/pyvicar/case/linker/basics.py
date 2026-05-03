@@ -213,6 +213,7 @@ class BasicsLinker:
             def_list,
             {
                 "path": True,
+                "name": True,
                 "mpirun": True,
                 "sbatch": True,
                 "bash": True,
@@ -224,6 +225,10 @@ class BasicsLinker:
         @property
         def path(self):
             return self._path
+
+        @property
+        def name(self):
+            return self._path.name
 
         def mpirun(self, np=None, outfile=None):
             if np is None:
@@ -254,6 +259,8 @@ class BasicsLinker:
         def linker(cls):
             if def_list["path"]:
                 cls.path = path
+            if def_list["name"]:
+                cls.name = name
             if def_list["mpirun"]:
                 cls.mpirun = mpirun
             if def_list["sbatch"]:

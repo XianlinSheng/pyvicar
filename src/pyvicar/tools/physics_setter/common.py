@@ -43,27 +43,29 @@ def get_cfl(c, U, dx):
 # also set the poisson resmax to nearly dt * resmax ~ 1e-6, in scale of div(U)
 def set_tstep(
     c,
-    u,
+    U,
     dx,
-    t,
-    nt=1,
+    T,
+    nT=1,
     cfl_max=0.4,
     nsteps_unit=2000,
     nrestart_max=100,
-    tdumps=50,
+    ndumps=50,
     divu_tol=1e-6,
+    step_test=False,
 ):
-    if nsteps_unit % tdumps != 0:
+    if nsteps_unit % ndumps != 0:
         raise ValueError(
-            f"Steps in a unit {nsteps_unit} not divisible by the total number of dumps {tdumps} within the time scale. "
+            f"Steps in a unit {nsteps_unit} not divisible by the total number of dumps {ndumps} within the time scale. "
             + f"It is sufficient that steps | dumps if nsteps_unit | dumps. Though not necessary, this is enforced to make sure it works on any case."
         )
-    dt_max = cfl_max * dx / u
+    dt_max = cfl_max * dx / U
     unit_dt_max = nsteps_unit * dt_max
-    units = int(np.ceil(t / unit_dt_max))
-    tsteps = units * nsteps_unit
-    dt = t / tsteps
-    ndump = tsteps // tdumps
+    units = int(np.ceil(T / unit_dt_max))
+    nsteps = units * nsteps_unit
+    ntstep = nT * nsteps
+    dt = T / nsteps
+    ndump = nsteps // ndumps
     nrestart = min(ndump, nrestart_max)
 
     resmax = divu_tol / dt
@@ -71,7 +73,12 @@ def set_tstep(
     k = np.floor(np.log(resmax) / np.log(10) + eps)
     resmax = np.floor(resmax / 10**k + eps) * 10**k
 
-    c.input.timeStep.ntStep = nt * tsteps
+    if step_test:
+        ntstep = 1
+        ndump = 1
+        nrestart = 1
+
+    c.input.timeStep.ntStep = ntstep
     c.input.timeStep.dt = dt
     c.input.timeStep.nDump = ndump
     c.input.timeStep.nRestart = nrestart
