@@ -4,12 +4,16 @@ from pyvicar.geometry.presets import create_sphere
 # 3. stl
 # this script generate the case file for a flow past stl sphere at Re=200, run for one time step
 
-Case = pyvicar.import_case("~/opt/Vicar3D/common")
+pyvicar.assert_api_version("1.0.1", "1.1.0")
+
+Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
 d = 1
 U = 1
 re = 200
 dx = d / 20
+T = d / U
+Umax = 2 * U
 
 # this creates a sphere stl file at origin, in real uses one should already have the file somewhere
 create_sphere(d / 2, dx, [0, 0, 0], file="tut_stl_sphere.stl")
@@ -26,19 +30,32 @@ body, surf = c.append_stl_solid("tut_stl_sphere.stl", gm.center)
 # using stl to store its 2D shape yourself introduces redundant info and dynamic dependencies like dz,
 # so recommend storing it using npz numpy array in example 4, and let pyvicar handle the conversion
 
-# below is completely the same as example 1/2
-
 c.set_inlet("x1", [U, 0, 0])
+
 c.set_re(re, U=U, L=d)
 
-c.show_grid(gm.center)
+c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False)
 
-# c.job.enable()
-# c.job.jobName = "tut_stl"
-# c.job.account = "account"
+c.set_partition(nproc_node=16, nnode_max=1)
+
+c.job.enable()
+c.job.account = "account"
 
 c.write()
 
-# c.mpirun()
+# c.show_grid(gm.center)
 
+c.stat_grid()
+c.stat_tstep(
+    cfl={"U": Umax, "dx": dx},
+    tdt={"T": T},
+    ndmp={"T": T},
+)
+c.stat_viscosity(
+    re={"U": U, "L": d},
+    yplus={"y": dx, "tau": {"U": U, "L": d}},
+)
+c.stat_partition()
+
+# c.bash()
 # c.sbatch()
