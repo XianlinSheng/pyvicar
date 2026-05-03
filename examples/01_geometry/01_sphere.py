@@ -42,6 +42,7 @@ body, surf = c.append_sphere(d / 2, dx, gm.center)
 # and the position to place the body depends on how we define the domain and refine the grid
 
 c.set_inlet("x1", [U, 0, 0])
+
 c.set_re(re, U=U, L=d)  # U and L are needed since solver uses 1/nu
 
 # U and dx are used to calculate cfl constraints
@@ -50,7 +51,7 @@ c.set_re(re, U=U, L=d)  # U and L are needed since solver uses 1/nu
 # other default values are
 # cfl_max=0.4, nsteps_unit=2000, nrestart_max=100, ndumps=50, divu_tol=1e-6, step_test=False
 # set step_test=True to run for only one step and dump to test
-c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10)
+c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False)
 
 # partition is defined after grid because auto setter needs to read grid number to calc npx/npy
 # when calling without arguments c.set_partition(), default values are
