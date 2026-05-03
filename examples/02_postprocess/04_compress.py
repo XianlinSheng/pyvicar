@@ -2,27 +2,29 @@ import pyvicar
 import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
 
-
 # 4. compress
-# this script reads the case vtk dump and compress to vtr binary
+# this script reads the case vtm dump and compress the sub vtr to binary
 
-Case = pyvicar.import_case("~/opt/Vicar3D/common")
+pyvicar.assert_api_version("1.0.1", "1.1.0")
 
-name = "tut_compress"
-npx, npy = 4, 4
+Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
+
+name = "tut_sphere"
 
 log.log_host(f"Compress Case: {name}")
-c = Case(name)
-c.dump.vtm.read()
-# default keep_vtm=True in case of mistakes
-c.dump.vtm.to_vtrs(npx=npx, npy=npy, keep_vtms=True)
 
-# # or to single unstruc vtk, for gp version
+c = Case(name)
+
+c.dump.vtm.read()
+
+# specify inplace=False to create fields.x/fields.x.y.bin.vtr without overwrite original
+# binary sub vtr takes ~ 45% space of ascii
+# vtm is not changed, only replace the heavy vtr files it points to
+c.dump.vtm.to_binary()
+
+# # or to a single unstruc vtk, but may take even larger space
 # c.dump.vtm.to_vtks(keep_vtms=True)
 
-# Versions except gp might use vtr because of full structuredness.
-# In this case vtr can compress > 50% space but vtk may introduce additional 30%
-# because the output vtm is already made up with multiple ascii vtr
-
-
 mpi.print_elapsed_time()
+
+# similar, mpirun -np x python compress.py to compress in parallel

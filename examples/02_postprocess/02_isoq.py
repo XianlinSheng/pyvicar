@@ -1,40 +1,64 @@
 import pyvicar
 import pyvicar.tools.mpi as mpi
-from pyvicar.tools.post.dump import Color, Field, set_cam_compass
+import pyvicar.tools.post.dump.labels as lb
+import pyvicar.tools.post.dump.plotter_fs as pf
 
 # 2. isoq3d
 # this script reads the case vtk dump and generate a quick animation of Q criterion iso surfaces
 
-Case = pyvicar.import_case("~/opt/Vicar3D/common")
+pyvicar.assert_api_version("1.0.1", "1.1.0")
 
-c = Case("tut_isoq3d")
+Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
+
+# change this to a completed 3d case in 01_geometry, like tut_sphere here
+c = Case("tut_sphere")
 c.dump.read()
 
+# this is the typical center generated in the 3d geometry tutorial so will work on all 3d cases
+# see the 03_project section to see how to manage these data in detail
 center = [20, 20, 20]
 
+# set l0 to the case length scale. 3d tutorials are 1 so this will work well on all of them
 a2 = c.create_isoq_video(
     c.dump.vtm,
     c.dump.marker,
-    plotter_f=set_cam_compass(center, l0=1),
+    plotter_f=pf.set_cam_compass(center, l0=1),  # the default values are below
     # plotter_f=set_cam_compass(center, l0=1, r=3, oclock=2, pitch=30, downstream_shift=1),
-    iso_color=Color.field(Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
+    # iso_color=Color.field(Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
     # iso_color=Color.field(Field.vector("VEL", "mag"), clim=[0, 1.5]),
-    # iso_color=Color.field(Field.scalar("P"), clim=[-0.5, 0.5]),
+    iso_color=lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
     keep_frames=True,
     # resolution="4k",
-    out_name="q_w_o2",
+    out_name="q_p_o2",
 )
 
 # or change a view angle if you want
 a10 = c.create_isoq_video(
     c.dump.vtm,
     c.dump.marker,
-    plotter_f=set_cam_compass(center, l0=1, oclock=10),
-    iso_color=Color.field(Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
+    plotter_f=pf.set_cam_compass(center, l0=1, oclock=10),
+    iso_color=lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
     keep_frames=True,
-    out_name="q_w_o10",
+    out_name="q_p_o10",
 )
 
+# better rendered
+a2t = c.create_isoq_video(
+    c.dump.vtm,
+    c.dump.marker,
+    plotter_f=pf.set_cam_compass(center, l0=1, oclock=2),
+    iso_color=lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
+    marker_color=lb.Color.uniform("white"),
+    iso_texture=lb.Texture.specular(),  # default will work just fine
+    marker_texture=lb.Texture.specular(),
+    iso_opacity=0.9,
+    show_outline=False,
+    add_axes=False,
+    show_grid=False,
+    enable_anti_aliasing=True,
+    keep_frames=False,
+    out_name="q_p_o2_textured",
+)
 
 # this is generally used to checkout total processing time
 mpi.print_elapsed_time()

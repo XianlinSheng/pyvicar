@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 # font_sizes_xl() will be friendly for illustration included in another canvas
 pvmpl.set_default(plt_kwargs=pvmpl.font_sizes_l())
 
-Case = pyvicar.import_case("~/opt/Vicar3D/common")
+pyvicar.assert_api_version("1.0.1", "1.1.0")
+
+Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
 c = Case("tut_draglift")
 c.draglift.read()
