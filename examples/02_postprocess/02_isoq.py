@@ -12,6 +12,7 @@ Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
 # change this to a completed 3d case in 01_geometry, like tut_sphere here
 c = Case("tut_sphere")
+
 c.dump.read()
 
 # this is the typical center generated in the 3d geometry tutorial so will work on all 3d cases
@@ -24,8 +25,8 @@ a2 = c.create_isoq_video(
     c.dump.marker,
     plotter_f=pf.set_cam_compass(center, l0=1),  # the default values are below
     # plotter_f=set_cam_compass(center, l0=1, r=3, oclock=2, pitch=30, downstream_shift=1),
-    # iso_color=Color.field(Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
-    # iso_color=Color.field(Field.vector("VEL", "mag"), clim=[0, 1.5]),
+    # iso_color=lb.Color.field(lb.Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
+    # iso_color=lb.Color.field(lb.Field.vector("VEL", "mag"), clim=[0, 1.5]),
     iso_color=lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
     keep_frames=True,
     # resolution="4k",

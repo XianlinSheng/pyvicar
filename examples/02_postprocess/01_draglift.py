@@ -15,6 +15,7 @@ pyvicar.assert_api_version("1.0.1", "1.1.0")
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
 c = Case("tut_draglift")
+
 c.draglift.read()
 
 forces = c.draglift.proc()
