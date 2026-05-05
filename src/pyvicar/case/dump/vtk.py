@@ -176,7 +176,7 @@ class VTM(VTKBase):
         VTKBase.__init__(self, path, tstep, seriesi)
 
     def to_pyvista(self):
-        return pv.read(self._path).combine()
+        return pv.read(self._path).combine().clean(tolerance=1e-6)
 
     def to_pyvista_multiblock(self):
         return pv.read(self._path)

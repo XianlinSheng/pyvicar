@@ -56,6 +56,8 @@ a2t = c.create_isoq_video(
     show_outline=False,
     add_axes=False,
     show_grid=False,
+    # anti_alising is default off, turning on sometimes creates render issues on complex iso surface topologies
+    # simply remove this line for a stable rendering
     enable_anti_aliasing=True,
     keep_frames=False,
     out_name="q_p_o2_textured",

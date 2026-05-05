@@ -13,5 +13,5 @@ if [ "$#" -ne 0 ]; then
   exit 1
 fi
 
-scp -- job_post rmvtm *.py *.h5 "${REMOTE_HOST}:${REMOTE_PATH}"
+scp -r job_post postlib *.py *.h5 "${REMOTE_HOST}:${REMOTE_PATH}"
 

@@ -37,7 +37,15 @@ def create_slicecontour_video(
     origin_f=None,
     clip_f=None,
     contour_color=lb.Color.field(lb.Field.vector("VEL")),
+    contour_kwargs={},
+    marker_color=lb.Color.uniform("white"),
+    marker_texture=lb.Texture.none(),
     marker_opacity=1,
+    marker_kwargs={},
+    show_outline=False,
+    add_axes=False,
+    show_grid=False,
+    enable_anti_aliasing=False,
     keep_frames=True,
     resolution="4k",
     out_name="vel",
@@ -75,7 +83,17 @@ def create_slicecontour_video(
             bodies = marker.to_pyvista_multiblocks()
             bodies = marker_f(c, i, vtk, bodies)
             for body in bodies:
-                plotter.add_mesh(body, opacity=marker_opacity)
+                if isinstance(marker_color, lb.ColorField):
+                    body = prep_field(body, marker_color.field)
+
+                plotter.add_mesh(
+                    body,
+                    opacity=marker_opacity,
+                    smooth_shading=True,
+                    **marker_color.add_mesh_kwargs(),
+                    **marker_texture.add_mesh_kwargs(),
+                    **marker_kwargs,
+                )
 
         if isinstance(contour_color, lb.ColorField):
             mesh = prep_field(mesh, contour_color.field)
@@ -90,14 +108,23 @@ def create_slicecontour_video(
                 slice,
                 smooth_shading=True,
                 **contour_color.add_mesh_kwargs(),
+                **contour_kwargs,
             )
 
         # looking at the positive side, normal points to camera
         plotter.camera_position = normal_to_plane(normal)
         # plotter.camera.ParallelProjectionOn()
         # plotter.camera.zoom(1.5)
-        plotter.add_axes()
-        plotter.show_grid()
+
+        if show_outline:
+            outline = mesh.outline()
+            plotter.add_mesh(outline, color="black", line_width=1)
+        if add_axes:
+            plotter.add_axes()
+        if show_grid:
+            plotter.show_grid()
+        if enable_anti_aliasing:
+            plotter.enable_anti_aliasing()
 
         plotter = plotter_f(plotter, c, i, vtk, marker)
 

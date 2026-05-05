@@ -1,4 +1,5 @@
 import numpy as np
+import pyvista as pv
 from collections.abc import Iterable
 import pyvicar.tools.post.dump.labels as lb
 
@@ -8,6 +9,9 @@ def prep_field(mesh, field):
         case lb.FieldRenameScalar():
             mesh.rename_array(field.orig, field.name)
         case lb.FieldVectorVORFromVEL():
+            # combine partitions otherwise vorticity is incorrect at partition boundary
+            if isinstance(mesh, pv.MultiBlock):
+                mesh = mesh.combine().clean(tolerance=1e-12)
             mesh = mesh.compute_derivative(field.vel_name, vorticity=True)
             mesh.rename_array("vorticity", field.name)
 

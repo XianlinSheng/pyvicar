@@ -1,0 +1,29 @@
+#!/bin/bash
+# CASE CHECK
+#SBATCH --job-name='post_re1000rec'
+# CASE CHECK
+#SBATCH --partition=partition 
+#SBATCH --time=2-00:00:00
+#SBATCH --nodes=1
+# CASE CHECK
+#SBATCH --ntasks-per-node=48
+# CASE CHECK
+#SBATCH --account=jsmith01
+
+# Here starts script
+
+# CASE CHECK
+code="re1000rec"
+
+# CASE CHECK: number of processors, memory
+mpirun -np 16 python post.py isoq $code > log.post.$code
+mpirun -np 16 python post.py compress $code >> log.post.$code
+
+
+# notice the memory, normally 16 parallel vtk will take up all memory, 
+# larger grids allow even fewer processes
+# if out of memory, either it is explicitly killed, or ffmpeg will run into trouble and cannot return normally
+# only one process is running ffmpeg, so if its killed other processes cannot return normally 
+
+# post_isoq is before compress because one may want the animation asap 
+# and compress can run in background when inspecting animations
