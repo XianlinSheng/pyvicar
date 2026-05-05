@@ -101,9 +101,9 @@ class SegTypeChoice(SegType):
         m = pattern.match(code)
 
         if m:
-            value = str(m.group(1))
+            choice = str(m.group(1))
             rest = code[m.end() :]
-            return SegValChoice(self.label, value), rest
+            return SegValChoice(self.label, choice), rest
         else:
             raise ValueError(
                 f"Unrecognized code for a segment with choices {self.name}, expected format {pattern.pattern} but encountered {code}"
@@ -116,6 +116,32 @@ class SegValChoice(SegVal):
 
     def encode(self):
         return f"{self.label}{self.choice}"
+
+
+@dataclass
+class SegTypeOptionalChoice(SegType):
+    choices: tuple[str]
+    off_choice: str
+
+    def decode(self, code):
+        pattern = re.compile(rf"^{self.label}({'|'.join(self.choices)})")
+        m = pattern.match(code)
+
+        if m:
+            choice = str(m.group(1))
+            rest = code[m.end() :]
+            return SegValOptionalChoice(self.label, True, choice), rest
+        else:
+            return SegValOptionalChoice(self.label, False, self.off_choice), code
+
+
+@dataclass
+class SegValOptionalChoice(SegVal):
+    on: bool
+    choice: str
+
+    def encode(self):
+        return f"{self.label}{self.choice}" if self.on else ""
 
 
 @dataclass
@@ -146,8 +172,22 @@ class StudyType:
         self.segs_t.append(SegTypeChoice(name, label, choices))
         return self
 
+    def add_optional_choice(self, name, label, choices, off_choice=""):
+        self.segs_t.append(SegTypeOptionalChoice(name, label, choices, off_choice))
+        return self
+
     def add_branch(self, name, label, mapping):
         self.segs_t.append(SegTypeBranch(name, label, mapping))
+        return self
+
+    def add_optional_branch(self, name, label, mapping, off_branch_substudy=None):
+        if off_branch_substudy is None:
+            off_branch_substudy = ("", StudyType())
+        if isinstance(off_branch_substudy, str):
+            off_branch_substudy = (off_branch_substudy, mapping[off_branch_substudy])
+        self.segs_t.append(
+            SegTypeOptionalBranch(name, label, mapping, off_branch_substudy)
+        )
         return self
 
     def decode_self(self, code):
@@ -217,6 +257,51 @@ class SegValBranch(SegVal):
 
     def encode(self):
         return f"{self.label}{self.branch}{self.substudy.encode()}"
+
+
+@dataclass
+class SegTypeOptionalBranch(SegType):
+    mapping: dict[str, StudyType]
+    off_branch_substudy: tuple[str, StudyType]
+
+    def decode(self, code):
+        pattern = re.compile(rf"^{self.label}")
+        m = pattern.match(code)
+
+        if m:
+            rest = code[m.end() :]
+        else:
+            return (
+                SegValOptionalBranch(self.label, False, *self.off_branch_substudy),
+                code,
+            )
+
+        pattern = re.compile(rf"^({'|'.join(self.mapping.keys())})")
+        m = pattern.match(rest)
+
+        if m:
+            branch = str(m.group(1))
+            rest = rest[m.end() :]
+        else:
+            return (
+                SegValOptionalBranch(self.label, False, *self.off_branch_substudy),
+                code,
+            )
+
+        substudy_t = self.mapping[branch]
+        substudy, rest = substudy_t.decode_self(rest)
+
+        return SegValOptionalBranch(self.label, True, branch, substudy), rest
+
+
+@dataclass
+class SegValOptionalBranch(SegVal):
+    on: bool
+    branch: str
+    substudy: StudyVal
+
+    def encode(self):
+        return f"{self.label}{self.branch}{self.substudy.encode()}" if self.on else ""
 
 
 @dataclass

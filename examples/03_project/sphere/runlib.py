@@ -3,6 +3,10 @@
 # then the front part that computes variables goes to params.py, studies.py is modified accordingly
 # the middle part that setup the case goes here
 # and the end part that writes and prints stat goes into run.py
+# it would be wise to first stick to such a simple script when handling an unknown case
+# once the behavior is clear enough for a param space batch study, transfer into a project structure
+# the project structure would be always changing to add/change/integrate functionalities during analysis
+# so these scripts are not hard-coded in the lib but free to be tailored as needed
 
 
 def make_case(p):
@@ -18,6 +22,16 @@ def make_case(p):
 
     match p.stage:
         case "dev":
+            # start from 100T y/z starts to become anisotropic
+            # one can change it to 80T to record the transition process
+            # for an unknown case, this number is concluded before making a batch project lke this
+            # or concluded from an existing study and decide to make a new branch of params space to analyze
+            # like here, to further study the transition process,
+            # one can choose to add another study seg .add_optional_int("start", "s", off_value=100)
+            # so as to change the starting position of recording to run new study batches
+            # and also backward compatible with existing cases
+            # there are add_optional_int, ..._choice, ..._branch available for further compatible extensions
+            # but remember open a new project once the existing features become irrelevent and messy
             T = 100 * p.T
             nT = 1
             ndumps = 1
