@@ -226,7 +226,7 @@ def set_partition_total(c, nproc):
 
 # node-based auto calc number of partitions, part_ncell is approx
 # since its node-based, also set job file
-def set_partition(c, nproc_node=48, ncell_proc=200e3, nnode_max=16):
+def set_partition(c, nproc_node=48, ncell_proc=100e3, nnode_max=16):
     nxc = c.input.domain.nx.value - 1
     nyc = c.input.domain.ny.value - 1
     nzc = c.input.domain.nz.value - 1
@@ -237,7 +237,10 @@ def set_partition(c, nproc_node=48, ncell_proc=200e3, nnode_max=16):
 
     set_partition_total(c, nproc)
 
-    c.job.enable()
+    if c.job:
+        c.job.autofill()
+    else:
+        c.job.enable()
     c.job.ntasksPerNode = nproc_node
     c.job.nodes = nnode
 

@@ -56,7 +56,7 @@ c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=Fals
 
 # partition is defined after grid because auto setter needs to read grid number to calc npx/npy
 # when calling without arguments c.set_partition(), default values are
-# nproc_node=48, nnode_max=16, ncell_node=200e3
+# nproc_node=48, nnode_max=16, ncell_node=100e3
 c.set_partition(nproc_node=16, nnode_max=1)
 
 # set_partition in fact have already enabled job, but here explicit enable it for clarification
