@@ -53,5 +53,5 @@ class Texture:
         return TexturePBR(metallic, roughness)
 
     @staticmethod
-    def specular(specular=0.4, specular_power=50, diffuse=0.85, ambient=0.15):
+    def specular(specular=0.6, specular_power=60, diffuse=1, ambient=0.1):
         return TextureSpecular(specular, specular_power, diffuse, ambient)
