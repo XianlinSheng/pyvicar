@@ -1,6 +1,6 @@
 #!/bin/bash
 # CASE CHECK
-#SBATCH --job-name='post_re1000rec'
+#SBATCH --job-name='post_re1000recLC'
 # CASE CHECK
 #SBATCH --partition=partition 
 #SBATCH --time=2-00:00:00
@@ -13,7 +13,7 @@
 # Here starts script
 
 # CASE CHECK
-code="re1000rec"
+code="re1000recLC"
 
 # CASE CHECK: number of processors, memory
 mpirun -np 16 python post.py isoq $code > log.post.$code

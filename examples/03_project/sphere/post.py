@@ -4,11 +4,11 @@ import postlib
 import pyvicar.tools.mpi as mpi
 
 # usage  : python post.py <job> <code>
-# example: python post.py compress re200rec
+# example: python post.py compress re200recLC
 
 job = sys.argv[1]
 code = sys.argv[2]
-# code = "re1000rec"
+# code = "re1000recLC"
 
 p = studies.to_params(code)
 

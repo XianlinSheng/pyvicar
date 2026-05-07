@@ -7,7 +7,7 @@ import runlib
 
 # one can choose to either take by arg python run.py <code> or specify inside script
 code = sys.argv[1]
-# code = "re1000dev"
+# code = "re1000devLC"
 
 p = studies.to_params(code)
 

@@ -52,16 +52,25 @@ def make_case(p):
         step_test=p.step_test,
     )
 
-    if p.body_test:
-        c.set_partition(nproc_node=16, nnode_max=1)
-    else:
-        c.set_partition(nproc_node=48, nnode_max=16)
+    # partition and job are coupled so are configured together
+    c.job.enable()
+    match f"{p.platform}-{p.version}":
+        case "local-common":
+            c.set_partition(nproc_node=16, nnode_max=1)
+        case "local-gpu":
+            c.set_partition(nproc_node=1, nnode_max=1)
+        case "remote-common":
+            c.set_partition(nproc_node=48, nnode_max=16, ncell_proc=100e3)
+            c.job.partition = "partition"
+            c.job.account = "jsmith01"
+        case "remote-gpu":
+            c.set_partition(nproc_node=4, nnode_max=4, ncell_proc=5e6)
+            c.job.partition = "partition"
+            c.job.account = "jsmith01"
+        case _:
+            raise Exception(f"Unrecognized platform-version {p.platform}-{p.version}")
 
     c.input.ib.form = p.gcss
-
-    c.job.enable()
-    c.job.partition = "partition"
-    c.job.account = "account"
 
     if p.allow_restart:
         c.restart.read()

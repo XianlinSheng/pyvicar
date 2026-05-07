@@ -13,6 +13,7 @@ pyvicar.assert_api_version("1.0.1", "1.1.0")
 
 
 def make_params(
+    platform="local",
     version="common",
     name="test",
     allow_restart=True,
@@ -25,6 +26,7 @@ def make_params(
 ):
     p = struct()
 
+    p.platform = platform
     p.version = version
     p.name = name
     p.allow_restart = allow_restart
