@@ -18,12 +18,14 @@ class TextureNone(TextureBase):
 class TexturePBR(TextureBase):
     metallic: float
     roughness: float
+    diffuse: float
 
     def add_mesh_kwargs(self):
         return {
             "pbr": True,
             "metallic": self.metallic,
             "roughness": self.roughness,
+            "diffuse": self.diffuse,
         }
 
 
@@ -49,8 +51,8 @@ class Texture:
         return TextureNone()
 
     @staticmethod
-    def pbr(metallic=0.0, roughness=0.7):
-        return TexturePBR(metallic, roughness)
+    def pbr(metallic=0.4, roughness=0.2, diffuse=1):
+        return TexturePBR(metallic, roughness, diffuse)
 
     @staticmethod
     def specular(specular=0.6, specular_power=60, diffuse=1, ambient=0.1):
