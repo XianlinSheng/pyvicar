@@ -69,6 +69,7 @@ def create_isoq_video(
     q_name=None,
     marker_f=lambda c, i, v, m: m,
     plotter_f=lambda p, c, i, v, m: p,
+    iso_value=0.1,
     iso_opacity=0.5,
     iso_color=lb.Color.field(lb.Field.vector("VEL")),
     iso_texture=lb.Texture.none(),
@@ -130,9 +131,9 @@ def create_isoq_video(
                 )
 
         if q_name is None:
-            contours = create_isoq(mesh)
+            contours = create_isoq(mesh, iso_value=iso_value)
         else:
-            contours = create_isoq(mesh, q=Q.use_exist(q_name))
+            contours = create_isoq(mesh, q=Q.use_exist(q_name), iso_value=iso_value)
 
         if contours.n_points == 0 or contours.n_cells == 0:
             log.log(f"ISOQ Video: No q isosurfaces after calculation")
