@@ -17,6 +17,7 @@ class Job(Group, Writable, Optional):
             {
                 "ntasks": {"default": 48},
                 "partition": {"default": "parallel"},
+                "gres": {"default": []},
             },
             recursive=True,
         )
@@ -38,7 +39,23 @@ class Job(Group, Writable, Optional):
         self._children.ntasksPerNode = Field(
             "ntasksPerNode", self._config["ntasks"]["default"]
         )
+        self._children.gres = Field("gres", self._config["gres"]["default"])
         self._children.account = Field("account", "jsmith01")
+
+        self._children.modulePurge = Field(
+            "modulePurge", False, "add a module purge line in job file before mpirun"
+        )
+        self._children.moduleUse = Field(
+            "moduleUse",
+            False,
+            "add a module use install/etc/modulefiles line in job file before mpirun",
+        )
+        self._children.moduleLoad = Field(
+            "moduleLoad",
+            False,
+            "add a module load vicar3d/version line in job file before mpirun, version is determined by the config file etc/modulefiles/vicar3d/version",
+        )
+
         self._children.mpinp = Field("mpinp", self._config["ntasks"]["default"])
         self._children.runpath = Field("runpath", "/path/to/executable")
         self._children.logfile = Field("logfile", "log.std")
@@ -68,9 +85,28 @@ class Job(Group, Writable, Optional):
         f.write(f"#SBATCH --time=2-00:00:00\n")
         f.write(f"#SBATCH --nodes={self._children.nodes}\n")
         f.write(f"#SBATCH --ntasks-per-node={self._children.ntasksPerNode}\n")
+        if self._children.gres.value:
+            f.write(f"#SBATCH --gres={','.join(self._children.gres)}\n")
         f.write(f"#SBATCH --account={self._children.account}\n")
         f.write(f"\n")
         f.write(f"# Here starts script\n")
+        if self._children.modulePurge.value:
+            f.write(f"module purge\n")
+        if self._children.moduleUse.value:
+            # [v1.1.0 reserved] this becomes mandatory from v1.1.0 and will be checked during import
+            if not self._case.installs.modulefiles.is_dir():
+                raise Exception(
+                    f"module use etc/modulefiles needs a valid etc/modulefiles folder but the imported ViCar3D version does not support one"
+                )
+            f.write(f"module use {self._case.installs.modulefiles}\n")
+        if self._children.moduleLoad.value:
+            # [v1.1.0 reserved] this becomes mandatory from v1.1.0 and will be checked during import
+            if self._case.installs.version == "none":
+                raise Exception(
+                    f"module load vicar3d/version needs a valid etc/modulefiles/vicar3d/version config file but the imported ViCar3D version does not support one"
+                )
+            f.write(f"module load vicar3d/{self._case.installs.version}\n")
+        f.write(f"\n")
         f.write(
             f"mpirun -np {self._children.mpinp} {self._children.runpath} > {self._children.logfile}\n"
         )

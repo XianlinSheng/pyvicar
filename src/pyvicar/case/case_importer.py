@@ -10,6 +10,11 @@ def import_case(install_prefix):
     def runpath(self):
         return paths.exe
 
+    @property
+    def installs(self):
+        return paths
+
     Case.runpath = runpath
+    Case.installs = installs
 
     return Case
