@@ -237,6 +237,8 @@ class BasicsLinker:
                 f"cd {self._path}; mpirun -np {np} {self.runpath} {f'> {outfile}' if not outfile is None else f''}; cd - > /dev/null"
             )
 
+        # [v1.1.0 reserved] starting from v1.1.0 > log.std will be replaced by slurm redirection
+        # so no need of sed ... anymore
         def bash(self):
             log = self.job.logfile
             os.system(f"(cd {self._path}; sed 's/> {log}//g' job | bash)")

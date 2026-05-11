@@ -31,6 +31,7 @@ class Job(Group, Writable, Optional):
     def _init(self):
         self._f = open(self._path, "w")
 
+        # [v1.1.0 reserved] jobname will be removed
         self._children.jobName = Field("jobName", "unnamed")
         self._children.partition = Field(
             "partition", self._config["partition"]["default"]
@@ -42,6 +43,16 @@ class Job(Group, Writable, Optional):
         self._children.gres = Field("gres", self._config["gres"]["default"])
         self._children.account = Field("account", "jsmith01")
 
+        # [v1.1.0 reserved] starting from v1.1.0
+        # the logfile log.std will be removed and these two will be always on with default value log.out log.err
+        self._children.output = Field("output", "")
+        self._children.error = Field("error", "")
+
+        self._children.condaDeactivate = Field(
+            "condaDeactivate",
+            False,
+            "add conda deactivate block in job file before mpirun",
+        )
         self._children.modulePurge = Field(
             "modulePurge", False, "add a module purge line in job file before mpirun"
         )
@@ -56,6 +67,7 @@ class Job(Group, Writable, Optional):
             "add a module load vicar3d/version line in job file before mpirun, version is determined by the config file etc/modulefiles/vicar3d/version",
         )
 
+        # [v1.1.0 reserved] these will be removed
         self._children.mpinp = Field("mpinp", self._config["ntasks"]["default"])
         self._children.runpath = Field("runpath", "/path/to/executable")
         self._children.logfile = Field("logfile", "log.std")
@@ -71,6 +83,7 @@ class Job(Group, Writable, Optional):
             return
         Optional.enable(self)
         self._init()
+        # [v1.1.0 reserved] autofill will be removed
         self.autofill()
 
     def write(self):
@@ -88,8 +101,18 @@ class Job(Group, Writable, Optional):
         if self._children.gres.value:
             f.write(f"#SBATCH --gres={','.join(self._children.gres)}\n")
         f.write(f"#SBATCH --account={self._children.account}\n")
+        # [v1.1.0 reserved] these two are optional < v1.1.0, will become mandatory to replace log.std >= v1.1.0
+        if self._children.output.value:
+            f.write(f"#SBATCH --output={self._children.output}\n")
+        if self._children.error.value:
+            f.write(f"#SBATCH --error={self._children.error}\n")
         f.write(f"\n")
         f.write(f"# Here starts script\n")
+        if self._children.condaDeactivate.value:
+            f.write(f'source "$(conda info --base)/etc/profile.d/conda.sh"\n')
+            f.write(f'while [[ -n "$CONDA_SHLVL" && "$CONDA_SHLVL" -gt 0 ]]; do\n')
+            f.write(f"    conda deactivate\n")
+            f.write(f"done\n")
         if self._children.modulePurge.value:
             f.write(f"module purge\n")
         if self._children.moduleUse.value:
@@ -107,13 +130,15 @@ class Job(Group, Writable, Optional):
                 )
             f.write(f"module load vicar3d/{self._case.installs.version}\n")
         f.write(f"\n")
+        # [v1.1.0 reserved] logfile log.std will be removed and replaced by output error slurm standard redirection
         f.write(
-            f"mpirun -np {self._children.mpinp} {self._children.runpath} > {self._children.logfile}\n"
+            f"mpirun -np {self._children.mpinp} {self._children.runpath} {f'> {self._children.logfile}' if self._children.logfile.value else ''}\n"
         )
         f.write(f"\n")
 
         f.flush()
 
+    # [v1.1.0 reserved] this and jobName/mpinp/runpath will be removed, and directly use case methods to format write
     # fill job np, mpi np, run path from current case config
     def autofill(self):
         nproc = self._case.nproc
