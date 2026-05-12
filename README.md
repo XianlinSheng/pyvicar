@@ -90,7 +90,6 @@ conda install -c conda-forge ffmpeg-python pyvista
 </pre>
 It is separated into multiple commands in case of slow env solving process,
 and keep the sequence of matplotlib-vtk-ffmpeg/pyvista in case of vtk build overwrite.
-ment settings can be seen in examples. 
 
 VTK can use X server, off-screen CPU, or off-screen GPU.
 Typically one need to install osmesa (off screen mesa) build on cluster 
