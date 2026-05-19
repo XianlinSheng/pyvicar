@@ -242,7 +242,7 @@ class BasicsLinker:
         # so no need of sed ... anymore
         def bash(self):
             log = self.job.logfile
-            os.system(f"(cd {self._path}; sed 's/> {log}//g' job | bash)")
+            subprocess.run(["bash", "-lc", f"cd {self._path} && source <(sed 's/> {log}//g' job)"])
 
         def sbatch(self):
             subprocess.run(["bash", "-lc", f"cd {self._path} && sbatch job"])

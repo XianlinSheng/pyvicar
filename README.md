@@ -124,6 +124,10 @@ python -c "from mpi4py import MPI; print(MPI.Get_library_version())"
 </pre>
 and this platform mpi will need to be visible at user level together with conda
 since it becomes the conda package backend.
+It is still recommended to directly use conda mpi for compatibility
+if theres only one node and does not need platform-specific mpi backend.
+If running into weird situations when submitting jobs using .sbatch() or .bash(),
+this is the first thing to check espcially mpirun or python mpi import throws some warnings.  
 
 
 ## Install
