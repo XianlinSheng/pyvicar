@@ -1,5 +1,6 @@
 import os
 import json
+import subprocess
 from pathlib import Path
 from pyvicar.case.input import Input
 from pyvicar.case.probe import Probe
@@ -244,7 +245,7 @@ class BasicsLinker:
             os.system(f"(cd {self._path}; sed 's/> {log}//g' job | bash)")
 
         def sbatch(self):
-            os.system(f"cd {self._path}; sbatch job; cd - > /dev/null")
+            subprocess.run(["bash", "-lc", f"cd {self._path} && sbatch job"])
 
         @property
         def nproc(self):

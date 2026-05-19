@@ -78,6 +78,8 @@ After ViCar3D is correctly installed on a platform, pyvicar requires the followi
 - ffmpeg (convert frames to video files, can be auto handled by conda)
 - ffmpeg-python (python controller of above)
 
+Some libs need special treatment based on platform:
+
 These are managed by conda so simply:
 <pre>
 conda create -n vicar python=3.12
@@ -85,11 +87,13 @@ conda activate vicar
 conda install -c conda-forge    \
     numpy scipy numpy-stl       \
     trimesh pandas h5py matplotlib
-conda install -c conda-forge mpi4py vtk=*=osmesa*
+conda install -c conda-forge vtk=*=osmesa* # has special treatments, see below
 conda install -c conda-forge ffmpeg-python pyvista
+conda install -c conda-forge mpi4py # has special treatments, see below
 </pre>
 It is separated into multiple commands in case of slow env solving process,
-and keep the sequence of matplotlib-vtk-ffmpeg/pyvista in case of vtk build overwrite.
+and keep the sequence of matplotlib-vtk-ffmpeg/pyvista in case of vtk build overwrite
+and do mpi4py separately.
 
 VTK can use X server, off-screen CPU, or off-screen GPU.
 Typically one need to install osmesa (off screen mesa) build on cluster 
