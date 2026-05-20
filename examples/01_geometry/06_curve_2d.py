@@ -47,6 +47,7 @@ c.set_partition(nproc_node=16, nnode_max=1)
 
 c.job.enable()
 c.job.account = "account"
+c.job.partition = "partition"
 
 c.write()
 

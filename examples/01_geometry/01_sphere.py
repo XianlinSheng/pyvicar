@@ -64,6 +64,7 @@ c.set_partition(nproc_node=16, nnode_max=1)
 # job is autofilled during first enable based on c.input parallel npx/npy settings
 c.job.enable()
 c.job.account = "account"
+c.job.partition = "partition"
 
 # # jobName is set to case name (folder name) when first enabled by autofill
 # c.job.jobname = "tut_sphere"
