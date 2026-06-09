@@ -2,7 +2,7 @@ import pyvicar.tools.physics_setter.common as phys
 import pyvicar.geometry.case_setter.common as geom
 import pyvicar.grid.case_setter.common as grid
 from pyvicar.grid.previewer.common import show_grid, stat_grid
-from pyvicar.tools.post.case_setter.common import create_matplotlib_fig
+import pyvicar.tools.post.case_setter.common as post
 from pyvicar.tools.post.dump import create_isoq_video, create_slicecontour_video
 
 
@@ -39,7 +39,8 @@ class ToolsLinker:
             cls.show_grid = show_grid
             cls.stat_grid = stat_grid
 
-            cls.create_matplotlib_fig = create_matplotlib_fig
+            cls.create_matplotlib_fig = post.create_matplotlib_fig
+            cls.create_json_dict = post.create_json_dict
             cls.create_isoq_video = create_isoq_video
             cls.create_slicecontour_video = create_slicecontour_video
 

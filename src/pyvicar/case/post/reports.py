@@ -1,4 +1,5 @@
 import pandas as pd
+import json
 import numpy as np
 import shutil
 import matplotlib.pyplot as plt
@@ -174,6 +175,7 @@ class Report(Group, Dict, Readable):
         fig.savefig(path, *args, **kwargs)
         plt.close(fig)
 
+    # [v1.1.0] will be removed, deprecated, use json_by_dict instead
     def table_by_dict(self, row, **kwargs):
         path = self._path / f"{self._name}.csv"
 
@@ -181,6 +183,12 @@ class Report(Group, Dict, Readable):
         row = _dict_to_csv_row(row, **kwargs)
 
         pd.DataFrame([row]).to_csv(path, index=False)
+
+    def json_by_dict(self, d, indent=4, **kwargs):
+        path = self._path / f"{self._name}.json"
+
+        with open(path, "w") as f:
+            json.dump(d, f, indent=indent, **kwargs)
 
 
 class Rows(List, Readable, Optional):
@@ -290,7 +298,15 @@ class Table(Group):
         return self._extension
 
     def to_pandas(self):
+        if self._extension != "csv":
+            raise Exception(f"Only .csv report file can be read to pandas, but encountered {self._extension}")
         return pd.read_csv(self._path)
+    
+    def to_dict(self):
+        if self._extension != "json":
+            raise Exception(f"Only .json report file can be read to dict, but encountered {self._extension}")
+        with open(self._path, "r") as f:
+            return json.load(f)
 
 
 def _dict_to_csv_row(
