@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from pyvicar.geometry.presets import create_sphere, create_cyl_2d, create_plane
 from pyvicar.geometry.spanned_2dcurve import Spanned2DCurve
 from pyvicar.geometry.trisurface import TriSurface
@@ -66,6 +67,18 @@ def append_stl_solid(case, file, xyz=None):
     if xyz is not None:
         mesh.xyz.arr += np.array(xyz)
     return append_solid(case, mesh)
+
+
+def append_csv_solid_2d(case, file, xy=None):
+    csv = pd.read_csv(file)
+
+    x = csv["x"].to_numpy()
+    y = csv["y"].to_numpy()
+    curv = np.hstack((x[:, np.newaxis], y[:, np.newaxis]))
+
+    if xy is not None:
+        curv += np.array(xy)[np.newaxis, :]
+    return append_solid_2d(case, curv)
 
 
 def append_npz_solid_2d(case, file, xy=None):
