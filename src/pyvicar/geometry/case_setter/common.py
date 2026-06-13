@@ -25,12 +25,13 @@ def append_solid(case, mesh=None):
 
     if not case.unstrucSurface:
         case.unstrucSurface.enable()
-        surf = case.unstrucSurface.surfaces.appendnew()
-        surf.nPoint = nPoint
-        surf.nElem = nElem
-        if mesh is not None:
-            surf.xyz = mesh.xyz
-            surf.conn = mesh.conn
+
+    surf = case.unstrucSurface.surfaces.appendnew()
+    surf.nPoint = nPoint
+    surf.nElem = nElem
+    if mesh is not None:
+        surf.xyz = mesh.xyz
+        surf.conn = mesh.conn
 
     return body, surf
 
