@@ -9,3 +9,9 @@ def create_json_dict(c, d, name, indent=4, **kwargs):
     c.post.reports.enable()
     dict_report = c.post.reports.get_or_create(name)
     dict_report.json_by_dict(d, indent=indent, **kwargs)
+
+def create_csv_dataframe(c, df, name, index=False, **kwargs):
+    c.post.enable()
+    c.post.reports.enable()
+    df_report = c.post.reports.get_or_create(name)
+    df_report.csv_by_dataframe(df, index=index, **kwargs)

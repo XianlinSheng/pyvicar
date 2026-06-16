@@ -189,6 +189,10 @@ class Report(Group, Dict, Readable):
 
         with open(path, "w") as f:
             json.dump(d, f, indent=indent, **kwargs)
+    
+    def csv_by_dataframe(self, df, **kwargs):
+        path = self._path / f"{self._name}.csv"
+        pd.DataFrame(df).to_csv(path, **kwargs)
 
 
 class Rows(List, Readable, Optional):
