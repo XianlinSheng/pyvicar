@@ -221,3 +221,32 @@ def proc_draglift(
         out = output.set(out, key, val)
 
     return out
+
+
+# least-square criterion to correct x by k*x or x+b or k*x+b
+
+
+# d/dk sum((k*xi - x~i)^2) == 0
+# => 2*sum((k*xi - x~i)*xi) == 0
+def correct_k(x, target):
+    return np.sum(x * target) / np.sum(x**2)
+
+
+# d/db sum((xi + b - x~i)^2) == 0
+# => 2*sum(xi + b - x~i) == 0
+def correct_b(x, target):
+    return np.sum(target - x) / x.shape[0]
+
+
+# d/dk sum((k*xi + b - x~i)^2) == 0
+# => 2*sum((k*xi + b - x~i)*xi) == 0
+# d/db sum((k*xi + b - x~i)^2) == 0
+# => 2*sum(k*xi + b - x~i) == 0
+# i.e.
+# [ sum(xi^2)   sum(xi) ] [ k ] = [sum(xi*x~i)]
+# [ sum(xi  )   sum(1 ) ] [ b ]   [sum(x~i   )]
+def correct_kb(x, target):
+    mat = np.array([[np.sum(x**2), np.sum(x)], [np.sum(x), x.shape[0]]])
+    rhs = np.array([np.sum(x * target), np.sum(target)])
+    k, b = np.linalg.solve(mat, rhs)
+    return k, b
