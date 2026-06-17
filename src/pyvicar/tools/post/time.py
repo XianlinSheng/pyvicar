@@ -250,3 +250,25 @@ def correct_kb(x, target):
     rhs = np.array([np.sum(x * target), np.sum(target)])
     k, b = np.linalg.solve(mat, rhs)
     return k, b
+
+
+# time series statistics
+
+
+def stat(x, avg=True, min=True, max=True, p2p=True, amp=True, rat=True):
+    minv = np.min(x)
+    maxv = np.max(x)
+    d = {}
+    if avg:
+        d["avg"] = np.mean(x)
+    if min:
+        d["min"] = minv
+    if max:
+        d["max"] = maxv
+    if p2p:
+        d["p2p"] = maxv - minv
+    if amp:
+        d["amp"] = (maxv - minv) / 2
+    if rat:
+        d["rat"] = minv / maxv
+    return d
