@@ -1,11 +1,8 @@
-import numpy as np
 import pyvicar
 from pyvicar.geometry.presets import create_cyl_2d
 
-# 6. curve 2D
-# this script generate the case file for a flow past 2D cylinder at Re=200,
-# where the cylinder is described by a np array, xy coords for points.
-# in shape [npoint, 2], [[x1, y1], ..., [xn, yn]], same format as the npz xy array in example 4
+# 6. npz
+# this script generate the case file for a flow past 2D cylinder from npz coord array at Re=200
 
 pyvicar.assert_api_version("1.0.1", "1.1.0")
 
@@ -18,24 +15,23 @@ dx = d / 20
 T = d / U
 Umax = 2 * U
 
-# this preset gives a np array for xy coord of all points
-curv = create_cyl_2d(d / 2, dx, [0, 0])
+# this creates a 2D cylinder npz file at origin, in real uses one should already have the file somewhere
+# in npz it has a 2darray xy, shape [npoint, 2], [[x1, y1], ..., [xn, yn]]
+# the cylinder is the closed curve point1-p2-p3-...-pn-p1
+# to create from your own np array, using: np.savez(filename, xy=xy_coord_array)
+create_cyl_2d(d / 2, dx, [0, 0], file="tut_npz_cyl.npz")
 
-# this create_cyl_2d(...) is exactly the same function in example 4,
-# it always returns the xy coord np array in runtime memory,
-# but does not write it to npz file if file=... is not specified
-
-c = Case("tut_curve_2d")
+c = Case("tut_npz")
 
 gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[3, None], 3])
 #                                          ^~~~~~~~~~~~~~~~~~~ remember stricter 2d refine requirement
 #                                                              no longer needed starting from d/50
 #                                                              typical decent sim. needs at least d/100
-#                               ^~~~~~~~~ dont forget this in 2D case
+#                               ^~~~~~ remember this when creating 2D grid,
+#                                      but you can always check for possible mistakes by show_grid()
 
-# this emplaces a translated 2D closed curve,
-# gm.center auto returns len-2 xy coord in 2D, np.newaxis is to broadcast to all points
-body, surf = c.append_solid_2d(curv + gm.center[np.newaxis, :])
+# this read the npz and emplace at gm.center
+body, surf = c.append_npz_solid_2d("tut_npz_cyl.npz", gm.center)
 
 c.set_inlet("x1", [U, 0, 0])
 
@@ -48,6 +44,14 @@ c.set_partition(nproc_node=16, nnode_max=1)
 c.job.enable()
 c.job.account = "account"
 c.job.partition = "partition"
+
+c.job.condaDeactivate = True
+c.job.modulePurge = True
+c.job.moduleUse = True
+c.job.moduleLoad = True
+c.job.logfile = ""
+c.job.output = "log.out"
+c.job.error = "log.err"
 
 c.write()
 

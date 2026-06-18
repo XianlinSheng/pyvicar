@@ -70,6 +70,14 @@ def make_case(p):
         case _:
             raise Exception(f"Unrecognized platform-version {p.platform}-{p.version}")
 
+    c.job.condaDeactivate = True
+    c.job.modulePurge = True
+    c.job.moduleUse = True
+    c.job.moduleLoad = True
+    c.job.logfile = ""
+    c.job.output = "log.out"
+    c.job.error = "log.err"
+
     c.input.ib.form = p.gcss
 
     if p.allow_restart:

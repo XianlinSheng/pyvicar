@@ -1,7 +1,7 @@
 import pyvicar
 from pyvicar.geometry.presets import create_sphere
 
-# 3. stl
+# 5. stl
 # this script generate the case file for a flow past stl sphere at Re=200
 
 pyvicar.assert_api_version("1.0.1", "1.1.0")
@@ -28,7 +28,7 @@ body, surf = c.append_stl_solid("tut_stl_sphere.stl", gm.center)
 # stl is considered only for 3D body in 3D case because 2D body should simply be a point list.
 # even though 2D body is stored as an extruded 3D triangular surface in the solver,
 # using stl to store its 2D shape yourself introduces redundant info and dynamic dependencies like dz,
-# so recommend storing it using npz numpy array in example 4, and let pyvicar handle the conversion
+# so recommend storing it using npz numpy array or csv in example 6/7, and let pyvicar handle the conversion
 
 c.set_inlet("x1", [U, 0, 0])
 
@@ -41,6 +41,14 @@ c.set_partition(nproc_node=16, nnode_max=1)
 c.job.enable()
 c.job.account = "account"
 c.job.partition = "partition"
+
+c.job.condaDeactivate = True
+c.job.modulePurge = True
+c.job.moduleUse = True
+c.job.moduleLoad = True
+c.job.logfile = ""
+c.job.output = "log.out"
+c.job.error = "log.err"
 
 c.write()
 

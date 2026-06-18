@@ -73,14 +73,15 @@ c.job.partition = "partition"
 # c.job.nodes = 1
 # c.job.ntasksPerNode = 16
 
-# # these are optional to create the recommended new v1.1.0 style job file
-# c.job.condaDeactivate = True
-# c.job.modulePurge = True
-# c.job.moduleUse = True
-# c.job.moduleLoad = True
-# c.job.logfile = ""
-# c.job.output = "log.out"
-# c.job.error = "log.err"
+# these are optional to create the recommended new v1.1.0 style job file
+# these will handle an isolated and clean runtime env
+c.job.condaDeactivate = True
+c.job.modulePurge = True
+c.job.moduleUse = True
+c.job.moduleLoad = True
+c.job.logfile = ""
+c.job.output = "log.out"
+c.job.error = "log.err"
 
 # write the case input files
 c.write()

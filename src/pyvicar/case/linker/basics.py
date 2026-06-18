@@ -7,6 +7,7 @@ from pyvicar.case.probe import Probe
 from pyvicar.case.canonical_body import CanonicalBody
 from pyvicar.case.unstruc_surface import UnstrucSurface
 from pyvicar.case.srj import SRJ
+from pyvicar.case.om2_edge import OM2Edge
 from pyvicar.case.nonuniform_grid import NonuniformGrid
 from pyvicar.case.job import Job
 from pyvicar.case.drag_lift import DragLiftList
@@ -61,6 +62,7 @@ class BasicsLinker:
         "cbody": True,
         "usurf": True,
         "srj": True,
+        "om2e": True,
         "grids": True,
         "job": True,
     }
@@ -124,6 +126,9 @@ class BasicsLinker:
         if def_list["srj"]:
             self._children.srj = SRJ(self._path / "SRJ_params_in.dat")
 
+        if def_list["om2e"]:
+            self._children.om2edge = OM2Edge(self._path / "open_membrane_edge_in.dat")
+
         if def_list["grids"]:
             self._children.xgrid = NonuniformGrid(self._path / "xgrid.dat")
             self._children.ygrid = NonuniformGrid(self._path / "ygrid.dat")
@@ -170,6 +175,9 @@ class BasicsLinker:
 
         if def_list["srj"] and self._children.srj:
             self._children.srj.write()
+
+        if def_list["om2e"] and self._children.om2edge:
+            self._children.om2edge.write()
 
         if def_list["grids"]:
             if self._children.xgrid:
@@ -242,7 +250,9 @@ class BasicsLinker:
         # so no need of sed ... anymore
         def bash(self):
             log = self.job.logfile
-            subprocess.run(["bash", "-lc", f"cd {self._path} && source <(sed 's/> {log}//g' job)"])
+            subprocess.run(
+                ["bash", "-lc", f"cd {self._path} && source <(sed 's/> {log}//g' job)"]
+            )
 
         def sbatch(self):
             subprocess.run(["bash", "-lc", f"cd {self._path} && sbatch job"])

@@ -21,14 +21,20 @@ class ToolsLinker:
 
             cls.append_solid = geom.append_solid
             cls.append_solid_2d = geom.append_solid_2d
+            cls.append_membrane = geom.append_membrane
+            cls.append_membrane_2d = geom.append_membrane_2d
+
             cls.append_sphere = geom.append_sphere
             cls.append_cyl_2d = geom.append_cyl_2d
+            cls.append_plane = geom.append_plane
+            cls.append_plane_2d = geom.append_plane_2d
+
             cls.append_stl_solid = geom.append_stl_solid
             cls.append_npz_solid_2d = geom.append_npz_solid_2d
             cls.append_csv_solid_2d = geom.append_csv_solid_2d
-            cls.append_membrane = geom.append_membrane
-            cls.append_plane = geom.append_plane
             cls.append_stl_membrane = geom.append_stl_membrane
+            cls.append_npz_membrane_2d = geom.append_npz_membrane_2d
+            cls.append_csv_membrane_2d = geom.append_csv_membrane_2d
 
             cls.refine_grid = grid.refine_grid
             cls.uniform_grid_n = grid.uniform_grid_n

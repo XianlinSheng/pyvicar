@@ -1,10 +1,10 @@
 import pyvicar
-from pyvicar.geometry.presets import create_cyl_2d
+import numpy as np
 
-# 4. npz
-# this script generate the case file for a flow past 2D cylinder from npz coord array at Re=200
+# 4. plane 2d
+# this script generate the case file for a flow past 2D planar membrane at Re=200
 
-pyvicar.assert_api_version("1.0.1", "1.1.0")
+pyvicar.assert_api_version("1.0.2", "1.1.0")  # append_plane_2d is added in 1.0.2
 
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
@@ -14,14 +14,10 @@ re = 200
 dx = d / 20
 T = d / U
 Umax = 2 * U
+alpha = 5
+alpha_rad = np.radians(alpha)
 
-# this creates a 2D cylinder npz file at origin, in real uses one should already have the file somewhere
-# in npz it has a 2darray xy, shape [npoint, 2], [[x1, y1], ..., [xn, yn]]
-# the cylinder is the closed curve point1-p2-p3-...-pn-p1
-# to create from your own np array, using: np.savez(filename, xy=xy_coord_array)
-create_cyl_2d(d / 2, dx, [0, 0], file="tut_npz_cyl.npz")
-
-c = Case("tut_npz")
+c = Case("tut_plane_2d")
 
 gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[3, None], 3])
 #                                          ^~~~~~~~~~~~~~~~~~~ remember stricter 2d refine requirement
@@ -30,8 +26,14 @@ gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[3, None], 3])
 #                               ^~~~~~ remember this when creating 2D grid,
 #                                      but you can always check for possible mistakes by show_grid()
 
-# this read the npz and emplace at gm.center
-body, surf = c.append_npz_solid_2d("tut_npz_cyl.npz", gm.center)
+vec = d * np.array([np.cos(alpha_rad), -np.sin(alpha_rad)])
+body, surf, om2e = c.append_plane_2d(vec, dx, gm.center - vec / 2)
+#                                ^~~ different from example 3
+#           ^~~~ 2d membrane returns an extra open_membrane_edge_in.dat block object,
+#                it refers to a new item c.om2edge.om2s[i] storing the edge point indexes (start from 1).
+#                this is only valid when appending an open membrane, which is always true for this func
+#                when appending a closed membrane, no new item will be created in om2edge
+#                and this return object will be None (also see 09)
 
 c.set_inlet("x1", [U, 0, 0])
 
@@ -44,6 +46,14 @@ c.set_partition(nproc_node=16, nnode_max=1)
 c.job.enable()
 c.job.account = "account"
 c.job.partition = "partition"
+
+c.job.condaDeactivate = True
+c.job.modulePurge = True
+c.job.moduleUse = True
+c.job.moduleLoad = True
+c.job.logfile = ""
+c.job.output = "log.out"
+c.job.error = "log.err"
 
 c.write()
 
