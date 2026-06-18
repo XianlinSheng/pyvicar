@@ -29,12 +29,12 @@ class LazyFile:
 
     def write(self, *args, **kwargs):
         self._open_if_not()
-        self._f.write(*args, **kwargs)
+        return self._f.write(*args, **kwargs)
 
     def read(self, *args, **kwargs):
         self._open_if_not()
-        self._f.read(*args, **kwargs)
+        return self._f.read(*args, **kwargs)
 
     def flush(self, *args, **kwargs):
         self._open_if_not()
-        self._f.flush(*args, **kwargs)
+        return self._f.flush(*args, **kwargs)
