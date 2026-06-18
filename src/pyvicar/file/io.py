@@ -13,19 +13,19 @@ class Readable(ABC):
         pass
 
 
-def lazy_open(path, mode):
-    return LazyFile(path, mode)
+def lazy_open(*args, **kwargs):
+    return LazyFile(*args, **kwargs)
 
 
 class LazyFile:
-    def __init__(self, path, mode):
-        self._path = path
-        self._mode = mode
+    def __init__(self, *args, **kwargs):
+        self._args = args
+        self._kwargs = kwargs
         self._f = None
 
     def _open_if_not(self):
         if self._f is None:
-            self._f = open(self._path, self._mode)
+            self._f = open(*self._args, **self._kwargs)
 
     def write(self, *args, **kwargs):
         self._open_if_not()
