@@ -1,7 +1,7 @@
 from pyvicar._tree import Group, List, Field
 from pyvicar._utilities.optional import Optional
 from pyvicar._format import KV1Formatter, DatasetFormatter
-from pyvicar.file import Writable
+from pyvicar.file import Writable, lazy_open
 from pathlib import Path
 import numpy as np
 
@@ -13,7 +13,7 @@ class OM2Edge(Group, Writable, Optional):
         Writable.__init__(self)
         Optional.__init__(self)
         self._path = Path(path)
-        self._f = open(self._path, "w")
+        self._f = lazy_open(self._path, "w")
         self._headerFormatter = KV1Formatter(self._f)
         self._arrayFormatter = DatasetFormatter(self._f)
         self._arrayFormatter.printidx = False

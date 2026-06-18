@@ -1,6 +1,6 @@
 from pathlib import Path
 from pyvicar._tree import Group
-from pyvicar.file import Writable
+from pyvicar.file import Writable, lazy_open
 from .nodes import Nodes
 from .markers import Markers
 
@@ -10,7 +10,7 @@ class Probe(Group, Writable):
         Group.__init__(self)
         Writable.__init__(self)
         self._path = Path(path)
-        self._f = open(self._path, "w")
+        self._f = lazy_open(self._path, "w")
 
         # all subgroups
         self._children.nodes = Nodes(self._f)

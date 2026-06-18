@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
-from pyvicar.file import Writable
+from pyvicar.file import Writable, lazy_open
 from pyvicar.tools.miscellaneous import args
 
 
@@ -29,7 +29,7 @@ class Job(Group, Writable, Optional):
             self._init()
 
     def _init(self):
-        self._f = open(self._path, "w")
+        self._f = lazy_open(self._path, "w")
 
         # [v1.1.0 reserved] jobname will be removed
         self._children.jobName = Field("jobName", "unnamed")

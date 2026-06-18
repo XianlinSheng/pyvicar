@@ -1,6 +1,7 @@
 from pathlib import Path
 from pyvicar._format import KV1Formatter
 from pyvicar._tree import Field
+from pyvicar.file import lazy_open
 from pyvicar.tools.miscellaneous import args
 from pyvicar.case.canonical_body.bodies import Bodies
 from pyvicar.case.canonical_body.body import Body
@@ -10,7 +11,7 @@ class BasicsLinker:
     @staticmethod
     def def_path(self, path):
         self._path = Path(path)
-        self._f = open(self._path, "w")
+        self._f = lazy_open(self._path, "w")
         self._headerFormatter = KV1Formatter(self._f)
 
     _default_children = {

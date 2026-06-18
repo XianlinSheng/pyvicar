@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
-from pyvicar.file import Writable
+from pyvicar.file import Writable, lazy_open
 from pyvicar._format import DatasetFormatter
 
 
@@ -16,7 +16,7 @@ class NonuniformGrid(Group, Writable, Optional):
             self._init()
 
     def _init(self):
-        self._f = open(self._path, "w")
+        self._f = lazy_open(self._path, "w")
         self._formatter = DatasetFormatter(self._f)
         self._formatter.printidx = True
 
