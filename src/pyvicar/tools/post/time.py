@@ -255,12 +255,20 @@ def correct_kb(x, target):
 # time series statistics
 
 
-def stat(x, avg=True, min=True, max=True, p2p=True, amp=True, rat=True):
-    minv = np.min(x)
-    maxv = np.max(x)
+def stat(
+    x,
+    avg=True,
+    min=True,
+    max=True,
+    p2p=True,
+    amp=True,
+    rat=True,
+):
+    minv = float(np.min(x))
+    maxv = float(np.max(x))
     d = {}
     if avg:
-        d["avg"] = np.mean(x)
+        d["avg"] = float(np.mean(x))
     if min:
         d["min"] = minv
     if max:
@@ -270,5 +278,17 @@ def stat(x, avg=True, min=True, max=True, p2p=True, amp=True, rat=True):
     if amp:
         d["amp"] = (maxv - minv) / 2
     if rat:
-        d["rat"] = minv / maxv
+        d["rat"] = minv / maxv if maxv != 0 else "div_0"
     return d
+
+
+def prepend_fill(x, n, value=0):
+    y = np.full(n, value, dtype=x.dtype)
+    y[-x.shape[0] :] = x
+    return y
+
+
+def append_fill(x, n, value=0):
+    y = np.full(n, value, dtype=x.dtype)
+    y[: x.shape[0]] = x
+    return y
