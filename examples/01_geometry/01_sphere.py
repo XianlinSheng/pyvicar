@@ -30,6 +30,7 @@ c = Case("tut_sphere")
 # pyvicar api simply first auto calculates and then does the same c.xxx.yyy.... settings
 
 # return a GridModel, containing domain, refinement buffer sizes, and growth rates, check by print(gm)
+# see 02_motion/01_sph_sine.py for more details on GridModel
 gm = c.create_grid(l0=d, dx=dx)
 #                        ^ finest grid spacing, forced dx=dy=dz in refinement region in create_grid method
 #                  ^ length scale, default refine region will be relative to this scale

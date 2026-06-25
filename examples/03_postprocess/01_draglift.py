@@ -1,20 +1,29 @@
 import pyvicar
 import pyvicar.tools.matplotlib as pvmpl
 import matplotlib.pyplot as plt
+from pyvicar.tools.post.time import stat, prepend_fill
 
 # 1. draglift
 # this script reads the case draglift outputs and plot the curves
+
+# use at least v1.0.2 if only for postprocess because in lower version
+# instantiating Case(...) alone would truncate existing input files
+# create_json_dict, create_csv_dataframe, stat, prepend_fill, c.draglift.nseries are v1.0.2 features
+pyvicar.assert_api_version("1.0.2", "1.1.0")
 
 # this is for some presets of plotting fontsize.
 # font_sizes_l() is the default (without importing pvmpl) and will be friendly for plot screen
 # font_sizes_xl() will be friendly for illustration included in another canvas
 pvmpl.set_default(plt_kwargs=pvmpl.font_sizes_l())
 
-pyvicar.assert_api_version("1.0.1", "1.1.0")
+U = 1
+d = 1
+A = d**2
 
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
-c = Case("tut_draglift")
+# change this to a completed case in 01_geometry, like tut_sphere here
+c = Case("tut_sphere")
 
 c.draglift.read()
 
@@ -35,23 +44,48 @@ forces = c.draglift.proc()
 fig = plt.figure()
 ax = fig.add_subplot()
 
-ax.plot(forces.time, forces.cx[0], label="drag")
+# C = F/(1/2*rho*U^2*A) vicar3d solver has already divided 1/2, but no U and A (or L) yet
+cx = forces.cx[0] / (U**2 * A)
+cy = forces.cy[0] / (U**2 * A)
+cz = forces.cz[0] / (U**2 * A)
+
+ax.plot(forces.time, cx, label="cx")
+ax.plot(forces.time, cy, label="cy")
+ax.plot(forces.time, cz, label="cz")
 
 ax.axis([None, None, None, None])
 ax.grid(True)
 ax.legend()
 ax.set_xlabel("Time")
-ax.set_ylabel("CD")
-ax.set_title("Drag")
+ax.set_ylabel("F/(1/2*rho*U^2*A)")
+ax.set_title("Drag Lift Coeff")
 fig.tight_layout()
 
-plt.show()
+# plt.show()
 
-# # or savefig
-# fig.savefig("draglift.png")
+# pyvicar managed postprocessing file structure, at case/Post/Reports/...
+c.create_matplotlib_fig(fig, "draglift")
 
-# # or using pyvicar managed postprocessing file structure, at case/Post/Reports/...
-# c.create_matplotlib_fig(fig, "draglift")
+# make statistics on time series, min max avg ..., return a dict
+c.create_json_dict(
+    {
+        "cx": stat(cx),
+        "cy": stat(cy),
+        "cz": stat(cz),
+    },
+    "draglift",
+)
+
+# output filtered cleaned series, prepend_fill 0 to original series length
+c.create_csv_dataframe(
+    {
+        "cx": prepend_fill(cx, c.draglift.nseries, 0),
+        "cy": prepend_fill(cy, c.draglift.nseries, 0),
+        "cz": prepend_fill(cz, c.draglift.nseries, 0),
+    },
+    "draglift",
+)
+
 
 # one job is only done if its arg is specified,
 # if call it empty c.draglift.proc(), it will give raw series

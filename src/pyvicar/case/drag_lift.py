@@ -42,9 +42,29 @@ class DragLiftList(List, Readable, Optional):
 
         if series:
             self._enable()
+            self._time2 = self[1].time
 
     def proc(self, *args, **kwargs):
         return proc_draglift(self, *args, **kwargs)
+
+    # 2d [n, 1], can be used to hstack
+    @property
+    def time2(self):
+        if not self:
+            raise Exception(
+                "Case draglift not available. Call c.draglift.read() or check Case path and outputs"
+            )
+        return self._time2
+
+    # 1d [n]
+    @property
+    def time1(self):
+        return self._time2.ravel()
+
+    # length of time series
+    @property
+    def nseries(self):
+        return self._time2.shape[0]
 
 
 class DragLift(Group, Readable):

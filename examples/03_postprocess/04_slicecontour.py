@@ -3,21 +3,27 @@ import pyvicar.tools.mpi as mpi
 import pyvicar.tools.post.dump.labels as lb
 import pyvicar.tools.post.dump.plotter_fs as pf
 
-# 3. slice contour
+# 4. slice contour
 # this script reads the case vtk dump and generate a quick animation of contour on a slice
 
-pyvicar.assert_api_version("1.0.1", "1.1.0")
+# use at least v1.0.2 if only for postprocess because in lower version
+# instantiating Case(...) alone would truncate existing input files
+pyvicar.assert_api_version("1.0.2", "1.1.0")
 
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
+# this is also workable for 2d cases in 01_geometry because we are posting z-normal slice
 c = Case("tut_sphere")
+
+# for 2d cases, change it to [20, 20, dz/2], dz/2 is small can be 0
+cam_f = pf.set_cam_compass([20, 20, 20], l0=1, r=8, oclock=3, pitch=90)
 
 c.dump.read()
 
 vel_mid = c.create_slicecontour_video(
     c.dump.vtm,
     c.dump.marker,
-    normal="y",
+    normal="z",
     # origin=[None, None, None], # pass None to take midplane in the corresponding axis
     contour_color=lb.Color.field(lb.Field.vector("VEL", "mag"), clim=[0, 1.5]),
     # contour_color=lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
@@ -25,7 +31,7 @@ vel_mid = c.create_slicecontour_video(
     marker_color=lb.Color.uniform("white"),
     marker_opacity=1,
     marker_texture=lb.Texture.specular(),
-    plotter_f=pf.set_cam_compass([20, 20, 20], l0=1, oclock=3, pitch=0),
+    plotter_f=cam_f,
     keep_frames=False,
     out_name=f"vel_mid",
 )
@@ -33,12 +39,12 @@ vel_mid = c.create_slicecontour_video(
 vor_mid = c.create_slicecontour_video(
     c.dump.vtm,
     c.dump.marker,
-    normal="y",
-    contour_color=lb.Color.field(lb.Field.vor_from_vel("VEL", "y"), clim=[-1, 1]),
+    normal="z",
+    contour_color=lb.Color.field(lb.Field.vor_from_vel("VEL", "z"), clim=[-1, 1]),
     marker_color=lb.Color.uniform("white"),
     marker_opacity=1,
     marker_texture=lb.Texture.specular(),
-    plotter_f=pf.set_cam_compass([20, 20, 20], l0=1, oclock=3, pitch=0),
+    plotter_f=cam_f,
     keep_frames=False,
     out_name=f"vor_mid",
 )

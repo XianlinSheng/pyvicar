@@ -3,27 +3,29 @@ import pyvicar.tools.mpi as mpi
 import pyvicar.tools.post.dump.labels as lb
 import pyvicar.tools.post.dump.plotter_fs as pf
 
-# 2. isoq3d
+# 2. isoq
 # this script reads the case vtk dump and generate a quick animation of Q criterion iso surfaces
 
-pyvicar.assert_api_version("1.0.1", "1.1.0")
+# use at least v1.0.2 if only for postprocess because in lower version
+# instantiating Case(...) alone would truncate existing input files
+pyvicar.assert_api_version("1.0.2", "1.1.0")
 
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
-# change this to a completed 3d case in 01_geometry, like tut_sphere here
 c = Case("tut_sphere")
 
 c.dump.read()
 
 # this is the typical center generated in the 3d geometry tutorial so will work on all 3d cases
-# see the 03_project section to see how to manage these data in detail
+# for 2d cases, change it to [20, 20, dz/2], dz/2 is small can be 0
+# see the 04_project section to see how to manage these data in detail
 center = [20, 20, 20]
 
 # set l0 to the case length scale. 3d tutorials are 1 so this will work well on all of them
 a2 = c.create_isoq_video(
     c.dump.vtm,
     c.dump.marker,
-    plotter_f=pf.set_cam_compass(center, l0=1),  # the default values are below
+    plotter_f=pf.set_cam_compass(center, r=8, l0=1),  # the default values are below
     # plotter_f=set_cam_compass(center, l0=1, r=3, oclock=2, pitch=30, downstream_shift=1),
     # iso_color=lb.Color.field(lb.Field.vector("VEL", "z"), clim=[-0.5, 0.5]),
     # iso_color=lb.Color.field(lb.Field.vector("VEL", "mag"), clim=[0, 1.5]),
@@ -37,7 +39,7 @@ a2 = c.create_isoq_video(
 a10 = c.create_isoq_video(
     c.dump.vtm,
     c.dump.marker,
-    plotter_f=pf.set_cam_compass(center, l0=1, oclock=10),
+    plotter_f=pf.set_cam_compass(center, l0=1, r=8, oclock=10),
     iso_color=lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
     keep_frames=True,
     out_name="q_p_o10",
@@ -47,7 +49,7 @@ a10 = c.create_isoq_video(
 a2t = c.create_isoq_video(
     c.dump.vtm,
     c.dump.marker,
-    plotter_f=pf.set_cam_compass(center, l0=1, oclock=2),
+    plotter_f=pf.set_cam_compass(center, l0=1, r=8, oclock=2),
     iso_color=lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
     marker_color=lb.Color.uniform("white"),
     iso_texture=lb.Texture.specular(),  # default will work just fine

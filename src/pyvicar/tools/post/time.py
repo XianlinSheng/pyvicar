@@ -164,7 +164,9 @@ def proc_draglift(
         raise TypeError(f"Expect an OutputSetter for the output policy argument")
 
     if not cdraglift:
-        raise Exception("Case draglift not read yet. Call c.draglift.read()")
+        raise Exception(
+            "Case draglift not available. Call c.draglift.read() or check Case path and outputs"
+        )
 
     if cut is None:
         cut = [None, None]
@@ -262,7 +264,9 @@ def stat(
     max=True,
     p2p=True,
     amp=True,
-    rat=True,
+    ratio=True,
+    argmin=True,
+    argmax=True,
 ):
     minv = float(np.min(x))
     maxv = float(np.max(x))
@@ -277,8 +281,12 @@ def stat(
         d["p2p"] = maxv - minv
     if amp:
         d["amp"] = (maxv - minv) / 2
-    if rat:
-        d["rat"] = minv / maxv if maxv != 0 else "div_0"
+    if ratio:
+        d["ratio"] = minv / maxv if maxv != 0 else "div_0"
+    if argmin:
+        d["argmin"] = int(np.argmin(x))
+    if argmax:
+        d["argmax"] = int(np.argmax(x))
     return d
 
 

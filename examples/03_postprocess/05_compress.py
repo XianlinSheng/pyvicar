@@ -2,18 +2,16 @@ import pyvicar
 import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
 
-# 4. compress
+# 5. compress
 # this script reads the case vtm dump and compress the sub vtr to binary
 
-pyvicar.assert_api_version("1.0.1", "1.1.0")
+# use at least v1.0.2 if only for postprocess because in lower version
+# instantiating Case(...) alone would truncate existing input files
+pyvicar.assert_api_version("1.0.2", "1.1.0")
 
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
-name = "tut_sphere"
-
-log.log_host(f"Compress Case: {name}")
-
-c = Case(name)
+c = Case("tut_sphere")
 
 c.dump.vtm.read()
 
