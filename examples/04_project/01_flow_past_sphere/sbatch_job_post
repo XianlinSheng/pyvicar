@@ -1,0 +1,12 @@
+#! /bin/bash
+
+if [[ -z "$1" ]] 
+then
+    cat <<MSG
+Usage: 
+${0##*/} <code>: sbatch a job_post substituting case @CODE@ to <code>
+MSG
+fi
+
+echo "$1"
+sed "s/@CODE@/$1/g" projmgr/job_post | sbatch

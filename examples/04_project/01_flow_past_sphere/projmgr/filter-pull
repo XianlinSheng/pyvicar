@@ -1,0 +1,17 @@
++ pull
++ push
++ *.py
++ sbatch_job_post
+- __pycache__
+- *Files
+- ProcLog
+- Restart
++ projmgr/***
++ stat/***
++ *[RL][CG]/
++ */*.csv
++ */Post/Animations/*mp4
++ Post/
++ Animations/
++ Reports/
+- *

@@ -2,8 +2,8 @@ import sys
 import studies
 import runlib
 
-# run.py is the node following studies.py and finally comes to running cases
-
+# usage  : python run.py <job> ...
+# example: python run.py compress re200rec
 
 # one can choose to either take by arg python run.py <code> or specify inside script
 code = sys.argv[1]

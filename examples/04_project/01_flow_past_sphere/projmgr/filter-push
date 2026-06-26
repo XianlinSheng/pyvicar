@@ -1,0 +1,9 @@
++ pull
++ push
++ *.py
++ sbatch_job_post
++ stat
+- __pycache__
++ projmgr/***
+- *
+
