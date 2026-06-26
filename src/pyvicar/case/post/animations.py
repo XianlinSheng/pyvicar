@@ -56,6 +56,8 @@ class AnimationDict(Dict, Readable, Optional):
             ani.read()
 
     def enable(self):
+        if self:
+            return
         super().enable()
         self._init()
 
@@ -168,6 +170,7 @@ class Animation(Group, Dict, Readable):
     def name(self):
         return self._name
 
+    # [v1.1.0: default outformat will be "mp4"] 
     def video_by_ffmpeg(self, video, outformat="gif", quiet=False):
         match mpi.parallel_mode():
             case mpi.ParallelMode.Sync:
@@ -230,6 +233,8 @@ class Frames(List, Readable, Optional):
             self._startidx = self._childrenlist[0].idx
 
     def enable(self):
+        if self:
+            return
         super().enable()
         self._init()
 

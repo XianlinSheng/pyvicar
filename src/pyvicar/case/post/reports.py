@@ -58,6 +58,8 @@ class ReportDict(Dict, Readable, Optional):
             rep.read()
 
     def enable(self):
+        if self:
+            return
         super().enable()
         self._init()
 
@@ -233,6 +235,8 @@ class Rows(List, Readable, Optional):
             self._startidx = self._childrenlist[0].idx
 
     def enable(self):
+        if self:
+            return
         super().enable()
         self._init()
 

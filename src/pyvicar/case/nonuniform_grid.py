@@ -25,6 +25,8 @@ class NonuniformGrid(Group, Writable, Optional):
         self._finalize_init()
 
     def enable(self):
+        if self:
+            return
         Optional.enable(self)
         self._init()
 
