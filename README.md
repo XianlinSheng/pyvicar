@@ -80,7 +80,7 @@ After ViCar3D is correctly installed on a platform, pyvicar requires the followi
 
 Some libs need special treatment based on platform:
 
-These are managed by conda so simply:
+These are managed by conda, simply do:
 <pre>
 conda create -n vicar python=3.12
 conda activate vicar
