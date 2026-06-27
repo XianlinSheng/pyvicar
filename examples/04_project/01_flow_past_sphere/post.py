@@ -4,11 +4,11 @@ import pyvicar.tools.mpi as mpi
 import pyvicar.tools.log as log
 
 # usage  : python post.py <job> <code> ...
-# example: python post.py compress re200rec
+# example: python post.py compress re1000devr120LC
 
 job = sys.argv[1]
 codes = sys.argv[2:]
-# code = ["re1000rec"]
+# code = ["re1000devr120LC"]
 
 pf = mgr.postlib.import_func(job)
 

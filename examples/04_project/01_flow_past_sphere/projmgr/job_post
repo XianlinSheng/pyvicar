@@ -1,23 +1,22 @@
-#!/bin/bash
-# CASE CHECK
-#SBATCH --job-name='post_re1000recLC'
-# CASE CHECK
+#! /usr/bin/env bash
+#SBATCH --job-name='post_@CODE@'
+# CASE CHECK: partition
 #SBATCH --partition=partition 
 #SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
-# CASE CHECK
 #SBATCH --ntasks-per-node=48
-# CASE CHECK
+#SBATCH --cpus-per-task=1
+# CASE CHECK: account name
 #SBATCH --account=jsmith01
+#SBATCH --output=@CODE@/log.out.post
+#SBATCH --error=@CODE@/log.err.post
 
 # Here starts script
 
-# CASE CHECK
-code="re1000recLC"
+code="@CODE@"
 
-# CASE CHECK: number of processors, memory
-mpirun -np 16 python post.py isoq $code > log.post.$code
-mpirun -np 16 python post.py compress $code >> log.post.$code
+# mpirun -np 16 python post.py compress $code
+mpirun -np 16 python post.py isoq $code
 
 
 # notice the memory, normally 16 parallel vtk will take up all memory, 
@@ -25,5 +24,3 @@ mpirun -np 16 python post.py compress $code >> log.post.$code
 # if out of memory, either it is explicitly killed, or ffmpeg will run into trouble and cannot return normally
 # only one process is running ffmpeg, so if its killed other processes cannot return normally 
 
-# post_isoq is before compress because one may want the animation asap 
-# and compress can run in background when inspecting animations

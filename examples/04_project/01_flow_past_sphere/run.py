@@ -1,19 +1,17 @@
 import sys
-import studies
-import runlib
+import projmgr as mgr
 
 # usage  : python run.py <job> ...
-# example: python run.py compress re200rec
+# example: python run.py re1000devr120LC
 
-# one can choose to either take by arg python run.py <code> or specify inside script
 code = sys.argv[1]
-# code = "re1000devLC"
+# code = "re1000devr120LC"
 
-p = studies.to_params(code)
+p = mgr.studies.to_params(code)
 
 print(p)
 
-c = runlib.make_case(p)
+c = mgr.runlib.make_case(p)
 
 c.write()
 

@@ -2,13 +2,6 @@ import pyvicar
 from pyvicar.tools.collections import struct
 from pyvicar.grid import GridModel
 
-# params.py is the starting point of a project
-# one params struct fully defines a case,
-# make_params takes in the minimal degrees of freedom and spawn the rest parameters
-# some are set constants like U, d, and do not need to be passed as args
-# a complex project may need many more arguments than the example below
-
-
 pyvicar.assert_api_version("1.0.1", "1.1.0")
 
 

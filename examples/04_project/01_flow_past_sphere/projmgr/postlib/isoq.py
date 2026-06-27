@@ -1,9 +1,14 @@
-import numpy as np
+import pyvicar
 import pyvicar.tools.post.dump as dump
 import pyvicar.tools.post.dump.labels as lb
 import pyvicar.tools.post.dump.plotter_fs as pf
 import pyvicar.tools.fp as fp
 import pyvicar.tools.log as log
+import numpy as np
+
+pyvicar.assert_api_version("1.0.1", "1.1.0")
+
+mpi_async = False
 
 
 def post_isoq(p):
@@ -98,7 +103,7 @@ def post_isoq(p):
     }
 
     for oclock in oclocks:
-        log.log_host(f"Post ISOQ: Far & Surf Angle {oclock} o clock")
+        log.log_host(f"Post ISOQ: Duplicated Angle {oclock} o clock")
         c.create_isoq_video(
             plotter_f=fp.pipeline_f(
                 mirror_f,
@@ -108,11 +113,11 @@ def post_isoq(p):
                     **cam_common_kwargs,
                 ),
             ),
-            out_name=f"{outname}_far_surf_o{oclock}",
+            out_name=f"{outname}_dup_o{oclock}",
             **isoq_common_kwargs,
         )
 
-    log.log_host(f"Post ISOQ: Far & Surf Angle Top")
+    log.log_host(f"Post ISOQ: Duplicated Angle Top")
     c.create_isoq_video(
         plotter_f=fp.pipeline_f(
             mirror_f,
@@ -122,6 +127,6 @@ def post_isoq(p):
                 **cam_common_kwargs,
             ),
         ),
-        out_name=f"{outname}_far_surf_top",
+        out_name=f"{outname}_dup_top",
         **isoq_common_kwargs,
     )

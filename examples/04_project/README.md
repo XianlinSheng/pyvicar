@@ -7,12 +7,12 @@ creating parameters set, generating case files, and scheduling processings for a
 Several commands are provided in the project root path, 
 and the implementations or configurations are put in the projmgr folder.
 A typical file layout for a project is
-<pre>
+```
 - project
- |- run.py  : start/restart a case, python run.py &ltcode&gt
- |- post.py : postprocess cases, python post.py &ltjob&gt &ltcode1&gt ...
- |- stat.py : run statistics, python stat.py &ltjob1&gt ...
- |- sbatch_job_post : sbatch projmgr/job_post script for a case, sbatch_job_post &ltcode&gt
+ |- run.py  : start/restart a case, python run.py <code>
+ |- post.py : postprocess cases, python post.py <job> <code1> ...
+ |- stat.py : run statistics, python stat.py <job1> ...
+ |- sbatch_job_post : sbatch projmgr/job_post script for a case, sbatch_job_post <code>
  |- pull    : pull updates from remote server, including scripts, simulation reports (no dump files)
  |- push    : push updates, mainly the scripts
  |- projmgr
@@ -31,4 +31,23 @@ A typical file layout for a project is
    |- statlib
      |- ...         : structure same as postlib, but job.py contains stat_job() func
   |- codes ...  : simulation cases
-</pre>
+```
+Postprocess is to process the output data and generate other datasets within the same case
+so each case is independent and one needs to specify the code to run it.
+Statistics is analysis across cases, it is highly flexible and depends on the parameter space
+and the existing cases, so it does not take arguments and one modifies a script directly in place.
+
+Here are some common modifications after copying a project example.
+The unmentioned rest of these can be left untouched if simulating the same physical and numerical settings.
+1. projmgr/params.py: solver versions, install paths, platform names
+1. projmgr/studies.py: coding of solver versions, platforms
+1. projmgr/runlib.py: partitioning settings, version&platform, accounts
+1. projmgr/host: remote path
+1. projmgr/filter-pull: platform-version suffix pattern, e.g., + [LR][CG]
+1. projmgr/job_post: partition, accounts, number of processors (considering memory), and post jobs to run
+1. projmgr/statlib/...: job content, statistics jobs depend on the actual jobs that one run
+
+Note that nothing is intended to be hard-coded in the projmgr, 
+and this is why it is made completely inside a project not a pyvicar module.
+It is completely within the design to temporarily 
+comment out or change some implementations in the post scripts for special cases.

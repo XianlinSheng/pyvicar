@@ -24,7 +24,7 @@ class DragLiftList(List, Readable, Optional):
     def _elemcheck(self, new):
         if not isinstance(new, DragLift):
             raise TypeError(
-                f"Expected a DragLift object inside DragLiftList, but encountered {repr(new)}"
+                f"Expected a DragLift object inside DragLiftList, got {repr(new)}"
             )
 
     def _append(self, *args, **kwargs):
@@ -52,19 +52,19 @@ class DragLiftList(List, Readable, Optional):
     def time2(self):
         if not self:
             raise Exception(
-                "Case draglift not available. Call c.draglift.read() or check Case path and outputs"
+                f"Case draglift not available. Call c.draglift.read() or check Case path and outputs. Case({self._case.path})"
             )
         return self._time2
 
     # 1d [n]
     @property
     def time1(self):
-        return self._time2.ravel()
+        return self.time2.ravel()
 
     # length of time series
     @property
     def nseries(self):
-        return self._time2.shape[0]
+        return self.time2.shape[0]
 
 
 class DragLift(Group, Readable):

@@ -1,9 +1,11 @@
-import pyvicar.tools.log as log
+import pyvicar
+
+pyvicar.assert_api_version("1.0.1", "1.1.0")
+
+mpi_async = False
 
 
 def post_compress(p):
-
-    log.log_host(f"Compress Case: {p.name}")
 
     c = p.Case(p.name)
 

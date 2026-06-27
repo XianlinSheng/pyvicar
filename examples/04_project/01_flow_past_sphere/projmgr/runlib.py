@@ -1,14 +1,3 @@
-# runlib.py is the detail code to setup a case from params struct
-# typically one first copy an example in 01_geometry section and change to the desired geometry
-# then the front part that computes variables goes to params.py, studies.py is modified accordingly
-# the middle part that setup the case goes here
-# and the end part that writes and prints stat goes into run.py
-# it would be wise to first stick to such a simple script when handling an unknown case
-# once the behavior is clear enough for a param space batch study, transfer into a project structure
-# the project structure would be always changing to add/change/integrate functionalities during analysis
-# so these scripts are not hard-coded in the lib but free to be tailored as needed
-
-
 def make_case(p):
     c = p.Case(p.name)
 
@@ -54,21 +43,21 @@ def make_case(p):
 
     # partition and job are coupled so are configured together
     c.job.enable()
-    match f"{p.platform}-{p.version}":
-        case "local-common":
+    match f"{p.platform}&{p.version}":
+        case "local&common":
             c.set_partition(nproc_node=16, nnode_max=1)
-        case "local-gpu":
+        case "local&gpu":
             c.set_partition(nproc_node=1, nnode_max=1)
-        case "remote-common":
+        case "remote&common":
             c.set_partition(nproc_node=48, nnode_max=16, ncell_proc=100e3)
             c.job.partition = "partition"
             c.job.account = "jsmith01"
-        case "remote-gpu":
+        case "remote&gpu":
             c.set_partition(nproc_node=4, nnode_max=4, ncell_proc=5e6)
             c.job.partition = "partition"
             c.job.account = "jsmith01"
         case _:
-            raise Exception(f"Unrecognized platform-version {p.platform}-{p.version}")
+            raise Exception(f"Unrecognized platform&version {p.platform}&{p.version}")
 
     c.job.condaDeactivate = True
     c.job.modulePurge = True

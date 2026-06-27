@@ -4,7 +4,7 @@ import pyvicar.tools.mpi as mpi
 import pyvicar.tools.log as log
 
 # usage  : python stat.py <job> ...
-# example: python stat.py rs_dlcurve sg_dlbar
+# example: python stat.py re_curve
 
 jobs = sys.argv[1:]
 

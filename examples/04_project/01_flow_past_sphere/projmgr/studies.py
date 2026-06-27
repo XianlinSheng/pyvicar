@@ -1,11 +1,5 @@
 from pyvicar.tools.study import StudyType
-import params
-
-# studies.py is the 2nd node following params.py
-# a study is a concise code that can be easily typed to generate or refer to a params struct
-# it may seem unnecessary to name and manage a params struct
-# but it becomes inevitable starting to manage complex parameter space
-# especially trying to maximize inspection and postprocessing efficiency
+from . import params 
 
 
 # StudyType defines the coding standard of a parameter space (a frame)

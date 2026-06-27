@@ -1,6 +1,11 @@
+import pyvicar
 import pyvicar.tools.post.dump.labels as lb
 import pyvicar.tools.post.dump.plotter_fs as pf
 import pyvicar.tools.log as log
+
+pyvicar.assert_api_version("1.0.1", "1.1.0")
+
+mpi_async = False
 
 
 def post_slicecontour(p):
