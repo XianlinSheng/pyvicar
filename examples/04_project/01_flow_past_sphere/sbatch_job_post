@@ -6,7 +6,7 @@ then
 Usage: 
 ${0##*/} <code>: sbatch a job_post substituting case @CODE@ to <code>
 MSG
+else
+    echo "$1"
+    sed "s/@CODE@/$1/g" projmgr/job_post | sbatch
 fi
-
-echo "$1"
-sed "s/@CODE@/$1/g" projmgr/job_post | sbatch
