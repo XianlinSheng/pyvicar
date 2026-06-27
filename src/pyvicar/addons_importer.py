@@ -7,7 +7,7 @@ import pyvicar.tools.log as log
 
 
 def api_version():
-    return Version("1.0.2")
+    return Version("1.0.3")
 
 
 def assert_api_version(ver_min, ver_max):

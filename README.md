@@ -80,7 +80,7 @@ After ViCar3D is correctly installed on a platform, pyvicar requires the followi
 
 Some libs need special treatment based on platform:
 
-These are managed by conda so simply:
+These are managed by conda, simply do:
 <pre>
 conda create -n vicar python=3.12
 conda activate vicar
@@ -135,7 +135,7 @@ Once the dependencies are handled, installing pyvicar is simply a pip install:
 <pre>
 git clone https://github.com/XianlinSheng/pyvicar.git
 cd pyvicar
-git checkout v1.0.2 # or other release tag
+git checkout v1.0.3 # or other release tag
 pip install .
 </pre>
 Now one can copy the examples/01_geometry/01_sphere.py to a test folder
