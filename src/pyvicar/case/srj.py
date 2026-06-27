@@ -2,7 +2,7 @@ import numpy as np
 from pathlib import Path
 from pyvicar._utilities.optional import Optional
 from pyvicar._tree import Group, Field
-from pyvicar.file import Writable
+from pyvicar.file import Writable, lazy_open
 from pyvicar._format import KV1Formatter, DatasetFormatter
 import pyvicar.tools.srj as srj
 import pyvicar.tools.log as log
@@ -18,7 +18,7 @@ class SRJ(Group, Writable, Optional):
             self._init()
 
     def _init(self):
-        self._f = open(self._path, "w")
+        self._f = lazy_open(self._path, "w")
         self._headerFormatter = KV1Formatter(self._f)
         self._arrayFormatter = DatasetFormatter(self._f)
         self._arrayFormatter.printidx = False
@@ -29,6 +29,8 @@ class SRJ(Group, Writable, Optional):
         self._finalize_init()
 
     def enable(self):
+        if self:
+            return
         Optional.enable(self)
         self._init()
 

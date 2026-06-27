@@ -1,5 +1,6 @@
 import trimesh
 import numpy as np
+import pandas as pd
 from pathlib import Path
 from .trisurface import TriSurface
 from .spanned_2dcurve import Spanned2DCurve
@@ -14,7 +15,14 @@ def create_sphere(r, dx, xyz=None, file=None):
         mesh.apply_translation(np.array(xyz) - mesh.centroid)
 
     if file is not None:
-        mesh.export(f"{Path(file).stem}.stl")
+        suffix = Path(file).suffix
+        match suffix:
+            case ".stl":
+                mesh.export(file)
+            case _:
+                raise RuntimeError(
+                    f"Unrecognized output file format, supports [.stl], got {suffix}"
+                )
 
     # THIS MUST BE PLACED AFTER EXPORT, TRISURFACE DOES ZERO COPY AND MODIFIES ARRAY
     surf = TriSurface.from_xyz_conn(mesh.vertices, mesh.faces)
@@ -36,7 +44,17 @@ def create_cyl_2d(r, dx, xy=None, dz=None, file=None):
     curv = np.vstack([x, y]).T + xy[np.newaxis, :]
 
     if file is not None:
-        np.savez(f"{Path(file).stem}.npz", xy=curv)
+        suffix = Path(file).suffix
+        match suffix:
+            case ".npz":
+                np.savez(file, xy=curv)
+            case ".csv":
+                df = pd.DataFrame({"x": curv[:, 0], "y": curv[:, 1]})
+                df.to_csv(file, index=False)
+            case _:
+                raise RuntimeError(
+                    f"Unrecognized output file format, supports [.npz, .csv], got {suffix}"
+                )
 
     return curv
 
@@ -67,6 +85,43 @@ def create_plane(uxyz, vxyz, dx, xyz0=None, file=None):
     surf = TriSurface.from_xyz_conn(xyz, conn)
 
     if file is not None:
-        surf.to_stl(Path(file).stem)
+        suffix = Path(file).suffix
+        match suffix:
+            case ".stl":
+                surf.to_stl(Path(file).stem)
+            case _:
+                raise RuntimeError(
+                    f"Unrecognized output file format, supports [.stl], got {suffix}"
+                )
 
     return surf
+
+
+def create_plane_2d(vec, dx, xy0=None, file=None):
+    vec = np.asarray(vec)
+
+    l = np.linalg.norm(vec)
+
+    n = int(np.ceil(l / dx))
+
+    i = np.arange(n + 1)
+    if xy0 is None:
+        xy0 = [0, 0]
+    xy0 = np.asarray(xy0)
+
+    curv = xy0[np.newaxis, :] + i[:, np.newaxis] * vec / n
+
+    if file is not None:
+        suffix = Path(file).suffix
+        match suffix:
+            case ".npz":
+                np.savez(file, xy=curv)
+            case ".csv":
+                df = pd.DataFrame({"x": curv[:, 0], "y": curv[:, 1]})
+                df.to_csv(file, index=False)
+            case _:
+                raise RuntimeError(
+                    f"Unrecognized output file format, supports [.npz, .csv], got {suffix}"
+                )
+
+    return curv

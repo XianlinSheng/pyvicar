@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+host=$(cat projmgr/host)
+echo "To host $host"
+
+if [[ "$1" == "test" ]] 
+then
+    rsync -avhnP --filter="merge projmgr/filter-push" . $host/
+elif [[ -z "$1" ]]
+then
+    rsync -avhP --filter="merge projmgr/filter-push" . $host/
+else
+    cat <<MSG
+Usage: 
+${0##*/} test: dry run, only show the file changes that will happen
+${0##*/}     : execute
+MSG
+fi

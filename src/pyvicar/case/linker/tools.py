@@ -2,8 +2,8 @@ import pyvicar.tools.physics_setter.common as phys
 import pyvicar.geometry.case_setter.common as geom
 import pyvicar.grid.case_setter.common as grid
 from pyvicar.grid.previewer.common import show_grid, stat_grid
-from pyvicar.tools.post.case_setter.common import create_matplotlib_fig
-from pyvicar.tools.post.dump import create_isoq_video, create_slicecontour_video
+import pyvicar.tools.post.case_setter.common as post
+import pyvicar.tools.post.dump as dump
 
 
 class ToolsLinker:
@@ -21,13 +21,20 @@ class ToolsLinker:
 
             cls.append_solid = geom.append_solid
             cls.append_solid_2d = geom.append_solid_2d
+            cls.append_membrane = geom.append_membrane
+            cls.append_membrane_2d = geom.append_membrane_2d
+
             cls.append_sphere = geom.append_sphere
             cls.append_cyl_2d = geom.append_cyl_2d
+            cls.append_plane = geom.append_plane
+            cls.append_plane_2d = geom.append_plane_2d
+
             cls.append_stl_solid = geom.append_stl_solid
             cls.append_npz_solid_2d = geom.append_npz_solid_2d
-            cls.append_membrane = geom.append_membrane
-            cls.append_plane = geom.append_plane
+            cls.append_csv_solid_2d = geom.append_csv_solid_2d
             cls.append_stl_membrane = geom.append_stl_membrane
+            cls.append_npz_membrane_2d = geom.append_npz_membrane_2d
+            cls.append_csv_membrane_2d = geom.append_csv_membrane_2d
 
             cls.refine_grid = grid.refine_grid
             cls.uniform_grid_n = grid.uniform_grid_n
@@ -39,9 +46,13 @@ class ToolsLinker:
             cls.show_grid = show_grid
             cls.stat_grid = stat_grid
 
-            cls.create_matplotlib_fig = create_matplotlib_fig
-            cls.create_isoq_video = create_isoq_video
-            cls.create_slicecontour_video = create_slicecontour_video
+            cls.create_matplotlib_fig = post.create_matplotlib_fig
+            cls.create_json_dict = post.create_json_dict
+            cls.create_csv_dataframe = post.create_csv_dataframe
+            cls.create_isoq_video = dump.create_isoq_video
+            cls.create_slicecontour_video = dump.create_slicecontour_video
+            cls.create_recorder_video = dump.create_recorder_video
+            cls.create_bodyanim_video = dump.create_bodyanim_video
 
             return cls
 

@@ -22,6 +22,8 @@ class Post(Group, Readable, Optional):
         self._finalize_init()
 
     def enable(self):
+        if self:
+            return
         super().enable()
         self._init()
 

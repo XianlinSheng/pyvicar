@@ -1,5 +1,6 @@
 from abc import abstractmethod
 import pyvicar.tools.mpi as mpi
+from pyvicar.file import lazy_open
 
 
 class Logger:
@@ -32,7 +33,7 @@ class StdLogger(Logger):
 class FileLogger(Logger):
     def __init__(self, basename="log", mode="w"):
         self._basename = basename
-        self._f = open(f"{basename}.{mpi.rank()}", mode)
+        self._f = lazy_open(f"{basename}.{mpi.rank()}", mode)
 
     def log(self, *args):
         print(*add_header(args), file=self._f, flush=True)

@@ -164,7 +164,9 @@ def proc_draglift(
         raise TypeError(f"Expect an OutputSetter for the output policy argument")
 
     if not cdraglift:
-        raise Exception("Case draglift not read yet. Call c.draglift.read()")
+        raise Exception(
+            "Case draglift not available. Call c.draglift.read() or check Case path and outputs"
+        )
 
     if cut is None:
         cut = [None, None]
@@ -221,3 +223,80 @@ def proc_draglift(
         out = output.set(out, key, val)
 
     return out
+
+
+# least-square criterion to correct x by k*x or x+b or k*x+b
+
+
+# d/dk sum((k*xi - x~i)^2) == 0
+# => 2*sum((k*xi - x~i)*xi) == 0
+def correct_k(x, target):
+    return np.sum(x * target) / np.sum(x**2)
+
+
+# d/db sum((xi + b - x~i)^2) == 0
+# => 2*sum(xi + b - x~i) == 0
+def correct_b(x, target):
+    return np.sum(target - x) / x.shape[0]
+
+
+# d/dk sum((k*xi + b - x~i)^2) == 0
+# => 2*sum((k*xi + b - x~i)*xi) == 0
+# d/db sum((k*xi + b - x~i)^2) == 0
+# => 2*sum(k*xi + b - x~i) == 0
+# i.e.
+# [ sum(xi^2)   sum(xi) ] [ k ] = [sum(xi*x~i)]
+# [ sum(xi  )   sum(1 ) ] [ b ]   [sum(x~i   )]
+def correct_kb(x, target):
+    mat = np.array([[np.sum(x**2), np.sum(x)], [np.sum(x), x.shape[0]]])
+    rhs = np.array([np.sum(x * target), np.sum(target)])
+    k, b = np.linalg.solve(mat, rhs)
+    return k, b
+
+
+# time series statistics
+
+
+def stat(
+    x,
+    avg=True,
+    min=True,
+    max=True,
+    p2p=True,
+    amp=True,
+    ratio=True,
+    argmin=True,
+    argmax=True,
+):
+    minv = float(np.min(x))
+    maxv = float(np.max(x))
+    d = {}
+    if avg:
+        d["avg"] = float(np.mean(x))
+    if min:
+        d["min"] = minv
+    if max:
+        d["max"] = maxv
+    if p2p:
+        d["p2p"] = maxv - minv
+    if amp:
+        d["amp"] = (maxv - minv) / 2
+    if ratio:
+        d["ratio"] = minv / maxv if maxv != 0 else "div_0"
+    if argmin:
+        d["argmin"] = int(np.argmin(x))
+    if argmax:
+        d["argmax"] = int(np.argmax(x))
+    return d
+
+
+def prepend_fill(x, n, value=0):
+    y = np.full(n, value, dtype=x.dtype)
+    y[-x.shape[0] :] = x
+    return y
+
+
+def append_fill(x, n, value=0):
+    y = np.full(n, value, dtype=x.dtype)
+    y[: x.shape[0]] = x
+    return y

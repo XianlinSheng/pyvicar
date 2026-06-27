@@ -1,4 +1,5 @@
 from pyvicar._format import write_banner
+from pyvicar.file import lazy_open
 from pyvicar.case.input.parallel import ParallelConfiguration
 from pyvicar.case.input.domain import ComputationalDomainConfiguration
 from pyvicar.case.input.bc import BoundaryConditions
@@ -21,7 +22,7 @@ class BasicsLinker:
     @staticmethod
     def def_path(self, path):
         self._path = path
-        self._f = open(path, "w")
+        self._f = lazy_open(path, "w")
 
         return self
 

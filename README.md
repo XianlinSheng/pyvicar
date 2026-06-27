@@ -135,7 +135,7 @@ Once the dependencies are handled, installing pyvicar is simply a pip install:
 <pre>
 git clone https://github.com/XianlinSheng/pyvicar.git
 cd pyvicar
-git checkout v1.0.1 # or other release tag
+git checkout v1.0.2 # or other release tag
 pip install .
 </pre>
 Now one can copy the examples/01_geometry/01_sphere.py to a test folder

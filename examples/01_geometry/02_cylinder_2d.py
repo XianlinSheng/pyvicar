@@ -58,6 +58,14 @@ c.job.enable()
 c.job.account = "account"
 c.job.partition = "partition"
 
+c.job.condaDeactivate = True
+c.job.modulePurge = True
+c.job.moduleUse = True
+c.job.moduleLoad = True
+c.job.logfile = ""
+c.job.output = "log.out"
+c.job.error = "log.err"
+
 c.write()
 
 # c.show_grid(gm.center)

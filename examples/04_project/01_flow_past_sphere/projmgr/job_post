@@ -1,0 +1,26 @@
+#! /usr/bin/env bash
+#SBATCH --job-name='post_@CODE@'
+# CASE CHECK: partition
+#SBATCH --partition=partition 
+#SBATCH --time=2-00:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=48
+#SBATCH --cpus-per-task=1
+# CASE CHECK: account name
+#SBATCH --account=jsmith01
+#SBATCH --output=@CODE@/log.out.post
+#SBATCH --error=@CODE@/log.err.post
+
+# Here starts script
+
+code="@CODE@"
+
+# mpirun -np 16 python post.py compress $code
+mpirun -np 16 python post.py isoq $code
+
+
+# notice the memory, normally 16 parallel vtk will take up all memory, 
+# larger grids allow even fewer processes
+# if out of memory, either it is explicitly killed, or ffmpeg will run into trouble and cannot return normally
+# only one process is running ffmpeg, so if its killed other processes cannot return normally 
+

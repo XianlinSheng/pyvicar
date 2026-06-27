@@ -41,6 +41,12 @@ class Fourier:
 
         return f.min(), f.max()
 
+    def min(self, **kwargs):
+        return self.minmax(**kwargs)[0]
+
+    def max(self, **kwargs):
+        return self.minmax(**kwargs)[1]
+
     def __mul__(self, k):
         return Fourier(self.n, self.ab * k, self.c * k)
 

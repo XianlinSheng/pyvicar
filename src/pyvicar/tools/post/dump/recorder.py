@@ -37,7 +37,9 @@ def create_recorder_video(
 
     for i, (vtk, marker) in mpi.dispatch(enumerate(zip(vtks, markers))):
         t = t_f(vtk.tstep)
-        log.log(f"Recorder Video: Posting frame at tstep = {vtk.tstep}, time = {t}")
+        log.log(
+            f"Recorder Video: Posting frame at tstep = {vtk.tstep}, time stamp = {t}"
+        )
         s = slice_by_t(ts, t1, t)
 
         fig = fig_f(ts[s], *(v[s] for v in vs))
