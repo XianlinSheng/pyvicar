@@ -53,11 +53,11 @@ def post_attachdl(p):
     )
 
     # do this before iteration because each post job adds a new element to dict
-    includes = [re.compile(r"^q\_.+$")]
+    includes = [re.compile(r"^q\_.+$"), re.compile(r"^slice\_.+$")]
     excludes = [re.compile(r"^.+\_dup\_.+$"), re.compile(r"^.+\_dl$")]
 
     def is_match(key):
-        return all([include.match(key) for include in includes]) and all(
+        return any([include.match(key) for include in includes]) and all(
             [not exclude.match(key) for exclude in excludes]
         )
 
