@@ -8,7 +8,7 @@ import pyvicar.tools.post.dump.plotter_fs as pf
 
 # use at least v1.0.2 if only for postprocess because in lower version
 # instantiating Case(...) alone would truncate existing input files
-pyvicar.assert_api_version("1.0.2", "1.1.0")
+pyvicar.assert_api_version("1.0.3", "1.1.0")  # compact post is v1.0.3 feature
 
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
@@ -47,6 +47,23 @@ vor_mid = c.create_slicecontour_video(
     plotter_f=cam_f,
     keep_frames=False,
     out_name=f"vor_mid",
+)
+
+# compact post, same as isoq, all arguments except vtks and markers can be list for multiple render
+vor_mid = c.create_slicecontour_video(
+    c.dump.vtm,
+    c.dump.marker,
+    normal="z",
+    contour_color=[
+        lb.Color.field(lb.Field.vector("VEL", "mag"), clim=[0, 1.5]),
+        lb.Color.field(lb.Field.vor_from_vel("VEL", "z"), clim=[-1, 1]),
+    ],
+    marker_color=lb.Color.uniform("white"),
+    marker_opacity=1,
+    marker_texture=lb.Texture.specular(),
+    plotter_f=cam_f,
+    keep_frames=False,
+    out_name=[f"vel_mid", f"vor_mid"],
 )
 
 mpi.print_elapsed_time()

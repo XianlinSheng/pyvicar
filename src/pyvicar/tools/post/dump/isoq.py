@@ -216,7 +216,6 @@ def create_isoq_video(
     else:
         a.read()
         mpi.barrier()
-        # a = c.post.animations[out_name]
         a.frames.to_video(outformat="mp4")
         if not keep_frames:
             del a.frames
