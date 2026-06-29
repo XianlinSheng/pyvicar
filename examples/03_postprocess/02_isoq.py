@@ -8,7 +8,7 @@ import pyvicar.tools.post.dump.plotter_fs as pf
 
 # use at least v1.0.2 if only for postprocess because in lower version
 # instantiating Case(...) alone would truncate existing input files
-pyvicar.assert_api_version("1.0.2", "1.1.0")
+pyvicar.assert_api_version("1.0.3", "1.1.0")  # compact post is 1.0.3 feature
 
 Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 
@@ -63,6 +63,35 @@ a2t = c.create_isoq_video(
     enable_anti_aliasing=True,
     keep_frames=False,
     out_name="q_p_o2_textured",
+)
+
+# compact post, reduce repeated file io and partition topology cleanup
+# specify a list for out_name to render multiple configs in one read,
+# most of the arguments (except vtks, markers, q_name, iso_value)
+# are supported and can be their corresponding lists
+# the larger dump files are, the more significant this can reduce the io and cleanup overhead
+# e.g., 4 view angles need 4T if posted separately, but compact post needs likely only 150%T
+# simply specify regular non-list if its unchanged across all variations
+a_all = c.create_isoq_video(
+    c.dump.vtm,
+    c.dump.marker,
+    plotter_f=[
+        pf.set_cam_compass(center, l0=1, r=8, oclock=3),
+        pf.set_cam_compass(center, l0=1, r=8, oclock=9),
+    ],
+    iso_color=[
+        lb.Color.field(lb.Field.scalar("P"), clim=[-0.5, 0.5]),
+        lb.Color.field(lb.Field.vector("VEL", "mag"), clim=[0, 1.5]),
+    ],
+    marker_color=lb.Color.uniform("white"),
+    iso_texture=lb.Texture.specular(),
+    marker_texture=lb.Texture.specular(),
+    iso_opacity=0.9,
+    show_outline=False,
+    add_axes=False,
+    show_grid=False,
+    keep_frames=False,
+    out_name=["q_p_o3", "q_vel_o9"],
 )
 
 # this is generally used to checkout total processing time

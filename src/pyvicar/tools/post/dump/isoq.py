@@ -117,6 +117,7 @@ def create_isoq_video(
         add_axes=add_axes,
         show_grid=show_grid,
         enable_anti_aliasing=enable_anti_aliasing,
+        keep_frames=keep_frames,
         resolution=resolution,
     )
 
@@ -205,7 +206,7 @@ def create_isoq_video(
             style.a.read()
             mpi.barrier()
             style.a.frames.to_video(outformat="mp4")
-            if not keep_frames:
+            if not style.keep_frames:
                 del style.a.frames
             mpi.barrier()
             style.a.read()  # update the new video
