@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
 from . import labels as lb
-from .preprocesses.data import prep_field, get_vtks_markers
+from .preprocesses.data import prep_field, get_vtks_markers, dispatch_styles
 from .preprocesses.conversions import resolution_to_size
 
 
@@ -86,20 +86,39 @@ def create_isoq_video(
     resolution="4k",
     out_name="q",
 ):
-    if not isinstance(iso_color, lb.ColorBase):
-        raise TypeError(
-            f"Use Color wizard to create argument, but encounter {type(iso_color)} for iso_color"
-        )
-
-    if not isinstance(marker_color, lb.ColorBase):
-        raise TypeError(
-            f"Use Color wizard to create argument, but encounter {type(marker_color)} for marker_color"
-        )
+    lb.assert_label(iso_color, "iso_color", lb.ColorBase, iterable=True)
+    lb.assert_label(marker_color, "marker_color", lb.ColorBase, iterable=True)
 
     c.post.enable()
     c.post.animations.enable()
-    a = c.post.animations.get_or_create(out_name)
-    a.frames.enable()
+    if isinstance(out_name, list):
+        a = [c.post.animations.get_or_create(name) for name in out_name]
+        for a1 in a:
+            a1.frames.enable()
+    else:
+        a = c.post.animations.get_or_create(out_name)
+        a.frames.enable()
+
+    styles = dispatch_styles(
+        out_name,
+        a=a,
+        # these arguments at function call can be lists for compact rendering
+        marker_f=marker_f,
+        plotter_f=plotter_f,
+        iso_opacity=iso_opacity,
+        iso_color=iso_color,
+        iso_texture=iso_texture,
+        iso_kwargs=iso_kwargs,
+        marker_opacity=marker_opacity,
+        marker_color=marker_color,
+        marker_texture=marker_texture,
+        marker_kwargs=marker_kwargs,
+        show_outline=show_outline,
+        add_axes=add_axes,
+        show_grid=show_grid,
+        enable_anti_aliasing=enable_anti_aliasing,
+        resolution=resolution,
+    )
 
     c, vtks, markers = get_vtks_markers(c, vtks, markers)
 
@@ -111,24 +130,9 @@ def create_isoq_video(
         )
 
         mesh = vtk.to_pyvista()
-        plotter = pv.Plotter(off_screen=True)
 
         if marker is not None:
             bodies = marker.to_pyvista_multiblocks()
-            bodies = marker_f(c, i, vtk, bodies)
-            for body in bodies:
-
-                if isinstance(marker_color, lb.ColorField):
-                    body = prep_field(body, marker_color.field)
-
-                plotter.add_mesh(
-                    body,
-                    opacity=marker_opacity,
-                    smooth_shading=True,
-                    **marker_color.add_mesh_kwargs(),
-                    **marker_texture.add_mesh_kwargs(),
-                    **marker_kwargs,
-                )
 
         if q_name is None:
             contours = create_isoq(mesh, iso_value=iso_value)
@@ -137,52 +141,85 @@ def create_isoq_video(
 
         if contours.n_points == 0 or contours.n_cells == 0:
             log.log(f"ISOQ Video: No q isosurfaces after calculation")
-        else:
-            if isinstance(iso_color, lb.ColorField):
-                contours = prep_field(contours, iso_color.field)
+            continue
+
+        for style in styles:
+            plotter = pv.Plotter(off_screen=True)
+
+            if marker is not None:
+                bodies = style.marker_f(c, i, vtk, bodies)
+                for body in bodies:
+
+                    if isinstance(style.marker_color, lb.ColorField):
+                        body = prep_field(body, style.marker_color.field)
+
+                    plotter.add_mesh(
+                        body,
+                        opacity=style.marker_opacity,
+                        smooth_shading=True,
+                        **style.marker_color.add_mesh_kwargs(),
+                        **style.marker_texture.add_mesh_kwargs(),
+                        **style.marker_kwargs,
+                    )
+
+            if isinstance(style.iso_color, lb.ColorField):
+                contours = prep_field(contours, style.iso_color.field)
+
             plotter.add_mesh(
                 contours,
-                opacity=iso_opacity,
+                opacity=style.iso_opacity,
                 smooth_shading=True,
-                **iso_color.add_mesh_kwargs(),
-                **iso_texture.add_mesh_kwargs(),
-                **iso_kwargs,
+                **style.iso_color.add_mesh_kwargs(),
+                **style.iso_texture.add_mesh_kwargs(),
+                **style.iso_kwargs,
             )
 
-        if show_outline:
-            outline = mesh.outline()
-            plotter.add_mesh(outline, color="black", line_width=1)
-        if add_axes:
-            plotter.add_axes()
-        if show_grid:
-            plotter.show_grid()
-        if enable_anti_aliasing:
-            plotter.enable_anti_aliasing()
+            if style.show_outline:
+                outline = mesh.outline()
+                plotter.add_mesh(outline, color="black", line_width=1)
+            if style.add_axes:
+                plotter.add_axes()
+            if style.show_grid:
+                plotter.show_grid()
+            if style.enable_anti_aliasing:
+                plotter.enable_anti_aliasing()
 
-        plotter = plotter_f(plotter, c, i, vtk, marker)
+            plotter = style.plotter_f(plotter, c, i, vtk, marker)
 
-        a.frames.frame_by_pyvista(
-            i,
-            plotter,
-            window_size=resolution_to_size(resolution),
-        )
+            style.a.frames.frame_by_pyvista(
+                i,
+                plotter,
+                window_size=resolution_to_size(style.resolution),
+            )
 
-        plotter.close()
-        plotter.deep_clean()
-        del plotter
+            plotter.close()
+            plotter.deep_clean()
+            del plotter
 
         pv.close_all()
 
     mpi.set_sync()
 
-    a.read()
-    mpi.barrier()
-    a = c.post.animations[out_name]
-    a.frames.to_video(outformat="mp4")
-    if not keep_frames:
-        del a.frames
-    mpi.barrier()
+    if isinstance(out_name, list):
+        for style in styles:
+            style.a.read()
+            mpi.barrier()
+            style.a.frames.to_video(outformat="mp4")
+            if not keep_frames:
+                del style.a.frames
+            mpi.barrier()
+            style.a.read()  # update the new video
 
-    a.read()  # update the new video
+        return [style.a for style in styles]
 
-    return a
+    else:
+        a.read()
+        mpi.barrier()
+        # a = c.post.animations[out_name]
+        a.frames.to_video(outformat="mp4")
+        if not keep_frames:
+            del a.frames
+        mpi.barrier()
+        a.read()  # update the new video
+
+        return a

@@ -2,6 +2,7 @@ import numpy as np
 import pyvista as pv
 from collections.abc import Iterable
 import pyvicar.tools.post.dump.labels as lb
+from pyvicar.tools.collections import struct
 
 
 def prep_field(mesh, field):
@@ -58,3 +59,45 @@ def get_vtks_markers(c, vtks, markers):
         )
 
     return c, vtks, markers
+
+
+def check_or_broadcast(names, inputs):
+    if isinstance(names, list):
+        n = len(names)
+
+        name_set = set(names)
+        if len(name_set) != n:
+            raise Exception(f"Got duplicated names in {names}")
+
+        if isinstance(inputs, list) and len(inputs) != n:
+            raise Exception(
+                f"Inputs should match with output name list, expected a {n}-value list, got {inputs}"
+            )
+
+        if not isinstance(inputs, list):
+            inputs = [inputs] * n
+
+    else:
+        if isinstance(inputs, list):
+            raise TypeError(
+                f"Inputs should match with output name, expected a single object, got list {inputs}"
+            )
+
+    return inputs
+
+
+class Style(struct):
+    pass
+
+
+def dispatch_styles(names, **configs):
+    configs = {
+        key: check_or_broadcast(names, config) for key, config in configs.items()
+    }
+    configs["name"] = names
+    keys = configs.keys()
+    if isinstance(names, list):
+        transposes = [dict(zip(keys, values)) for values in zip(*configs.values())]
+        return [Style.from_dict(transpose) for transpose in transposes]
+    else:
+        return [Style.from_dict(configs)]

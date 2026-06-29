@@ -9,3 +9,6 @@ class struct:
     def __str__(self):
         items = [f"  {k} : {v}" for k, v in vars(self).items()]
         return f"{self.__class__.__name__}\n(\n{'\n'.join(items)}\n)"
+
+    def __repr__(self):
+        return self.__str__()

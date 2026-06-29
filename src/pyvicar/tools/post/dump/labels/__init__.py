@@ -1,3 +1,4 @@
+from .checker import assert_label
 from .color import Color, ColorBase, ColorField, ColorUniform
 from .field import (
     Field,
