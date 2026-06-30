@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from abc import abstractmethod
+from collections.abc import Callable
 
 
 # name is the base name for the field, but without possible suffix like vec components
@@ -23,6 +24,12 @@ class FieldScalar(FieldBase):
 @dataclass
 class FieldRenameScalar(FieldScalar):
     orig: str
+
+
+@dataclass
+class FieldComputeScalar(FieldScalar):
+    src: list[str]
+    f: Callable
 
 
 class VecComp(Enum):
@@ -53,6 +60,10 @@ class Field:
     @staticmethod
     def rename_scalar(name, orig):
         return FieldRenameScalar(name, orig)
+
+    @staticmethod
+    def compute_scalar(name, src, f):
+        return FieldComputeScalar(name, src, f)
 
     @staticmethod
     def vector(name, component="mag"):

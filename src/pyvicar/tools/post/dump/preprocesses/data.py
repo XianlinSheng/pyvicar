@@ -9,6 +9,8 @@ def prep_field(mesh, field):
     match field:
         case lb.FieldRenameScalar():
             mesh.rename_array(field.orig, field.name)
+        case lb.FieldComputeScalar():
+            mesh[field.name] = field.f(*[mesh[name] for name in field.src])
         case lb.FieldVectorVORFromVEL():
             # combine partitions otherwise vorticity is incorrect at partition boundary
             if isinstance(mesh, pv.MultiBlock):

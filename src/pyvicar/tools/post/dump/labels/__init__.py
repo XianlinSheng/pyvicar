@@ -4,6 +4,7 @@ from .field import (
     Field,
     FieldBase,
     FieldRenameScalar,
+    FieldComputeScalar,
     FieldScalar,
     FieldVector,
     FieldVectorVORFromVEL,
