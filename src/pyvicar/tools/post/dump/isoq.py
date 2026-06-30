@@ -3,8 +3,14 @@ import numpy as np
 from dataclasses import dataclass
 import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
+from pyvicar.tools.miscellaneous import args
 from . import labels as lb
-from .preprocesses.data import prep_field, get_vtks_markers, dispatch_styles
+from .preprocesses.data import (
+    prep_field,
+    get_vtks_markers,
+    dispatch_styles,
+    calc_surf_data,
+)
 from .preprocesses.conversions import resolution_to_size
 
 
@@ -67,6 +73,8 @@ def create_isoq_video(
     vtks=None,
     markers=None,
     q_name=None,
+    surf_interp={},
+    surf_interp_radius=0.1,
     marker_f=lambda c, i, v, m: m,
     plotter_f=lambda p, c, i, v, m: p,
     iso_value=0.1,
@@ -86,6 +94,10 @@ def create_isoq_video(
     resolution="4k",
     out_name="q",
 ):
+    surf_interp = args.add_default(
+        surf_interp, {"pos": False, "neg": False, "double": False}
+    )
+
     lb.assert_label(iso_color, "iso_color", lb.ColorBase, iterable=True)
     lb.assert_label(marker_color, "marker_color", lb.ColorBase, iterable=True)
 
@@ -134,6 +146,8 @@ def create_isoq_video(
 
         if marker is not None:
             bodies = marker.to_pyvista_multiblocks()
+            for body in bodies:
+                calc_surf_data(mesh, body, surf_interp_radius, **surf_interp)
 
         if q_name is None:
             contours = create_isoq(mesh, iso_value=iso_value)

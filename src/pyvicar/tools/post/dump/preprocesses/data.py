@@ -101,3 +101,53 @@ def dispatch_styles(names, **configs):
         return [Style.from_dict(transpose) for transpose in transposes]
     else:
         return [Style.from_dict(configs)]
+
+
+def calc_surf_data(mesh, surf, radius, pos=True, neg=True, double=True):
+    if not (pos or neg or double):
+        return
+
+    xmin, xmax, ymin, ymax, zmin, zmax = surf.bounds
+
+    xmin -= radius
+    xmax += radius
+    ymin -= radius
+    ymax += radius
+    zmin -= radius
+    zmax += radius
+
+    roi = mesh.clip_box(
+        bounds=(xmin, xmax, ymin, ymax, zmin, zmax), invert=False, crinkle=True
+    )
+
+    cc = roi.cell_centers()
+    cc = cc.cell_data_to_point_data()
+    dist = cc.compute_implicit_distance(surf)
+    d = dist["implicit_distance"]
+
+    mask_pos = d > 0
+    mask_neg = ~mask_pos
+
+    cc_pos = cc.extract_points(mask_pos)
+    cc_neg = cc.extract_points(mask_neg)
+
+    # some output name might not be processed well, so rename it here
+    for name in list(cc_pos.point_data):
+        cc_pos.rename_array(name, f"{name}(SURF_POS)")
+    for name in list(cc_neg.point_data):
+        cc_neg.rename_array(name, f"{name}(SURF_NEG)")
+    for name in list(cc.point_data):
+        cc.rename_array(name, f"{name}(SURF)")
+
+    if pos:
+        surf_pos = surf.interpolate(cc_pos, sharpness=2, radius=radius)
+        for name in surf_pos.point_data:
+            surf.point_data[name] = surf_pos.point_data[name]
+    if neg:
+        surf_neg = surf.interpolate(cc_neg, sharpness=2, radius=radius)
+        for name in surf_neg.point_data:
+            surf.point_data[name] = surf_neg.point_data[name]
+    if double:
+        surf_double = surf.interpolate(cc, sharpness=2, radius=radius)
+        for name in surf_double.point_data:
+            surf.point_data[name] = surf_double.point_data[name]

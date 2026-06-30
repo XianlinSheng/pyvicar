@@ -67,7 +67,7 @@ a2t = c.create_isoq_video(
 
 # compact post, reduce repeated file io and partition topology cleanup
 # specify a list for out_name to render multiple configs in one read,
-# most of the arguments (except vtks, markers, q_name, iso_value)
+# most of the arguments (except vtks, markers, q_name, iso_value, surf_interp, surf_interp_radius)
 # are supported and can be their corresponding lists
 # the larger dump files are, the more significant this can reduce the io and cleanup overhead
 # e.g., 4 view angles need 4T if posted separately, but compact post needs likely only 150%T
