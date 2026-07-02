@@ -36,6 +36,7 @@ class Job(Group, Writable, Optional):
         self._children.partition = Field(
             "partition", self._config["partition"]["default"]
         )
+        self._children.time = Field("time", "2-00:00:00")
         self._children.nodes = Field("nodes", 1)
         self._children.ntasksPerNode = Field(
             "ntasksPerNode", self._config["ntasks"]["default"]
@@ -95,7 +96,7 @@ class Job(Group, Writable, Optional):
         f.write(f"#!/bin/bash\n")
         f.write(f"#SBATCH --job-name='{self._children.jobName}'\n")
         f.write(f"#SBATCH --partition={self._children.partition}\n")
-        f.write(f"#SBATCH --time=2-00:00:00\n")
+        f.write(f"#SBATCH --time={self._children.time}\n")
         f.write(f"#SBATCH --nodes={self._children.nodes}\n")
         f.write(f"#SBATCH --ntasks-per-node={self._children.ntasksPerNode}\n")
         if self._children.gres.value:
