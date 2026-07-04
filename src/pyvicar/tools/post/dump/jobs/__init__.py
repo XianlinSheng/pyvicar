@@ -15,4 +15,6 @@ from .computations import CalcQ, CalcVor, CalcFunc
 
 from .extractions import IsoSurf, Slice
 
-from .resamplings import ToPoints
+from .geometries import Translate, Reflect, Rotate
+
+from .resamplings import ToPoints, VolToSurf
