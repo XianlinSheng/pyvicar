@@ -17,7 +17,7 @@ def split_into_n(total, n):
 class args:
     # recursive: if an item is a subdict, add default values to it from its counterpart in default dict
     @staticmethod
-    def add_default(new, default, recursive=False, inplace=True):
+    def add_default(new, default, recursive=False, inplace=True, throw_unused=False):
         if recursive:
             for k, subdict in new.items():
                 if not isinstance(subdict, dict):
@@ -30,6 +30,12 @@ class args:
                     )
                 new[k] = args.add_default(subdict, default[k], recursive=True)
 
+        if throw_unused:
+            unknown = new.keys() - default.keys()
+            if unknown:
+                raise KeyError(
+                    f"Arguments {unknown} are unused. Valid arguments and default values are: {default}"
+                )
         default.update(new)
 
         if inplace:
