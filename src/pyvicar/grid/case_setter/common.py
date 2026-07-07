@@ -70,7 +70,7 @@ def uniform_grid_dx(case, dir, l, dx):
 
 
 def grid_2d(case, dz):
-    dz = clean_number(dz, sig_digits=2, rel_tol=0.01)
+    dz = clean_number(dz, sig_digits=2)
     case.input.domain.nDim = 2
     case.input.domain.zgridUnif = "uniform"
     case.input.domain.nz = 3
