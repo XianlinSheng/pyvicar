@@ -36,9 +36,12 @@ class GridModel:
     doml: np.ndarray
     refl: np.ndarray
     grow: np.ndarray
+    refine_kwargs: dict
 
     @classmethod
-    def create(cls, l0=None, doml=None, refl=None, grow=None, dim2=False):
+    def create(
+        cls, l0=None, doml=None, refl=None, grow=None, dim2=False, refine_kwargs={}
+    ):
         """
         create GridModel
 
@@ -89,6 +92,7 @@ class GridModel:
             np.array(doml, dtype=float),
             np.array(refl, dtype=float),
             np.array(grow, dtype=float),
+            refine_kwargs,
         )
 
     def copy(self):
@@ -99,6 +103,7 @@ class GridModel:
             self.doml.copy(),
             self.refl.copy(),
             self.grow.copy(),
+            {k: v for k, v in self.refine_kwargs.items()},
         )
 
     @property

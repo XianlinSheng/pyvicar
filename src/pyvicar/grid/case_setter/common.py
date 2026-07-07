@@ -98,7 +98,7 @@ def apply_grid_model(c, gm, dx):
         refine_grid(c, "z", kp(2), dx, gm.grow[2, 0], gm.grow[2, 1])
 
 
-def create_grid(c, l0=None, doml=None, refl=None, grow=None, dx=None, dim2=False):
+def create_grid(c, l0=None, doml=None, refl=None, grow=None, dx=None, dim2=False, **kwargs):
     """
     create grid model
     """
@@ -106,6 +106,6 @@ def create_grid(c, l0=None, doml=None, refl=None, grow=None, dx=None, dim2=False
         l0 = 1
     if dx is None:
         dx = l0 / 20
-    gm = GridModel.create(l0=l0, doml=doml, refl=refl, grow=grow, dim2=dim2)
+    gm = GridModel.create(l0=l0, doml=doml, refl=refl, grow=grow, dim2=dim2, refine_kwargs=kwargs)
     apply_grid_model(c, gm, dx)
     return gm
