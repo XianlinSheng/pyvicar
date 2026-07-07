@@ -44,7 +44,9 @@ c.set_inlet("x1", [U, 0, 0])
 c.set_re(re, U=U, L=d)
 
 # note: 2D poisson tol
-c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False, divu_tol=1e-4)
+c.set_tstep(
+    U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False, divu_tol=1e-4
+)
 
 c.set_partition(nproc_node=16, nnode_max=1)
 
