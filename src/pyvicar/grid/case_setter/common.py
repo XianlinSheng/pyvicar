@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from pyvicar.grid.segment import Segment, connect_segs
 import pyvicar.tools.log as log
 from pyvicar.grid.grid_model import GridModel
@@ -69,6 +70,7 @@ def uniform_grid_dx(case, dir, l, dx):
 
 
 def grid_2d(case, dz):
+    dz = clean_number(dz, sig_digits=2, rel_tol=0.01)
     case.input.domain.nDim = 2
     case.input.domain.zgridUnif = "uniform"
     case.input.domain.nz = 3
@@ -113,3 +115,18 @@ def create_grid(
     )
     apply_grid_model(c, gm, dx)
     return gm
+
+
+def clean_number(x, sig_digits=4, rel_tol=0.01):
+    if x == 0:
+        return 0.0
+
+    decimals = sig_digits - 1 - math.floor(math.log10(abs(x)))
+    y = round(x, decimals)
+
+    if abs(x - y) > rel_tol * abs(x):
+        raise ValueError(
+            f"{x} is not a clean number (nearest {sig_digits}-digit value is {y}). 2D dz needs accurate alignment with body mesh and one must not use number with more than {sig_digits} significant digits to prevent accuracy issue."
+        )
+
+    return y
