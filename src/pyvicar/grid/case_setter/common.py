@@ -117,14 +117,15 @@ def create_grid(
     return gm
 
 
-def clean_number(x, sig_digits=4, rel_tol=0.01):
+def clean_number(x, sig_digits=4):
     if x == 0:
-        return 0.0
+        return 0
 
     decimals = sig_digits - 1 - math.floor(math.log10(abs(x)))
     y = round(x, decimals)
+    tol = 10 ** (math.floor(math.log10(abs(x))) - sig_digits - 9)
 
-    if abs(x - y) > rel_tol * abs(x):
+    if abs(x - y) > tol:
         raise ValueError(
             f"{x} is not a clean number (nearest {sig_digits}-digit value is {y}). 2D dz needs accurate alignment with body mesh and one must not use number with more than {sig_digits} significant digits to prevent accuracy issue."
         )
