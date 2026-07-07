@@ -2,6 +2,7 @@ import pyvicar
 
 # 2. cylinder 2d
 # this script generate the case file for a flow past 2D cylinder at Re=200
+# note that 2D is typically more difficult to converge and sensitive to parameters in the solver
 
 pyvicar.assert_api_version("1.0.1", "1.1.0")
 
@@ -10,35 +11,36 @@ Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 d = 1
 U = 1
 re = 200
-dx = d / 20
+# 2D dz needs to be a clean number (at most 2 significant digits, like 0.015)
+dx = d / 50
 T = d / U
 Umax = 2 * U
 
 c = Case("tut_cyl2d")
 
-gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[3, None], 3])
-#                                          ^~~~~~~~~~~~~~~~~~~ needs to resolve pressure well to converge
-#                                                              no longer needed starting from d/50
-#                                                              typical decent sim. needs at least d/100
-#                               ^~~~~~~~~ different from example 1, this will create a 2D grid
+gm = c.create_grid(
+    l0=d,
+    dx=dx,
+    dim2=True,
+    doml=[[10, 8], 10],
+    refl=1.5,
+    grow=[[1.05, 1.02], 1.03],
+)
 # 2D case is still using a 3d grid, but only 3 nodes (2 segments) in z direction
-# note that 2D is still explicit to solver, and it behaves slightly differently from 3D cases.
-# [[3, None], 3] means:
-#             ^ refine 3*l0 in both y- and y+
-#      ^ keep the x+ refine len by default
-#   ^ refine 3*l0 length in x- direction from emplacement center (gm.center)
-# this list-list notation is used in other arguments too, default values:
-# doml=[[20, 5], [20, 20], [20, 20] (in 3d)], * l0 = domain length in each direction from gm.center
-# refl=[[1, 2.5], [1, 1], [1, 1] (in 3d)] * l0 = refine box length ...
-# grow=[[1.4, 1.02], [1.4, 1.4], [1.4, 1.4] (in 3d)] = growth rate ...
-# these defaults create minimal working grid for 3d for efficiency,
-# and the above example gives the one for 2d
-# if one want to resolve more in the wake, increase doml in x+ and corresponding refl x+, e.g.
-# gm = c.create_grid(l0=d, dx=dx, dim2=True, doml=[[None, 10], None], refl=[[None, 6], None])
-# this is easy in 2d but in 3d the need for resources increases much faster
-# generally, keep the default growth rate, and make sure aspect ratio is controlled in wake region
-# the default 1.02 x+ growth rate and short downstream length are both for a controlled aspect ratio
-# because in high-gradient region (lke in wake vortices) high aspect ratio brings instabilities
+# 2D behaves differently from 3D, use the above mesh
+
+# the list-list notation means
+# [[x-, x+], [y-, y+], [z-, z+]], can be broadcasted
+# doml=[[10, 8], 10] means domain length is 10*l0 in x- direction from gm.center
+#                                            8*l0 in x+
+#                                           10*l0 in both y- and y+
+# refl=1.5 means refine box length is 1.5*l0 in all direction from gm.center
+# grow=[[1.05, 1.02], 1.03] means outside refine box growth rate is 1.05 in x- direction, ...
+# default values if not specified:
+# doml=[[20, 5], [20, 20], [20, 20] (in 3d)]
+# refl=[[1, 2.5], [1, 1], [1, 1] (in 3d)]
+# grow=[[1.4, 1.02], [1.4, 1.4], [1.4, 1.4] (in 3d)]
+# specify None to use the default, also broadcastable
 
 body, surf = c.append_cyl_2d(d / 2, dx, gm.center)
 #                     ^~~~~~ different from example 1
@@ -50,9 +52,19 @@ c.set_inlet("x1", [U, 0, 0])
 
 c.set_re(re, U=U, L=d)
 
-c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False)
+# use divu_tol=1e-4 in 2D, default 1e-6, sometimes cannot converge below and blowup, mechanism not fully clear
+c.set_tstep(
+    U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False, divu_tol=1e-4
+)
 
 c.set_partition(nproc_node=16, nnode_max=1)
+
+# use 0.1 in 2D, default 1.0, 1.0 sometimes brings divergence, mechanism not fully clear
+c.input.hybridization.upwindWeight = 0.1
+
+# in 2D, poisson solver may run into compatibility issue,
+# shouldnt keep it iterating and eventually blowup but simply skip the ill-formed tstep,
+c.input.poisson.itermaxPoisson = 3000
 
 c.job.enable()
 c.job.account = "account"

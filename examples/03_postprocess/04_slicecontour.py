@@ -15,7 +15,7 @@ Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 # this is also workable for 2d cases in 01_geometry because we are posting z-normal slice
 c = Case("tut_sphere")
 
-# for 2d cases, change it to [20, 20, dz/2], dz/2 is small can be 0
+# for all 2d examples, use [10, 10, 0]
 cam_f = pf.set_cam_compass([20, 20, 20], l0=1, r=8, oclock=3, pitch=90)
 
 c.dump.read()

@@ -11,7 +11,8 @@ Case = pyvicar.import_case("~/opt/ViCar3D/versions/common")
 d = 1
 U = 1
 re = 200
-dx = d / 20
+# note: 2D clean dz
+dx = d / 50
 T = d / U
 Umax = 2 * U
 alpha = 5
@@ -19,12 +20,15 @@ alpha_rad = np.radians(alpha)
 
 c = Case("tut_plane_2d")
 
-gm = c.create_grid(l0=d, dx=dx, dim2=True, refl=[[3, None], 3])
-#                                          ^~~~~~~~~~~~~~~~~~~ remember stricter 2d refine requirement
-#                                                              no longer needed starting from d/50
-#                                                              typical decent sim. needs at least d/100
-#                               ^~~~~~ remember this when creating 2D grid,
-#                                      but you can always check for possible mistakes by show_grid()
+# note: 2D mesh parameters
+gm = c.create_grid(
+    l0=d,
+    dx=dx,
+    dim2=True,
+    doml=[[10, 8], 10],
+    refl=1.5,
+    grow=[[1.05, 1.02], 1.03],
+)
 
 vec = d * np.array([np.cos(alpha_rad), -np.sin(alpha_rad)])
 body, surf, om2e = c.append_plane_2d(vec, dx, gm.center - vec / 2)
@@ -39,9 +43,16 @@ c.set_inlet("x1", [U, 0, 0])
 
 c.set_re(re, U=U, L=d)
 
-c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False)
+# note: 2D poisson tol
+c.set_tstep(U=Umax, dx=dx, T=T, nT=10, nsteps_unit=10, ndumps=10, step_test=False, divu_tol=1e-4)
 
 c.set_partition(nproc_node=16, nnode_max=1)
+
+# note: 2D upwind
+c.input.hybridization.upwindWeight = 0.1
+
+# note: 2D poisson iter
+c.input.poisson.itermaxPoisson = 3000
 
 c.job.enable()
 c.job.account = "account"
