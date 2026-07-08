@@ -10,6 +10,30 @@ from dataclasses import dataclass
 from mpi4py import MPI
 
 
+def bcast_if_multiblock(mesh, f):
+    if isinstance(mesh, pv.MultiBlock):
+        for mesh1 in mesh:
+            bcast_if_multiblock(mesh1, f)
+    else:
+        f(mesh)
+
+
+def filter_fields(mesh, keep_points=[], keep_cells=[]):
+    for name in list(mesh.point_data.keys()):
+        if name not in keep_points:
+            del mesh.point_data[name]
+
+    for name in list(mesh.cell_data.keys()):
+        if name not in keep_cells:
+            del mesh.cell_data[name]
+
+
+def shcopy_mesh(mesh, keep_points=[], keep_cells=[]):
+    mesh = mesh.copy(deep=False)
+    filter_fields(mesh, keep_points=keep_points, keep_cells=keep_cells)
+    return mesh
+
+
 class JobOutputError(Exception):
     pass
 
@@ -243,6 +267,47 @@ class Read(PostJob):
 
     def frame_end(self, st: FullStatus):
         st.f.clear_outputs(self.name())
+
+
+class Keep(PostJob):
+    def __init__(self, **kwargs):
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "mesh": ObjPath("read", "mesh"),
+                "points": [],
+                "cells": [],
+            },
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self) -> str:
+        return "keep"
+
+    def global_begin(self, st: FullStatus):
+        pass
+
+    def global_end(self, st: FullStatus):
+        pass
+
+    def frame_begin(self, st: FullStatus):
+        pass
+
+    def frame_proc(self, st: FullStatus):
+        meshobj = st.f[self.kwargs["mesh"]]
+
+        def proc(mesh):
+            filter_fields(
+                mesh,
+                keep_points=self.kwargs["points"],
+                keep_cells=self.kwargs["cells"],
+            )
+
+        bcast_if_multiblock(meshobj, proc)
+
+    def frame_end(self, st: FullStatus):
+        pass
 
 
 class Plot(PostJob):

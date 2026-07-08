@@ -1,28 +1,6 @@
 from pyvicar.tools.miscellaneous import args
-from .basics import ObjPath, FullStatus, PostJob
+from .basics import ObjPath, FullStatus, PostJob, bcast_if_multiblock, shcopy_mesh
 import numpy as np
-import pyvista as pv
-
-
-def bcast_if_multiblock(mesh, f):
-    if isinstance(mesh, pv.MultiBlock):
-        for mesh1 in mesh:
-            bcast_if_multiblock(mesh1, f)
-    else:
-        f(mesh)
-
-
-def shcopy_mesh(mesh, keep_points=[], keep_cells=[]):
-    mesh = mesh.copy(deep=False)
-    for name in list(mesh.point_data.keys()):
-        if name not in keep_points:
-            del mesh.point_data[name]
-
-    for name in list(mesh.cell_data.keys()):
-        if name not in keep_cells:
-            del mesh.cell_data[name]
-
-    return mesh
 
 
 class CalcQ(PostJob):

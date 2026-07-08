@@ -63,6 +63,7 @@ st = compact_post(
         fields=c.dump.cgns,  # remove if no need to read
         markers=c.dump.marker,  # remove if no need to read
     ),
+    jobs.Keep(mesh=jobs.ObjPath("read", "mesh"), cells=["VEL", "P"]),
     jobs.VolToSurf(
         # interpolate vol cell fields to surf point field, can specify which side to use the vol data
         # needs vol cell fields so must be used before ToPoints keep=False (default), or specify keep=True
