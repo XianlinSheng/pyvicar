@@ -7,6 +7,7 @@ import pyvista as pv
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from mpi4py import MPI
 
 
 class JobOutputError(Exception):
@@ -134,12 +135,16 @@ class Loop(PostJob):
                 "nframes_local": nframes_local,
                 "continue": nframes_local > 0,
                 "progress": 0,
+                "jobs_frameproc_time": [],
             },
         )
         mpi.set_async()
 
     def global_end(self, st: FullStatus):
-        pass
+        comm = MPI.COMM_WORLD
+        times = st.g.loop["jobs_frameproc_time"]
+        comm.Allreduce(MPI.IN_PLACE, times, op=MPI.SUM)
+        times /= st.g.loop["nframes"]
 
     def frame_begin(self, st: FullStatus):
         iframes = st.g.loop["iframes_local"]
@@ -161,7 +166,7 @@ class Loop(PostJob):
 
 # if a job has no status outputs, jobname is never used
 class Clear(PostJob):
-    def __init__(self, jobs):
+    def __init__(self, *jobs):
         self.jobs = jobs
 
     def name(self) -> str:

@@ -2,7 +2,7 @@ import pyvicar
 import pyvicar.tools.log as log
 import pyvicar.tools.mpi as mpi
 
-# 5. compress
+# 6. compress
 # this script reads the case vtm dump and compress the sub vtr to binary
 
 # use at least v1.0.2 if only for postprocess because in lower version
