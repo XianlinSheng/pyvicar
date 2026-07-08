@@ -12,6 +12,19 @@ def bcast_if_multiblock(mesh, f):
         f(mesh)
 
 
+def shcopy_mesh(mesh, keep_points=[], keep_cells=[]):
+    mesh = mesh.copy(deep=False)
+    for name in list(mesh.point_data.keys()):
+        if name not in keep_points:
+            del mesh.point_data[name]
+
+    for name in list(mesh.cell_data.keys()):
+        if name not in keep_cells:
+            del mesh.cell_data[name]
+
+    return mesh
+
+
 class CalcQ(PostJob):
     def __init__(self, out_name, **kwargs):
         self.out_name = out_name
@@ -26,7 +39,7 @@ class CalcQ(PostJob):
         )
 
     def name(self) -> str:
-        return "calc_q"
+        return f"calc_q({self.out_name})"
 
     def global_begin(self, st: FullStatus):
         pass
@@ -41,7 +54,8 @@ class CalcQ(PostJob):
         meshobj = st.f[self.kwargs["mesh"]]
 
         def calc(meshin):
-            mesh = meshin.compute_derivative(self.kwargs["vel_name"], gradient=True)
+            mesh = shcopy_mesh(meshin, keep_points=[self.kwargs["vel_name"]])
+            mesh = mesh.compute_derivative(self.kwargs["vel_name"], gradient=True)
             grad = mesh.point_data["gradient"]
             grad = grad.reshape(-1, 3, 3)  # 3x3 tensor
             gradt = np.transpose(grad, (0, 2, 1))
@@ -52,7 +66,6 @@ class CalcQ(PostJob):
                 np.einsum("ijk,ijk->i", Omega, Omega) - np.einsum("ijk,ijk->i", S, S)
             )
 
-            mesh.point_data[self.out_name] = qfield
             meshin.point_data[self.out_name] = qfield
 
         bcast_if_multiblock(meshobj, calc)
@@ -75,7 +88,7 @@ class CalcVor(PostJob):
         )
 
     def name(self) -> str:
-        return "calc_vor"
+        return f"calc_vor({self.out_name})"
 
     def global_begin(self, st: FullStatus):
         pass
@@ -89,10 +102,65 @@ class CalcVor(PostJob):
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
 
-        def calc(mesh):
+        def calc(meshin):
+            mesh = shcopy_mesh(meshin, keep_points=[self.kwargs["vel_name"]])
             mesh = mesh.compute_derivative(self.kwargs["vel_name"], vorticity=True)
-            mesh.rename_array("vorticity", self.out_name)
-            st.f[self.kwargs["mesh"]] = mesh
+            meshin[self.out_name] = mesh["vorticity"]
+
+        bcast_if_multiblock(meshobj, calc)
+
+    def frame_end(self, st: FullStatus):
+        pass
+
+
+class CalcNabla(PostJob):
+    def __init__(self, **kwargs):
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "mesh": ObjPath("read", "mesh"),
+                "field": "VEL",
+                "grad": None,
+                "div": None,
+                "curl": None,
+                "q": None,
+            },
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self) -> str:
+        return f"calc_nabla({self.kwargs["field"]})"
+
+    def global_begin(self, st: FullStatus):
+        pass
+
+    def global_end(self, st: FullStatus):
+        pass
+
+    def frame_begin(self, st: FullStatus):
+        pass
+
+    def frame_proc(self, st: FullStatus):
+        meshobj = st.f[self.kwargs["mesh"]]
+
+        def calc(meshin):
+            mesh = shcopy_mesh(meshin, keep_points=[self.kwargs["field"]])
+            mesh = mesh.compute_derivative(
+                self.kwargs["field"],
+                gradient=self.kwargs["grad"] is not None,
+                divergence=self.kwargs["div"] is not None,
+                vorticity=self.kwargs["curl"] is not None,
+                qcriterion=self.kwargs["q"] is not None,
+            )
+            if self.kwargs["grad"] is not None:
+                meshin[self.kwargs["grad"]] = mesh["gradient"]
+            if self.kwargs["div"] is not None:
+                meshin[self.kwargs["div"]] = mesh["divergence"]
+            if self.kwargs["curl"] is not None:
+                meshin[self.kwargs["curl"]] = mesh["vorticity"]
+            if self.kwargs["q"] is not None:
+                meshin[self.kwargs["q"]] = mesh["qcriterion"]
 
         bcast_if_multiblock(meshobj, calc)
 
@@ -115,7 +183,7 @@ class CalcFunc(PostJob):
         )
 
     def name(self) -> str:
-        return "calc_func"
+        return f"calc_func({self.out_name})"
 
     def global_begin(self, st: FullStatus):
         pass
@@ -154,7 +222,7 @@ class CalcNondimVec(PostJob):
         )
 
     def name(self) -> str:
-        return "calc_nondim_vel"
+        return f"calc_nondim_vec({self.out_name})"
 
     def global_begin(self, st: FullStatus):
         pass
@@ -195,7 +263,7 @@ class CalcNondimP(PostJob):
         )
 
     def name(self) -> str:
-        return "calc_nondim_p"
+        return f"calc_nondim_p({self.out_name})"
 
     def global_begin(self, st: FullStatus):
         pass

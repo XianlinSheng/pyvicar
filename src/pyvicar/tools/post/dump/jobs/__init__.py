@@ -11,7 +11,14 @@ from .basics import (
     SaveCaseAnim,
 )
 
-from .computations import CalcQ, CalcVor, CalcFunc, CalcNondimVec, CalcNondimP
+from .computations import (
+    CalcQ,
+    CalcVor,
+    CalcNabla,
+    CalcFunc,
+    CalcNondimVec,
+    CalcNondimP,
+)
 
 from .extractions import IsoSurf, Slice
 

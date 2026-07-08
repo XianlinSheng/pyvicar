@@ -110,11 +110,13 @@ st = compact_post(
     ),
     jobs.ToPoints(jobs.ObjPath("read", "mesh"), keep=False),
     # these CalcXXX default mesh=jobs.ObjPath("read", "mesh") and output inplace
-    jobs.CalcVor("VOR", mesh=jobs.ObjPath("read", "mesh"), vel_name="VEL"),
     jobs.CalcNondimVec("CVEL", vec_name="VEL", vec0=U),
-    jobs.CalcNondimVec("CVOR", vec_name="VOR", vec0=U),
+    # CalcNabla computes GRAD DIV VOR Q in one run faster, can replace multiple calls
+    jobs.CalcNabla(field="CVEL", grad=None, div=None, curl="CVOR", q="Q"),
+    # jobs.CalcVor("VOR", vel_name="VEL"),
+    # jobs.CalcNondimVec("CVOR", vec_name="VOR", vec0=U),
+    # jobs.CalcQ("Q", vel_name="CVEL"),
     jobs.CalcNondimP("CP", vel0=U),
-    jobs.CalcQ("Q", vel_name="CVEL"),
     jobs.CalcFunc("WXU", ["CVOR", "CVEL"], lambda w, u: np.cross(w, u, axis=-1)),
     jobs.IsoSurf(
         # create iso surface mesh
