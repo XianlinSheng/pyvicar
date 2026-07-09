@@ -1,6 +1,7 @@
 from pyvicar.tools.miscellaneous import args
-from .basics import ObjPath, FullStatus, PostJob
+from .basics import ObjPath, FullStatus, PostJob, shcopy_mesh, bcast_if_multiblock
 import pyvista as pv
+import numpy as np
 
 
 class ToPoints(PostJob):
@@ -44,9 +45,38 @@ class ToPoints(PostJob):
             st.f.clear_outputs(self.name())
 
 
+# return idx_start, so that points[i] is nearly boxed by grid idx [idx_start[i], idx_start[i] + tot_idx)
+# (point may not be nearly center or even outside of the box at the grid boundary)
+def clamp_box(points, grid, tot_idx=6):
+    half = tot_idx // 2
+    idx = np.searchsorted(grid, points) - half
+    idx = np.clip(idx, 0, grid.shape[0] - tot_idx)
+    return idx
+
+
+def comps_castup(x):
+    if x.ndim == 1:
+        return x[:, None], 1
+    else:
+        return x, x.shape[1]
+
+
+def comps_castdown(x):
+    if x.shape[1] == 1:
+        return x[:, 0]
+    else:
+        return x
+
+
+def reshape_3d(x, nx, ny, nz):
+    return np.stack(
+        [comp.reshape((nx, ny, nz), order="F") for comp in x.T],
+        axis=-1,
+    )
+
+
 class VolToSurf(PostJob):
-    def __init__(self, radius, **kwargs):
-        self.radius = radius
+    def __init__(self, **kwargs):
         self.kwargs = args.add_default(
             kwargs,
             {
@@ -55,6 +85,7 @@ class VolToSurf(PostJob):
                 "pos": False,
                 "neg": False,
                 "double": False,
+                "tot_idx": 6,
             },
             inplace=True,
             throw_unused=True,
@@ -76,61 +107,194 @@ class VolToSurf(PostJob):
         if not (self.kwargs["pos"] or self.kwargs["neg"] or self.kwargs["double"]):
             return
 
-        def process(surf):
-            xmin, xmax, ymin, ymax, zmin, zmax = surf.bounds
-
-            xmin -= self.radius
-            xmax += self.radius
-            ymin -= self.radius
-            ymax += self.radius
-            zmin -= self.radius
-            zmax += self.radius
-
-            roi = vol.clip_box(
-                bounds=(xmin, xmax, ymin, ymax, zmin, zmax), invert=False, crinkle=True
-            )
-
-            cc = roi.cell_centers()
-            cc = cc.cell_data_to_point_data()
-            dist = cc.compute_implicit_distance(surf)
-            d = dist["implicit_distance"]
-
-            mask_pos = d > 0
-            mask_neg = ~mask_pos
-
-            cc_pos = cc.extract_points(mask_pos)
-            cc_neg = cc.extract_points(mask_neg)
-
-            # some output name might not be processed well, so rename it here
-            for name in list(cc_pos.point_data):
-                cc_pos.rename_array(name, f"{name}(SURF_POS)")
-            for name in list(cc_neg.point_data):
-                cc_neg.rename_array(name, f"{name}(SURF_NEG)")
-            for name in list(cc.point_data):
-                cc.rename_array(name, f"{name}(SURF)")
-
-            if self.kwargs["pos"]:
-                surf_pos = surf.interpolate(cc_pos, sharpness=2, radius=self.radius)
-                for name in surf_pos.point_data:
-                    surf.point_data[name] = surf_pos.point_data[name]
-            if self.kwargs["neg"]:
-                surf_neg = surf.interpolate(cc_neg, sharpness=2, radius=self.radius)
-                for name in surf_neg.point_data:
-                    surf.point_data[name] = surf_neg.point_data[name]
-            if self.kwargs["double"]:
-                surf_double = surf.interpolate(cc, sharpness=2, radius=self.radius)
-                for name in surf_double.point_data:
-                    surf.point_data[name] = surf_double.point_data[name]
-
         vol = st.f[self.kwargs["mesh_vol"]]
         surfs = st.f[self.kwargs["mesh_surf"]]
+        nx, ny, nz = vol.dimensions
+        nxc, nyc, nzc = nx - 1, ny - 1, nz - 1
+        xyz = shcopy_mesh(vol).cell_centers().points
+        x = xyz[:, 0].reshape((nxc, nyc, nzc), order="F")[:, 0, 0]
+        y = xyz[:, 1].reshape((nxc, nyc, nzc), order="F")[0, :, 0]
+        z = xyz[:, 2].reshape((nxc, nyc, nzc), order="F")[0, 0, :]
+        tot_idx = self.kwargs["tot_idx"]
 
-        if isinstance(surfs, pv.MultiBlock):
-            for surf in surfs:
-                process(surf)
-        else:
-            surf = surfs
-            process(surf)
+        def process(surf):
+            idx_x = clamp_box(surf.points[:, 0], x, tot_idx=tot_idx)
+            idx_y = clamp_box(surf.points[:, 1], y, tot_idx=tot_idx)
+            idx_z = clamp_box(surf.points[:, 2], z, tot_idx=tot_idx)
+            npoints = surf.points.shape[0]
+            eps = 1e-6
+            norm = (
+                shcopy_mesh(surf, keep_cells=["NORM"])
+                .cell_data_to_point_data(pass_cell_data=False)
+                .point_data["NORM"]
+            )
+
+            for name in vol.cell_data.keys():
+                # uniform treatment scalar/vector/tensor into [i, j, k, comp]
+                volc, ncomp = comps_castup(vol.cell_data[name])
+                volc = reshape_3d(volc, nxc, nyc, nzc)
+
+                if self.kwargs["neg"]:
+                    num_neg = np.zeros((npoints, ncomp))
+                    den_neg = np.zeros(npoints)
+
+                if self.kwargs["pos"]:
+                    num_pos = np.zeros((npoints, ncomp))
+                    den_pos = np.zeros(npoints)
+
+                if self.kwargs["double"]:
+                    num = np.zeros((npoints, ncomp))
+                    den = np.zeros(npoints)
+
+                # this is ~50 to ~500 lightweight loop over stencils
+                dis, djs, dks = np.meshgrid(
+                    np.arange(tot_idx),
+                    np.arange(tot_idx),
+                    np.arange(tot_idx),
+                    indexing="ij",
+                )
+                for di, dj, dk in zip(dis.ravel(), djs.ravel(), dks.ravel()):
+                    stcl_i = idx_x + di
+                    stcl_j = idx_y + dj
+                    stcl_k = idx_z + dk
+
+                    dx = x[stcl_i] - surf.points[:, 0]
+                    dy = y[stcl_j] - surf.points[:, 1]
+                    dz = z[stcl_k] - surf.points[:, 2]
+                    dxyz = np.stack((dx, dy, dz), axis=-1)
+
+                    d2 = dx * dx + dy * dy + dz * dz
+                    # IDW
+                    w = 1.0 / np.maximum(d2, eps) ** 2
+
+                    # dot == 0 is ill-formed and cannot guarantee the side of the value so is excluded both
+                    if self.kwargs["neg"]:
+                        w_neg = w * (np.sum(dxyz * norm, axis=-1) < 0)
+                        num_neg += (
+                            w_neg[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                        )
+                        den_neg += w_neg
+
+                    if self.kwargs["pos"]:
+                        w_pos = w * (np.sum(dxyz * norm, axis=-1) > 0)
+                        num_pos += (
+                            w_pos[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                        )
+                        den_pos += w_pos
+
+                    if self.kwargs["double"]:
+                        num += w[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                        den += w
+
+                if self.kwargs["neg"]:
+                    surf.point_data[f"{name}(SURF_NEG)"] = comps_castdown(
+                        num_neg / den_neg[:, np.newaxis]
+                    )
+
+                if self.kwargs["pos"]:
+                    surf.point_data[f"{name}(SURF_POS)"] = comps_castdown(
+                        num_pos / den_pos[:, np.newaxis]
+                    )
+
+                if self.kwargs["double"]:
+                    surf.point_data[f"{name}(SURF)"] = comps_castdown(
+                        num / den[:, np.newaxis]
+                    )
+
+        bcast_if_multiblock(surfs, process)
 
     def frame_end(self, st: FullStatus):
         pass
+
+
+# # legacy vtk impl, algorithm time complexity unacceptable
+# class VolToSurf(PostJob):
+#     def __init__(self, radius, **kwargs):
+#         self.radius = radius
+#         self.kwargs = args.add_default(
+#             kwargs,
+#             {
+#                 "mesh_vol": ObjPath("read", "mesh"),
+#                 "mesh_surf": ObjPath("read", "bodies"),
+#                 "pos": False,
+#                 "neg": False,
+#                 "double": False,
+#             },
+#             inplace=True,
+#             throw_unused=True,
+#         )
+
+#     def name(self) -> str:
+#         return "vol_to_surf"
+
+#     def global_begin(self, st: FullStatus):
+#         pass
+
+#     def global_end(self, st: FullStatus):
+#         pass
+
+#     def frame_begin(self, st: FullStatus):
+#         pass
+
+#     def frame_proc(self, st: FullStatus):
+#         if not (self.kwargs["pos"] or self.kwargs["neg"] or self.kwargs["double"]):
+#             return
+
+#         def process(surf):
+#             xmin, xmax, ymin, ymax, zmin, zmax = surf.bounds
+
+#             xmin -= self.radius
+#             xmax += self.radius
+#             ymin -= self.radius
+#             ymax += self.radius
+#             zmin -= self.radius
+#             zmax += self.radius
+
+#             roi = vol.clip_box(
+#                 bounds=(xmin, xmax, ymin, ymax, zmin, zmax), invert=False, crinkle=True
+#             )
+
+#             cc = roi.cell_centers()
+#             cc = cc.cell_data_to_point_data()
+#             dist = cc.compute_implicit_distance(surf)
+#             d = dist["implicit_distance"]
+
+#             mask_pos = d > 0
+#             mask_neg = ~mask_pos
+
+#             cc_pos = cc.extract_points(mask_pos)
+#             cc_neg = cc.extract_points(mask_neg)
+
+#             # some output name might not be processed well, so rename it here
+#             for name in list(cc_pos.point_data):
+#                 cc_pos.rename_array(name, f"{name}(SURF_POS)")
+#             for name in list(cc_neg.point_data):
+#                 cc_neg.rename_array(name, f"{name}(SURF_NEG)")
+#             for name in list(cc.point_data):
+#                 cc.rename_array(name, f"{name}(SURF)")
+
+#             if self.kwargs["pos"]:
+#                 surf_pos = surf.interpolate(cc_pos, sharpness=2, radius=self.radius)
+#                 for name in surf_pos.point_data:
+#                     surf.point_data[name] = surf_pos.point_data[name]
+#             if self.kwargs["neg"]:
+#                 surf_neg = surf.interpolate(cc_neg, sharpness=2, radius=self.radius)
+#                 for name in surf_neg.point_data:
+#                     surf.point_data[name] = surf_neg.point_data[name]
+#             if self.kwargs["double"]:
+#                 surf_double = surf.interpolate(cc, sharpness=2, radius=self.radius)
+#                 for name in surf_double.point_data:
+#                     surf.point_data[name] = surf_double.point_data[name]
+
+#         vol = st.f[self.kwargs["mesh_vol"]]
+#         surfs = st.f[self.kwargs["mesh_surf"]]
+
+#         if isinstance(surfs, pv.MultiBlock):
+#             for surf in surfs:
+#                 process(surf)
+#         else:
+#             surf = surfs
+#             process(surf)
+
+#     def frame_end(self, st: FullStatus):
+#         pass

@@ -47,13 +47,41 @@ isoq_cam_f = pf.set_cam_compass(center, l0=1, r=10, oclock=2)
 midy_cam_f = pf.set_cam_compass(center, l0=1, r=8, oclock=3, pitch=0)
 
 
-# add job objects to args, each job may write data in the internal status space
+# add job objects to compact_post args, each job may write data in the internal status space
 # this status space will eventually be returned to the 'st' below
 # st.g -> global status, st.f -> frame status
 # st.g|f.jobname -> job output dict
 # st.g|f[jobname], same as st.g|f.jobname
 # st.g|f.jobname[objname] -> an output obj of job
 # st.g|f[jobs.ObjPath(jobname, objname)], same as st.g|f.jobname[objname]
+
+
+# one can also define customized jobs in the pipeline
+class PrintFields(jobs.PostJob):
+    def __init__(self, header):
+        self.header = header
+
+    def name(self):
+        return f"echo_fields({self.header})"
+
+    def global_begin(self, st):
+        pass
+
+    def global_end(self, st):
+        pass
+
+    def frame_begin(self, st):
+        pass
+
+    def frame_proc(self, st):
+        print(f"{self.header}: {st.f.read["mesh"].cell_data.keys() = }")
+        print(f"{self.header}: {st.f.read["mesh"].point_data.keys() = }")
+        print(f"{self.header}: {st.f.read["bodies"][0].cell_data.keys() = }")
+        print(f"{self.header}: {st.f.read["bodies"][0].point_data.keys() = }")
+
+    def frame_end(self, st):
+        pass
+
 
 st = compact_post(
     jobs.Read(
@@ -63,18 +91,20 @@ st = compact_post(
         fields=c.dump.cgns,  # remove if no need to read
         markers=c.dump.marker,  # remove if no need to read
     ),
+    PrintFields("after read"),
     jobs.Keep(mesh=jobs.ObjPath("read", "mesh"), cells=["VEL", "P"]),
+    PrintFields("after keep"),
     jobs.VolToSurf(
         # interpolate vol cell fields to surf point field, can specify which side to use the vol data
         # needs vol cell fields so must be used before ToPoints keep=False (default), or specify keep=True
         # modifies surf mesh inplace, add XX(SURF_NEG) XX(SURF_POS) XX(SURF) for all cell fields XX
-        0.1,  # resample gauss kernel radius, typically ~ l0/10
         mesh_vol=jobs.ObjPath("read", "mesh"),
         mesh_surf=jobs.ObjPath("read", "bodies"),
         neg=True,  # use data on negative normal side, create XX(SURF_NEG), default False if removed
         pos=False,  # ... positive side, ... XX(SURF_POS), default False
         double=False,  # ... both sides, use when vol continuous across surf, ... XX(SURF), default False
     ),
+    PrintFields("after vol_to_surf"),
     # CalcXXX works on point field, surf interp comes from vol cell field
     jobs.CalcNondimP(
         "CP(SURF_NEG)",
@@ -82,6 +112,7 @@ st = compact_post(
         p_name="P(SURF_NEG)",
         vel0=U,
     ),
+    PrintFields("after calc_nondim_p"),
     jobs.Translate(
         # translate a mesh, can be done either inplace or create a new mesh
         # store f/out_name/mesh: output mesh, if copy=True
@@ -110,6 +141,7 @@ st = compact_post(
         out_name="bodies_rot",
     ),
     jobs.ToPoints(jobs.ObjPath("read", "mesh"), keep=False),
+    PrintFields("after to_points"),
     # these CalcXXX default mesh=jobs.ObjPath("read", "mesh") and output inplace
     jobs.CalcNondimVec("CVEL", vec_name="VEL", vec0=U),
     # CalcNabla computes GRAD DIV VOR Q in one run faster, can replace multiple calls
@@ -119,6 +151,7 @@ st = compact_post(
     # jobs.CalcQ("Q", vel_name="CVEL"),
     jobs.CalcNondimP("CP", vel0=U),
     jobs.CalcFunc("WXU", ["CVOR", "CVEL"], lambda w, u: np.cross(w, u, axis=-1)),
+    PrintFields("after all calc_xxx"),
     jobs.IsoSurf(
         # create iso surface mesh
         # store f/first_arg/mesh: iso surface mesh
