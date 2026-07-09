@@ -127,7 +127,16 @@ class VolToSurf(PostJob):
         pass
 
     def frame_begin(self, st: FullStatus):
-        pass
+        fields = st.f.read["fields"]
+        from pyvicar.case.dump.vtk import VTK, VTM
+
+        # no heavy file read will happen
+        if isinstance(fields, (VTK, VTM)):
+            raise Exception(
+                f"Post: Error in VolToSurf: Vol space must be on a structured mesh, got {fields}. "
+                + f"Unstruc interpolation is removed due to time complexity. "
+                + f"Use c.dump.vtm.to_vtrs(npx, npy, keep_vtms=True) to combine and use c.dump.vtr."
+            )
 
     def frame_proc(self, st: FullStatus):
         if not self.configs:

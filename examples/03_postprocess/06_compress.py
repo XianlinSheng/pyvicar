@@ -23,6 +23,9 @@ c.dump.vtm.to_binary()
 # # or to a single unstruc vtk, but may take even larger space
 # c.dump.vtm.to_vtks(keep_vtms=True)
 
+# # or combine into one full vtr structured field, needs to provide npx npy
+# c.dump.vtm.to_vtrs(npx=4, npy=4, keep_vtms=True)
+
 mpi.print_elapsed_time()
 
 # similar, mpirun -np x python compress.py to compress in parallel
