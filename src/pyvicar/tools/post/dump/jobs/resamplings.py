@@ -1,3 +1,4 @@
+import pyvicar.tools.log as log
 from pyvicar.tools.miscellaneous import args
 from .basics import ObjPath, FullStatus, PostJob, shcopy_mesh, bcast_if_multiblock
 import pyvista as pv
@@ -76,15 +77,24 @@ def reshape_3d(x, nx, ny, nz):
 
 
 class VolToSurf(PostJob):
-    def __init__(self, **kwargs):
+    def __init__(self, *configs, **kwargs):
+        self.configs = [
+            args.add_default(
+                config,
+                {
+                    "cell_fields": None,
+                    "pos": False,
+                    "neg": False,
+                    "double": False,
+                },
+            )
+            for config in configs
+        ]
         self.kwargs = args.add_default(
             kwargs,
             {
                 "mesh_vol": ObjPath("read", "mesh"),
                 "mesh_surf": ObjPath("read", "bodies"),
-                "pos": False,
-                "neg": False,
-                "double": False,
                 "tot_idx": 6,
             },
             inplace=True,
@@ -92,10 +102,26 @@ class VolToSurf(PostJob):
         )
 
     def name(self) -> str:
-        return "vol_to_surf"
+        return f"vol_to_surf({self.kwargs["mesh_vol"].to_str()}->{self.kwargs["mesh_surf"].to_str()})"
 
     def global_begin(self, st: FullStatus):
-        pass
+        if not self.configs:
+            log.log(
+                f"Post: Warning in VolToSurf: "
+                + f"No interpolations are defined, pass dicts like "
+                + "{'cell_fields': ['P'], 'neg': True, 'pos': True}"
+                + f"to create surface fields"
+            )
+
+        for i, config in enumerate(self.configs):
+            if not (config["neg"] or config["pos"] or config["double"]):
+                log.log(
+                    f"Post: Warning in VolToSurf Interp No. {i}: "
+                    + f"None of the interp side ['neg', 'pos', 'double'] is enabled,"
+                    + f"and thus no fields are defined, pass dicts like "
+                    + "{'cell_fields': ['P'], 'neg': True, 'pos': True}"
+                    + f"to create surface fields"
+                )
 
     def global_end(self, st: FullStatus):
         pass
@@ -104,7 +130,7 @@ class VolToSurf(PostJob):
         pass
 
     def frame_proc(self, st: FullStatus):
-        if not (self.kwargs["pos"] or self.kwargs["neg"] or self.kwargs["double"]):
+        if not self.configs:
             return
 
         vol = st.f[self.kwargs["mesh_vol"]]
@@ -129,77 +155,86 @@ class VolToSurf(PostJob):
                 .point_data["NORM"]
             )
 
-            for name in vol.cell_data.keys():
-                # uniform treatment scalar/vector/tensor into [i, j, k, comp]
-                volc, ncomp = comps_castup(vol.cell_data[name])
-                volc = reshape_3d(volc, nxc, nyc, nzc)
+            for config in self.configs:
+                if not (config["pos"] or config["neg"] or config["double"]):
+                    return
 
-                if self.kwargs["neg"]:
-                    num_neg = np.zeros((npoints, ncomp))
-                    den_neg = np.zeros(npoints)
-
-                if self.kwargs["pos"]:
-                    num_pos = np.zeros((npoints, ncomp))
-                    den_pos = np.zeros(npoints)
-
-                if self.kwargs["double"]:
-                    num = np.zeros((npoints, ncomp))
-                    den = np.zeros(npoints)
-
-                # this is ~50 to ~500 lightweight loop over stencils
-                dis, djs, dks = np.meshgrid(
-                    np.arange(tot_idx),
-                    np.arange(tot_idx),
-                    np.arange(tot_idx),
-                    indexing="ij",
+                names = (
+                    list(vol.cell_data.keys())
+                    if config["cell_fields"] is None
+                    else config["cell_fields"]
                 )
-                for di, dj, dk in zip(dis.ravel(), djs.ravel(), dks.ravel()):
-                    stcl_i = idx_x + di
-                    stcl_j = idx_y + dj
-                    stcl_k = idx_z + dk
+                for name in names:
+                    # uniform treatment scalar/vector/tensor into [i, j, k, comp]
+                    volc, ncomp = comps_castup(vol.cell_data[name])
+                    volc = reshape_3d(volc, nxc, nyc, nzc)
 
-                    dx = x[stcl_i] - surf.points[:, 0]
-                    dy = y[stcl_j] - surf.points[:, 1]
-                    dz = z[stcl_k] - surf.points[:, 2]
-                    dxyz = np.stack((dx, dy, dz), axis=-1)
+                    if config["neg"]:
+                        num_neg = np.zeros((npoints, ncomp))
+                        den_neg = np.zeros(npoints)
 
-                    d2 = dx * dx + dy * dy + dz * dz
-                    # IDW
-                    w = 1.0 / np.maximum(d2, eps) ** 2
+                    if config["pos"]:
+                        num_pos = np.zeros((npoints, ncomp))
+                        den_pos = np.zeros(npoints)
 
-                    # dot == 0 is ill-formed and cannot guarantee the side of the value so is excluded both
-                    if self.kwargs["neg"]:
-                        w_neg = w * (np.sum(dxyz * norm, axis=-1) < 0)
-                        num_neg += (
-                            w_neg[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                    if config["double"]:
+                        num = np.zeros((npoints, ncomp))
+                        den = np.zeros(npoints)
+
+                    # this is ~50 to ~500 lightweight loop over stencils
+                    dis, djs, dks = np.meshgrid(
+                        np.arange(tot_idx),
+                        np.arange(tot_idx),
+                        np.arange(tot_idx),
+                        indexing="ij",
+                    )
+                    for di, dj, dk in zip(dis.ravel(), djs.ravel(), dks.ravel()):
+                        stcl_i = idx_x + di
+                        stcl_j = idx_y + dj
+                        stcl_k = idx_z + dk
+
+                        dx = x[stcl_i] - surf.points[:, 0]
+                        dy = y[stcl_j] - surf.points[:, 1]
+                        dz = z[stcl_k] - surf.points[:, 2]
+                        dxyz = np.stack((dx, dy, dz), axis=-1)
+
+                        d2 = dx * dx + dy * dy + dz * dz
+                        # IDW
+                        w = 1.0 / np.maximum(d2, eps) ** 2
+
+                        # dot == 0 is ill-formed and cannot guarantee the side of the value so is excluded both
+                        if config["neg"]:
+                            w_neg = w * (np.sum(dxyz * norm, axis=-1) < 0)
+                            num_neg += (
+                                w_neg[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                            )
+                            den_neg += w_neg
+
+                        if config["pos"]:
+                            w_pos = w * (np.sum(dxyz * norm, axis=-1) > 0)
+                            num_pos += (
+                                w_pos[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                            )
+                            den_pos += w_pos
+
+                        if config["double"]:
+                            num += w[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                            den += w
+
+                    if config["neg"]:
+                        surf.point_data[f"{name}(SURF_NEG)"] = comps_castdown(
+                            num_neg / den_neg[:, np.newaxis]
                         )
-                        den_neg += w_neg
 
-                    if self.kwargs["pos"]:
-                        w_pos = w * (np.sum(dxyz * norm, axis=-1) > 0)
-                        num_pos += (
-                            w_pos[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
+                    if config["pos"]:
+                        surf.point_data[f"{name}(SURF_POS)"] = comps_castdown(
+                            num_pos / den_pos[:, np.newaxis]
                         )
-                        den_pos += w_pos
 
-                    if self.kwargs["double"]:
-                        num += w[:, np.newaxis] * volc[stcl_i, stcl_j, stcl_k, :]
-                        den += w
-
-                if self.kwargs["neg"]:
-                    surf.point_data[f"{name}(SURF_NEG)"] = comps_castdown(
-                        num_neg / den_neg[:, np.newaxis]
-                    )
-
-                if self.kwargs["pos"]:
-                    surf.point_data[f"{name}(SURF_POS)"] = comps_castdown(
-                        num_pos / den_pos[:, np.newaxis]
-                    )
-
-                if self.kwargs["double"]:
-                    surf.point_data[f"{name}(SURF)"] = comps_castdown(
-                        num / den[:, np.newaxis]
-                    )
+                    if config["double"]:
+                        surf.point_data[f"{name}(SURF)"] = comps_castdown(
+                            num / den[:, np.newaxis]
+                        )
 
         bcast_if_multiblock(surfs, process)
 

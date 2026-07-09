@@ -43,6 +43,9 @@ class ObjPath:
     jobname: str
     objname: str
 
+    def to_str(self):
+        return f"{self.jobname}/{self.objname}"
+
 
 # this manages the outputs of jobs
 class Status:

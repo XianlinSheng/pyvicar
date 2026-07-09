@@ -62,7 +62,7 @@ class PrintFields(jobs.PostJob):
         self.header = header
 
     def name(self):
-        return f"echo_fields({self.header})"
+        return f"print_fields({self.header})"
 
     def global_begin(self, st):
         pass
@@ -74,10 +74,10 @@ class PrintFields(jobs.PostJob):
         pass
 
     def frame_proc(self, st):
-        print(f"{self.header}: {st.f.read["mesh"].cell_data.keys() = }")
-        print(f"{self.header}: {st.f.read["mesh"].point_data.keys() = }")
-        print(f"{self.header}: {st.f.read["bodies"][0].cell_data.keys() = }")
-        print(f"{self.header}: {st.f.read["bodies"][0].point_data.keys() = }")
+        log.log(f"Post: {self.header}: {st.f.read["mesh"].cell_data.keys() = }")
+        log.log(f"Post: {self.header}: {st.f.read["mesh"].point_data.keys() = }")
+        log.log(f"Post: {self.header}: {st.f.read["bodies"][0].cell_data.keys() = }")
+        log.log(f"Post: {self.header}: {st.f.read["bodies"][0].point_data.keys() = }")
 
     def frame_end(self, st):
         pass
@@ -91,20 +91,28 @@ st = compact_post(
         fields=c.dump.cgns,  # remove if no need to read
         markers=c.dump.marker,  # remove if no need to read
     ),
-    PrintFields("after read"),
+    PrintFields("After read"),
     jobs.Keep(mesh=jobs.ObjPath("read", "mesh"), cells=["VEL", "P"]),
-    PrintFields("after keep"),
     jobs.VolToSurf(
         # interpolate vol cell fields to surf point field, can specify which side to use the vol data
         # needs vol cell fields so must be used before ToPoints keep=False (default), or specify keep=True
         # modifies surf mesh inplace, add XX(SURF_NEG) XX(SURF_POS) XX(SURF) for all cell fields XX
+        # each dict below is an interp config on certain fields
+        # its the same as calling multiple VolToSurf,
+        # but this avoids all repeated init works on the same vol/surf/fields
+        {
+            "cell_fields": ["P"],
+            "neg": True,  # use data on negative normal side, create XX(SURF_NEG), default False if removed
+            "pos": True,  # ... positive side, ... XX(SURF_POS), default False
+            "double": False,  # ... both sides, use when vol continuous across surf, ... XX(SURF), default False
+        },
+        {
+            "cell_fields": ["VEL"],
+            "double": True,
+        },
         mesh_vol=jobs.ObjPath("read", "mesh"),
         mesh_surf=jobs.ObjPath("read", "bodies"),
-        neg=True,  # use data on negative normal side, create XX(SURF_NEG), default False if removed
-        pos=False,  # ... positive side, ... XX(SURF_POS), default False
-        double=False,  # ... both sides, use when vol continuous across surf, ... XX(SURF), default False
     ),
-    PrintFields("after vol_to_surf"),
     # CalcXXX works on point field, surf interp comes from vol cell field
     jobs.CalcNondimP(
         "CP(SURF_NEG)",
@@ -112,7 +120,18 @@ st = compact_post(
         p_name="P(SURF_NEG)",
         vel0=U,
     ),
-    PrintFields("after calc_nondim_p"),
+    jobs.CalcNondimP(
+        "CP(SURF_POS)",
+        mesh=jobs.ObjPath("read", "bodies"),
+        p_name="P(SURF_POS)",
+        vel0=U,
+    ),
+    jobs.CalcFunc(
+        "CDP(SURF_POS_M_NEG)",
+        ["CP(SURF_POS)", "CP(SURF_NEG)"],
+        lambda pos, neg: pos - neg,
+        mesh=jobs.ObjPath("read", "bodies"),
+    ),
     jobs.Translate(
         # translate a mesh, can be done either inplace or create a new mesh
         # store f/out_name/mesh: output mesh, if copy=True
@@ -141,7 +160,6 @@ st = compact_post(
         out_name="bodies_rot",
     ),
     jobs.ToPoints(jobs.ObjPath("read", "mesh"), keep=False),
-    PrintFields("after to_points"),
     # these CalcXXX default mesh=jobs.ObjPath("read", "mesh") and output inplace
     jobs.CalcNondimVec("CVEL", vec_name="VEL", vec0=U),
     # CalcNabla computes GRAD DIV VOR Q in one run faster, can replace multiple calls
@@ -151,7 +169,7 @@ st = compact_post(
     # jobs.CalcQ("Q", vel_name="CVEL"),
     jobs.CalcNondimP("CP", vel0=U),
     jobs.CalcFunc("WXU", ["CVOR", "CVEL"], lambda w, u: np.cross(w, u, axis=-1)),
-    PrintFields("after all calc_xxx"),
+    PrintFields("Before plots"),
     jobs.IsoSurf(
         # create iso surface mesh
         # store f/first_arg/mesh: iso surface mesh
@@ -186,7 +204,6 @@ st = compact_post(
     # generate a frame for the recent Plot (render f/plot/plotter)
     jobs.SaveCaseAnim(c, "isoq_bodies", keep_frames=False),
     # one can remove a job output early to save some memory, if no longer used
-    jobs.Clear("isoq", "bodies_trans", "bodies_refl", "bodies_rot"),
     jobs.Plot(
         c,
         {
@@ -194,9 +211,20 @@ st = compact_post(
             # defualt uniform white, so one can simply remove this line in that case
             "color": lb.Color.field(lb.Field.scalar("CP(SURF_NEG)"), clim=[-1, 1]),
         },
+        {
+            "mesh": jobs.ObjPath("bodies_trans", "mesh"),
+            "color": lb.Color.field(lb.Field.scalar("CP(SURF_POS)"), clim=[-1, 1]),
+        },
+        {
+            "mesh": jobs.ObjPath("bodies_refl", "mesh"),
+            "color": lb.Color.field(
+                lb.Field.scalar("CDP(SURF_POS_M_NEG)"), clim=[-1, 1]
+            ),
+        },
         plotter_f=isoq_cam_f,
     ),
     jobs.SaveCaseAnim(c, "body", keep_frames=False),
+    jobs.Clear("isoq", "bodies_trans", "bodies_refl", "bodies_rot"),
     jobs.Slice("midy", mesh=jobs.ObjPath("read", "mesh"), normal="y"),
     jobs.Plot(
         c,
