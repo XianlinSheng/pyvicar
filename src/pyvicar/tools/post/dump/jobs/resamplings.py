@@ -137,10 +137,13 @@ class VolToSurf(PostJob):
         surfs = st.f[self.kwargs["mesh_surf"]]
         nx, ny, nz = vol.dimensions
         nxc, nyc, nzc = nx - 1, ny - 1, nz - 1
-        xyz = shcopy_mesh(vol).cell_centers().points
-        x = xyz[:, 0].reshape((nxc, nyc, nzc), order="F")[:, 0, 0]
-        y = xyz[:, 1].reshape((nxc, nyc, nzc), order="F")[0, :, 0]
-        z = xyz[:, 2].reshape((nxc, nyc, nzc), order="F")[0, 0, :]
+        xyz = vol.points
+        x = xyz[:, 0].reshape((nx, ny, nz), order="F")[:, 0, 0]
+        y = xyz[:, 1].reshape((nx, ny, nz), order="F")[0, :, 0]
+        z = xyz[:, 2].reshape((nx, ny, nz), order="F")[0, 0, :]
+        x = (x[1:] + x[:-1]) / 2
+        y = (y[1:] + y[:-1]) / 2
+        z = (z[1:] + z[:-1]) / 2
         tot_idx = self.kwargs["tot_idx"]
 
         def process(surf):
