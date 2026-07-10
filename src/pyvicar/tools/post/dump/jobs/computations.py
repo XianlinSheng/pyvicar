@@ -193,7 +193,7 @@ class CalcNondimVec(PostJob):
             {
                 "mesh": ObjPath("read", "mesh"),
                 "vec_name": "VEL",
-                "vec0": 1,
+                "mag0": 1,
             },
             inplace=True,
             throw_unused=True,
@@ -215,7 +215,7 @@ class CalcNondimVec(PostJob):
         meshobj = st.f[self.kwargs["mesh"]]
 
         def calc(mesh):
-            mesh[self.out_name] = mesh[self.kwargs["vec_name"]] / self.kwargs["vec0"]
+            mesh[self.out_name] = mesh[self.kwargs["vec_name"]] / self.kwargs["mag0"]
 
         bcast_if_multiblock(meshobj, calc)
 
