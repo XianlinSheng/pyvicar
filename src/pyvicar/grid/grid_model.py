@@ -112,3 +112,27 @@ class GridModel:
         if self.dim2:
             xyz = xyz[:2]
         return xyz
+
+    @property
+    def length(self):
+        abc = np.sum(self.l0 * self.doml, axis=1)
+        if self.dim2:
+            abc = abc[:2]
+        return abc
+
+    # [xside, yside, comp]
+    @property
+    def corners(self):
+        if self.dim2:
+            xys = np.zeros((2, 2, 2))
+            xys[:, :, :] = self.length[np.newaxis, np.newaxis, :]
+            xys[0, :, 0] = 0
+            xys[:, 0, 1] = 0
+            return xys
+        else:
+            xyzs = np.zeros((2, 2, 2, 3))
+            xyzs[:, :, :, :] = self.length[np.newaxis, np.newaxis, np.newaxis, :]
+            xyzs[0, :, :, 0] = 0
+            xyzs[:, 0, :, 1] = 0
+            xyzs[:, :, 0, 2] = 0
+            return xyzs

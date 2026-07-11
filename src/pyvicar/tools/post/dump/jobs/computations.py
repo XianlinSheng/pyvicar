@@ -1,6 +1,8 @@
+import pyvicar.tools.log as log
 from pyvicar.tools.miscellaneous import args
 from .basics import ObjPath, FullStatus, PostJob, bcast_if_multiblock, shcopy_mesh
 import numpy as np
+import pyvista as pv
 
 
 class CalcQ(PostJob):
@@ -34,7 +36,7 @@ class CalcQ(PostJob):
         def calc(meshin):
             mesh = shcopy_mesh(meshin, keep_points=[self.kwargs["vel_name"]])
             mesh = mesh.compute_derivative(self.kwargs["vel_name"], gradient=True)
-            grad = mesh.point_data["gradient"]
+            grad = mesh["gradient"]
             grad = grad.reshape(-1, 3, 3)  # 3x3 tensor
             gradt = np.transpose(grad, (0, 2, 1))
             S = 0.5 * (grad + gradt)
@@ -44,7 +46,7 @@ class CalcQ(PostJob):
                 np.einsum("ijk,ijk->i", Omega, Omega) - np.einsum("ijk,ijk->i", S, S)
             )
 
-            meshin.point_data[self.out_name] = qfield
+            meshin[self.out_name] = qfield
 
         bcast_if_multiblock(meshobj, calc)
 
@@ -176,8 +178,8 @@ class CalcFunc(PostJob):
         meshobj = st.f[self.kwargs["mesh"]]
 
         def calc(mesh):
-            inputs = [mesh.point_data[name] for name in self.names]
-            mesh.point_data[self.out_name] = self.f(*inputs)
+            inputs = [mesh[name] for name in self.names]
+            mesh[self.out_name] = self.f(*inputs)
 
         bcast_if_multiblock(meshobj, calc)
 
@@ -231,7 +233,8 @@ class CalcNondimP(PostJob):
             {
                 "mesh": ObjPath("read", "mesh"),
                 "p_name": "P",
-                "p0": None,
+                "p0": 0,
+                "p0_xyz": None,
                 "vel0": 1,
                 "rho0": 1,
                 "div2": True,
@@ -244,7 +247,8 @@ class CalcNondimP(PostJob):
         return f"calc_nondim_p({self.out_name})"
 
     def global_begin(self, st: FullStatus):
-        pass
+        if self.kwargs["p0"] is None and self.kwargs["p0_xyz"] is None:
+            raise ValueError(f"At least one in p0 and p0_xyz needs to be specified")
 
     def global_end(self, st: FullStatus):
         pass
@@ -254,18 +258,29 @@ class CalcNondimP(PostJob):
 
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
+        pname = self.kwargs["p_name"]
 
         def calc(mesh):
-            if self.kwargs["p0"] is None:
-                p0 = self.kwargs["vel0"] ** 2 * self.kwargs["rho0"]
-                if self.kwargs["div2"]:
-                    p0 /= 2
-            else:
-                p0 = self.kwargs["p0"]
+            k = self.kwargs["vel0"] ** 2 * self.kwargs["rho0"]
+            if self.kwargs["div2"]:
+                k /= 2
 
-            mesh[self.out_name] = mesh[self.kwargs["p_name"]] / p0
+            if self.kwargs["p0_xyz"] is None:
+                p0 = self.kwargs["p0"]
+            else:
+                xyzs = np.asarray(self.kwargs["p0_xyz"])
+                if xyzs.ndim == 1:
+                    xyzs = xyzs[None, :]
+                samples = pv.PolyData(xyzs).sample(
+                    shcopy_mesh(mesh, keep_points=[pname], keep_cells=[pname])
+                )
+                p0 = np.mean(samples[pname])
+
+            mesh[self.out_name] = (mesh[pname] - p0) / k
+
+            st.f.set_outputs(self.name(), {"p0": p0, "pscale": k})
 
         bcast_if_multiblock(meshobj, calc)
 
     def frame_end(self, st: FullStatus):
-        pass
+        st.f.clear_outputs(self.name())

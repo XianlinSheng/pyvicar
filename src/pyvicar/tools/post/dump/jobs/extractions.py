@@ -58,6 +58,7 @@ class Slice(PostJob):
             {
                 "mesh": ObjPath("read", "mesh"),
                 "origin": [None, None, None],
+                "origin_f": None,
                 "normal": "z",
                 "clip": None,
                 "slice_kwargs": {},
@@ -71,7 +72,8 @@ class Slice(PostJob):
         return self.jobname
 
     def global_begin(self, st: FullStatus):
-        pass
+        if self.kwargs["origin_f"] is None:
+            self.kwargs["origin_f"] = lambda *args: self.kwargs["origin"]
 
     def global_end(self, st: FullStatus):
         pass
@@ -82,9 +84,16 @@ class Slice(PostJob):
     def frame_proc(self, st: FullStatus):
         mesh = st.f[self.kwargs["mesh"]]
 
+        origin = self.kwargs["origin_f"](
+            None,
+            st.f.loop["iframe"],
+            st.f.read["fields"] if "fields" in st.f.read else None,
+            st.f.read["marker"] if "marker" in st.f.read else None,
+        )
+
         x1, x2, y1, y2, z1, z2 = mesh.bounds
         origin = args.none_to_default(
-            self.kwargs["origin"], [(x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2]
+            origin, [(x1 + x2) / 2, (y1 + y2) / 2, (z1 + z2) / 2]
         )
         slice = mesh.slice(origin=origin, normal=self.kwargs["normal"])
         if self.kwargs["clip"] is not None:

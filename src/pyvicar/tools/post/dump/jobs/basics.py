@@ -191,6 +191,11 @@ class Loop(PostJob):
         log.log(f"Post: Progress {st.g.loop["progress"]*100:5.01f}%")
 
 
+class ObjCleared:
+    def __bool__(self):
+        return False
+
+
 # if a job has no status outputs, jobname is never used
 class Clear(PostJob):
     def __init__(self, *jobs):
@@ -209,8 +214,15 @@ class Clear(PostJob):
         pass
 
     def frame_proc(self, st: FullStatus):
-        for job in self.jobs:
-            st.f.clear_outputs(job)
+        for jobpath in self.jobs:
+            if isinstance(jobpath, str):
+                st.f.clear_outputs(jobpath)
+            elif isinstance(jobpath, ObjPath):
+                st.f[jobpath] = ObjCleared()
+            else:
+                raise TypeError(
+                    f"Unrecognized jobpath type, support str as jobname and ObjPath, got {type(jobpath)} '{jobpath}'"
+                )
 
     def frame_end(self, st: FullStatus):
         pass
@@ -335,7 +347,7 @@ class Plot(PostJob):
             {
                 "add_axes": True,
                 "show_grid": True,
-                "enable_anti_aliasing": True,
+                "enable_anti_aliasing": False,
                 "plotter_f": lambda p, c, i, v, m: p,
             },
             inplace=True,
@@ -374,6 +386,19 @@ class Plot(PostJob):
                             comp = np.linalg.norm(vec, axis=1)
                     comp_name = field.fullname()
                     mesh[comp_name] = comp
+
+            out = {"is_empty": True}
+
+            def is_empty(mesh1):
+                out["is_empty"] = out["is_empty"] and (
+                    mesh1.n_points == 0 or mesh1.n_cells == 0
+                )
+
+            bcast_if_multiblock(mesh, is_empty)
+
+            if out["is_empty"]:
+                log.log(f"Post: Plot Warning: Empty mesh {config} at frame")
+                continue
 
             plotter.add_mesh(
                 mesh,

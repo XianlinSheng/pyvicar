@@ -6,11 +6,20 @@ import numpy as np
 from mpi4py import MPI
 
 
+def try_run(job, stage, st):
+    f = getattr(job, stage)
+    try:
+        f(st)
+    except Exception as e:
+        raise type(e)(f"Post Error during {job.name()}.{stage}: {e}")
+
+
 # need at least one read job on either vtk/marker, or otherwise theres nothing to do
 def compact_post(job_read, *jobs):
     st = FullStatus(Status(), Status())
 
     job_read.global_begin(st)
+    try_run(job_read, "global_begin", st)
 
     outputs = st.g[job_read.name()]
 
@@ -25,10 +34,10 @@ def compact_post(job_read, *jobs):
     # but since loop can be derived from read0, it is created internally
     job_loop = Loop(nframes)
 
-    job_loop.global_begin(st)
+    try_run(job_loop, "global_begin", st)
 
     for job in jobs:
-        job.global_begin(st)
+        try_run(job, "global_begin", st)
 
     # from this point, all jobs can be treated in the same way
     jobs = [job_loop, job_read, *jobs]
@@ -36,19 +45,19 @@ def compact_post(job_read, *jobs):
 
     while st.g.loop["continue"]:
         for job in jobs:
-            job.frame_begin(st)
+            try_run(job, "frame_begin", st)
 
         for ijob, job in enumerate(jobs):
             t0 = MPI.Wtime()
-            job.frame_proc(st)
+            try_run(job, "frame_proc", st)
             dt = MPI.Wtime() - t0
             st.g.loop["jobs_frameproc_time"][ijob] += dt
 
         for job in jobs:
-            job.frame_end(st)
+            try_run(job, "frame_end", st)
 
     for job in jobs:
-        job.global_end(st)
+        try_run(job, "global_end", st)
 
     log.log_host(f"Post: frame process avg time")
     table = Table.create()
