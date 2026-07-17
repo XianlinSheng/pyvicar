@@ -155,7 +155,7 @@ class VolToSurf(PostJob):
         z = (z[1:] + z[:-1]) / 2
         tot_idx = self.kwargs["tot_idx"]
 
-        def process(surf):
+        def process(surf, path):
             idx_x = clamp_box(surf.points[:, 0], x, tot_idx=tot_idx)
             idx_y = clamp_box(surf.points[:, 1], y, tot_idx=tot_idx)
             idx_z = clamp_box(surf.points[:, 2], z, tot_idx=tot_idx)

@@ -10,12 +10,12 @@ from dataclasses import dataclass
 from mpi4py import MPI
 
 
-def bcast_if_multiblock(mesh, f):
+def bcast_if_multiblock(mesh, f, path=tuple()):
     if isinstance(mesh, pv.MultiBlock):
-        for mesh1 in mesh:
-            bcast_if_multiblock(mesh1, f)
+        for i, mesh1 in enumerate(mesh):
+            bcast_if_multiblock(mesh1, f, path + (i,))
     else:
-        f(mesh)
+        f(mesh, path)
 
 
 def filter_fields(mesh, keep_points=[], keep_cells=[]):
@@ -154,6 +154,10 @@ class Loop(PostJob):
     def global_begin(self, st: FullStatus):
         iframes_local = list(mpi.dispatch(range(self.nframes_tot)))
         nframes_local = len(iframes_local)
+        if self.nframes_tot == 0:
+            raise ValueError(
+                f"No inputs are given, dump file length 0, check dump output or case path"
+            )
         st.g.set_outputs(
             self.name(),
             {
@@ -171,7 +175,8 @@ class Loop(PostJob):
         comm = MPI.COMM_WORLD
         times = st.g.loop["jobs_frameproc_time"]
         comm.Allreduce(MPI.IN_PLACE, times, op=MPI.SUM)
-        times /= st.g.loop["nframes"]
+        if st.g.loop["nframes"] > 0:
+            times /= st.g.loop["nframes"]
 
     def frame_begin(self, st: FullStatus):
         iframes = st.g.loop["iframes_local"]
@@ -189,6 +194,48 @@ class Loop(PostJob):
         st.g.loop["continue"] = self._ielem < st.g.loop["nframes_local"]
         st.g.loop["progress"] = self._ielem / st.g.loop["nframes_local"]
         log.log(f"Post: Progress {st.g.loop["progress"]*100:5.01f}%")
+
+
+class PrintFields(PostJob):
+    def __init__(self, header, **kwargs):
+        self.header = header
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "mesh": ObjPath("read", "mesh"),
+                "points": True,
+                "cells": True,
+            },
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self):
+        return f"print_fields({self.header})"
+
+    def global_begin(self, st):
+        pass
+
+    def global_end(self, st):
+        pass
+
+    def frame_begin(self, st):
+        pass
+
+    def frame_proc(self, st):
+        meshobj = st.f[self.kwargs["mesh"]]
+
+        def proc(meshin, path):
+            name = self.kwargs["mesh"].to_str()
+            idxes = [f"[{idx}]" for idx in path]
+            name += "".join(idxes)
+            log.log(f"Post: {self.header}: {name} cells  {meshin.cell_data.keys()}")
+            log.log(f"Post: {self.header}: {name} points {meshin.point_data.keys()}")
+
+        bcast_if_multiblock(meshobj, proc)
+
+    def frame_end(self, st):
+        pass
 
 
 class ObjCleared:
@@ -312,7 +359,7 @@ class Keep(PostJob):
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
 
-        def proc(mesh):
+        def proc(mesh, path):
             filter_fields(
                 mesh,
                 keep_points=self.kwargs["points"],
@@ -389,7 +436,7 @@ class Plot(PostJob):
 
             out = {"is_empty": True}
 
-            def is_empty(mesh1):
+            def is_empty(mesh1, path):
                 out["is_empty"] = out["is_empty"] and (
                     mesh1.n_points == 0 or mesh1.n_cells == 0
                 )

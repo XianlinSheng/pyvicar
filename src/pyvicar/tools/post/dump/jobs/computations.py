@@ -33,7 +33,7 @@ class CalcQ(PostJob):
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
 
-        def calc(meshin):
+        def calc(meshin, path):
             mesh = shcopy_mesh(meshin, keep_points=[self.kwargs["vel_name"]])
             mesh = mesh.compute_derivative(self.kwargs["vel_name"], gradient=True)
             grad = mesh["gradient"]
@@ -82,7 +82,7 @@ class CalcVor(PostJob):
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
 
-        def calc(meshin):
+        def calc(meshin, path):
             mesh = shcopy_mesh(meshin, keep_points=[self.kwargs["vel_name"]])
             mesh = mesh.compute_derivative(self.kwargs["vel_name"], vorticity=True)
             meshin[self.out_name] = mesh["vorticity"]
@@ -124,7 +124,7 @@ class CalcNabla(PostJob):
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
 
-        def calc(meshin):
+        def calc(meshin, path):
             mesh = shcopy_mesh(meshin, keep_points=[self.kwargs["field"]])
             mesh = mesh.compute_derivative(
                 self.kwargs["field"],
@@ -177,7 +177,7 @@ class CalcFunc(PostJob):
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
 
-        def calc(mesh):
+        def calc(mesh, path):
             inputs = [mesh[name] for name in self.names]
             mesh[self.out_name] = self.f(*inputs)
 
@@ -216,7 +216,7 @@ class CalcNondimVec(PostJob):
     def frame_proc(self, st: FullStatus):
         meshobj = st.f[self.kwargs["mesh"]]
 
-        def calc(mesh):
+        def calc(mesh, path):
             mesh[self.out_name] = mesh[self.kwargs["vec_name"]] / self.kwargs["mag0"]
 
         bcast_if_multiblock(meshobj, calc)
@@ -260,7 +260,7 @@ class CalcNondimP(PostJob):
         meshobj = st.f[self.kwargs["mesh"]]
         pname = self.kwargs["p_name"]
 
-        def calc(mesh):
+        def calc(mesh, path):
             k = self.kwargs["vel0"] ** 2 * self.kwargs["rho0"]
             if self.kwargs["div2"]:
                 k /= 2
@@ -268,7 +268,7 @@ class CalcNondimP(PostJob):
             if self.kwargs["p0_xyz"] is None:
                 p0 = self.kwargs["p0"]
             else:
-                xyzs = np.asarray(self.kwargs["p0_xyz"])
+                xyzs = np.asarray(self.kwargs["p0_xyz"], dtype=float)
                 if xyzs.ndim == 1:
                     xyzs = xyzs[None, :]
                 samples = pv.PolyData(xyzs).sample(

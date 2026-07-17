@@ -1,6 +1,7 @@
 import os
 import json
 import subprocess
+import types
 from pathlib import Path
 from pyvicar.case.input import Input
 from pyvicar.case.probe import Probe
@@ -16,6 +17,10 @@ from pyvicar.case.post import Post
 from pyvicar.case.restart import Restart
 from pyvicar.case.report import Report
 from pyvicar.tools.miscellaneous import args
+
+
+class CasePathError(Exception):
+    pass
 
 
 class BasicsLinker:
@@ -36,23 +41,27 @@ class BasicsLinker:
         )
 
         self._path = Path(path)
-        self._path.mkdir(exist_ok=True)
-
         if def_list["proclog"]:
             self._pathProcLog = self._path / "ProcLog"
-            self._pathProcLog.mkdir(exist_ok=True)
-
         if def_list["restart"]:
             self._pathRestart = self._path / "Restart"
-            self._pathRestart.mkdir(exist_ok=True)
-
         if def_list["fields"]:
             self._pathFieldsFiles = self._path / "FieldsFiles"
-            self._pathFieldsFiles.mkdir(exist_ok=True)
-
         if def_list["marker"]:
             self._pathMarkerFiles = self._path / "MarkerFiles"
-            self._pathMarkerFiles.mkdir(exist_ok=True)
+
+        def mkdir_all(self):
+            self._path.mkdir(exist_ok=True)
+            if def_list["proclog"]:
+                self._pathProcLog.mkdir(exist_ok=True)
+            if def_list["restart"]:
+                self._pathRestart.mkdir(exist_ok=True)
+            if def_list["fields"]:
+                self._pathFieldsFiles.mkdir(exist_ok=True)
+            if def_list["marker"]:
+                self._pathMarkerFiles.mkdir(exist_ok=True)
+
+        self.mkdir_all = types.MethodType(mkdir_all, self)
 
         return self
 
@@ -161,6 +170,8 @@ class BasicsLinker:
     ):
         def_list = args.add_default(def_list, BasicsLinker._default_w_children)
 
+        self.mkdir_all()
+
         if def_list["input"]:
             self._children.input.write()
 
@@ -198,6 +209,11 @@ class BasicsLinker:
         def_list={},
     ):
         def_list = args.add_default(def_list, BasicsLinker._default_r_children)
+
+        if not self._path.exists():
+            raise CasePathError(
+                f"Attempted to read a case whose path does not exist: {self._path}"
+            )
 
         if def_list["draglift"]:
             self._children.draglift.read()
