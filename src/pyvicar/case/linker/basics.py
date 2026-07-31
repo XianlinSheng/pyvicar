@@ -267,11 +267,19 @@ class BasicsLinker:
         def bash(self):
             log = self.job.logfile
             subprocess.run(
-                ["bash", "-lc", f"cd {self._path} && source <(sed 's/> {log}//g' job)"]
+                [
+                    "bash",
+                    "-lic",
+                    f"cd {self._path} && source <(sed 's/> {log}//g' job)",
+                ],
+                check=True,
             )
 
         def sbatch(self):
-            subprocess.run(["bash", "-lc", f"cd {self._path} && sbatch job"])
+            subprocess.run(
+                ["bash", "-lic", f"cd {self._path} && sbatch job"],
+                check=True,
+            )
 
         @property
         def nproc(self):
