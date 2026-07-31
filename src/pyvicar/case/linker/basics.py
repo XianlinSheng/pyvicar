@@ -269,15 +269,17 @@ class BasicsLinker:
             subprocess.run(
                 [
                     "bash",
-                    "-lic",
+                    "-lc",
                     f"cd {self._path} && source <(sed 's/> {log}//g' job)",
                 ],
+                env=os.environ.copy(),
                 check=True,
             )
 
         def sbatch(self):
             subprocess.run(
-                ["bash", "-lic", f"cd {self._path} && sbatch job"],
+                ["bash", "-lc", f"cd {self._path} && sbatch job"],
+                env=os.environ.copy(),
                 check=True,
             )
 
