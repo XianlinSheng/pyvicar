@@ -11,6 +11,7 @@ from .basics import (
     Keep,
     Plot,
     SaveCaseAnim,
+    Matplotlib,
 )
 
 from .computations import (
@@ -26,4 +27,4 @@ from .extractions import IsoSurf, Slice
 
 from .geometries import Translate, Reflect, Rotate
 
-from .resamplings import ToPoints, VolToSurf
+from .resamplings import ToPoints, VolToSurf, SweepDensity

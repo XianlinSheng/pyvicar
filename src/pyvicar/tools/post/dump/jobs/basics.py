@@ -71,15 +71,26 @@ class Status:
                 return self._outputs[job_name]
             except KeyError:
                 raise JobOutputError(
-                    f"Requested PostJob '{job_name}' but either it was not called or it did not set an output in Status. Add the PostJob before this request or check the implementation"
+                    f"Requested PostJob '{job_name}' "
+                    + f"but either it was not called or it did not set an output in Status. "
+                    + f"Add the PostJob before this request or check the implementation. "
+                    + f"Existing job outputs at this point: {self._outputs.keys()}"
                 )
         elif isinstance(job_name, ObjPath):
             path = job_name
             try:
                 return self[path.jobname][path.objname]
             except KeyError:
+                if path.jobname in self._outputs:
+                    msg = f"{path.jobname} output contains: {self._outputs[path.jobname].keys()}"
+                else:
+                    msg = f"Existing job outputs at this point: {self._outputs.keys()}"
+
                 raise JobOutputError(
-                    f"Requested PostJob output '{path.jobname}'/'{path.objname}' but either the job was not called or it did not set the required output. Add the PostJob before this request or check the job output format or check the implementation"
+                    f"Requested PostJob output '{path.jobname}'/'{path.objname}' "
+                    + f"but either the job was not called or it did not set the required output. "
+                    + f"Add the PostJob before this request or check the job output format or check the implementation. "
+                    + msg
                 )
         else:
             raise TypeError(
@@ -522,6 +533,58 @@ class SaveCaseAnim(PostJob):
             st.f.loop["iframe"],
             st.f.plot["plotter"],
             window_size=resolution_to_size(self.kwargs["resolution"]),
+        )
+
+    def frame_end(self, st: FullStatus):
+        pass
+
+
+class Matplotlib(PostJob):
+    def __init__(self, case, out_name, plot_f, **kwargs):
+        self.case = case
+        self.out_name = out_name
+        self.plot_f = plot_f
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "keep_frames": True,
+                "dpi": 300,
+            },
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self) -> str:
+        return f"matplotlib({self.out_name})"
+
+    def global_begin(self, st: FullStatus):
+        self.case.post.enable()
+        self.case.post.animations.enable()
+        a = self.case.post.animations.get_or_create(self.out_name)
+        a.frames.enable()
+        st.g.set_outputs(self.name(), {"anim": a})
+
+    def global_end(self, st: FullStatus):
+        a = st.g[self.name()]["anim"]
+
+        mpi.set_sync()
+        a.read()
+        mpi.barrier()
+        a.frames.to_video(outformat="mp4")
+        if not self.kwargs["keep_frames"]:
+            del a.frames
+        mpi.barrier()
+        a.read()  # update the new video
+
+    def frame_begin(self, st: FullStatus):
+        pass
+
+    def frame_proc(self, st: FullStatus):
+        a = st.g[self.name()]["anim"]
+        a.frames.frame_by_matplotlib(
+            st.f.loop["iframe"],
+            self.plot_f(st),
+            dpi=self.kwargs["dpi"],
         )
 
     def frame_end(self, st: FullStatus):
