@@ -34,17 +34,50 @@ def shcopy_mesh(mesh, keep_points=[], keep_cells=[]):
     return mesh
 
 
+def comps_castup(x):
+    if x.ndim == 1:
+        return x[:, None], 1
+    else:
+        return x, x.shape[1]
+
+
+def comps_castdown(x):
+    if x.shape[1] == 1:
+        return x[:, 0]
+    else:
+        return x
+
+
 class JobOutputError(Exception):
     pass
 
 
-@dataclass
 class ObjPath:
-    jobname: str
-    objname: str
+    tup: tuple
+
+    def __init__(self, *paths):
+        self.tup = tuple(paths)
+
+    @property
+    def jobname(self):
+        return self.tup[0]
+
+    @property
+    def objname(self):
+        return self.tup[1]
+
+    @property
+    def objname(self):
+        return self.tup[1]
+
+    def __getitem__(self, key):
+        return self.tup[key]
+
+    def __iter__(self):
+        return iter(self.tup)
 
     def to_str(self):
-        return f"{self.jobname}/{self.objname}"
+        return "/".join(str(key) for key in self.tup)
 
 
 # this manages the outputs of jobs
@@ -76,41 +109,62 @@ class Status:
                     + f"Add the PostJob before this request or check the implementation. "
                     + f"Existing job outputs at this point: {self._outputs.keys()}"
                 )
-        elif isinstance(job_name, ObjPath):
+        elif isinstance(job_name, (ObjPath, tuple)):
             path = job_name
+            obj = self._outputs
             try:
-                return self[path.jobname][path.objname]
+                finished = []
+                for key in path:
+                    obj = obj[key]
+                    finished.append(key)
+                return obj
             except KeyError:
-                if path.jobname in self._outputs:
-                    msg = f"{path.jobname} output contains: {self._outputs[path.jobname].keys()}"
+                if finished:
+                    finished_str = "/".join(str(key) for key in finished)
                 else:
-                    msg = f"Existing job outputs at this point: {self._outputs.keys()}"
-
+                    finished_str = "/"
                 raise JobOutputError(
-                    f"Requested PostJob output '{path.jobname}'/'{path.objname}' "
-                    + f"but either the job was not called or it did not set the required output. "
-                    + f"Add the PostJob before this request or check the job output format or check the implementation. "
-                    + msg
+                    f"Requested PostJob output object {'/'.join(str(key) for key in path)} "
+                    + f"but key {key} is not found in path {finished_str}. "
+                    + f"Existing sub objects in this path: {obj.keys()} "
                 )
         else:
             raise TypeError(
-                f"Expected a str for job_name or an ObjPath(jobname, objname) as quick access of [jobname][objname], got {type(job_name)} '{job_name}'"
+                f"Expected a str for job_name or an ObjPath|tuple(jobname, objname, subobjnames...) as quick access of [jobname][objname][...], got {type(job_name)} '{job_name}'"
             )
 
     def __setitem__(self, job_name: str | ObjPath, v):
         if isinstance(job_name, str) and isinstance(v, dict):
             try:
                 self._outputs[job_name] = v
+
             except KeyError:
                 raise JobOutputError(
                     f"Requested PostJob '{job_name}' but either it was not called or it did not set an output in Status. Add the PostJob before this request or check the implementation"
                 )
-        elif isinstance(job_name, ObjPath):
+        elif isinstance(job_name, (ObjPath, tuple)):
             path = job_name
-            self[path.jobname][path.objname] = v
+            obj = self._outputs
+            try:
+                finished = []
+                for key in path[:-1]:
+                    obj = obj[key]
+                    finished.append(key)
+                key = path[-1]
+                obj[key] = v
+            except KeyError:
+                if finished:
+                    finished_str = "/".join(str(key) for key in finished)
+                else:
+                    finished_str = "/"
+                raise JobOutputError(
+                    f"Requested PostJob output object {'/'.join(str(key) for key in path)} "
+                    + f"but key {key} is not found in path {finished_str}. "
+                    + f"Existing sub objects in this path: {obj.keys()} "
+                )
         else:
             raise TypeError(
-                f"Expected st[str] = dict or st[ObjPath] (eqv) st[ObjPath.jobname][ObjPath.objname] = v, got st[{type(job_name)}'{job_name}'] = {type(v)}'{v}'"
+                f"Expected st[str] = dict or st[ObjPath|tuple] (eqv) st[ObjPath.jobname][ObjPath.objname][...] = v, got st[{type(job_name)}'{job_name}'] = {type(v)}'{v}'"
             )
 
     def __getattr__(self, job_name: str):
@@ -287,9 +341,18 @@ class Clear(PostJob):
 
 
 class Read(PostJob):
-    def __init__(self, fields=None, markers=None):
+    def __init__(self, fields=None, markers=None, **kwargs):
         self.fields = fields
         self.markers = markers
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "read_fields_data": True,
+                "read_markers_data": True,
+            },
+            inplace=True,
+            throw_unused=True,
+        )
 
         if fields is None and markers is None:
             raise ValueError(
@@ -321,21 +384,29 @@ class Read(PostJob):
         i = st.f.loop["iframe"]
         msg = f"Post: Frame {i}"
         out = st.f.set_outputs(self.name(), {})
+        tstep = []
         if self.fields is not None:
             fields = self.fields[i + 1]
             msg += f" {fields}"
             out["fields"] = fields
+            tstep.append(fields.tstep)
         if self.markers is not None:
             marker = self.markers[i + 1]
             msg += f" {marker}"
             out["marker"] = marker
+            tstep.append(fields.tstep)
         log.log(msg)
+        if len(set(tstep)) != 1:
+            raise ValueError(
+                f"Fields/Marker tstep should match, got {tstep} respectively for frame {i}"
+            )
+        out["tstep"] = tstep[0]
 
     def frame_proc(self, st: FullStatus):
         out = st.f.read
-        if self.fields is not None:
+        if self.fields is not None and self.kwargs["read_fields_data"]:
             out["mesh"] = out["fields"].to_pyvista()
-        if self.markers is not None:
+        if self.markers is not None and self.kwargs["read_markers_data"]:
             out["bodies"] = out["marker"].to_pyvista_multiblocks()
 
     def frame_end(self, st: FullStatus):

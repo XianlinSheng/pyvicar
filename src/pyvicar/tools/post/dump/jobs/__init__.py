@@ -27,4 +27,6 @@ from .extractions import IsoSurf, Slice
 
 from .geometries import Translate, Reflect, Rotate
 
-from .resamplings import ToPoints, VolToSurf, SweepDensity
+from .integrals import SweepDensity, TimeAvg
+
+from .resamplings import ToPoints, VolToSurf

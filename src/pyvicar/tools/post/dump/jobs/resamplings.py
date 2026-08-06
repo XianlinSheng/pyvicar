@@ -1,6 +1,14 @@
 import pyvicar.tools.log as log
 from pyvicar.tools.miscellaneous import args
-from .basics import ObjPath, FullStatus, PostJob, shcopy_mesh, bcast_if_multiblock
+from .basics import (
+    ObjPath,
+    FullStatus,
+    PostJob,
+    shcopy_mesh,
+    bcast_if_multiblock,
+    comps_castup,
+    comps_castdown,
+)
 import pyvista as pv
 import numpy as np
 
@@ -53,20 +61,6 @@ def clamp_box(points, grid, tot_idx=6):
     idx = np.searchsorted(grid, points) - half
     idx = np.clip(idx, 0, grid.shape[0] - tot_idx)
     return idx
-
-
-def comps_castup(x):
-    if x.ndim == 1:
-        return x[:, None], 1
-    else:
-        return x, x.shape[1]
-
-
-def comps_castdown(x):
-    if x.shape[1] == 1:
-        return x[:, 0]
-    else:
-        return x
 
 
 def reshape_3d(x, nx, ny, nz):
@@ -345,95 +339,3 @@ class VolToSurf(PostJob):
 
 #     def frame_end(self, st: FullStatus):
 #         pass
-
-
-class SweepDensity(PostJob):
-    def __init__(self, phi_f, **kwargs):
-        self.phi_f = phi_f
-        self.kwargs = args.add_default(
-            kwargs,
-            {
-                "cell_field": None,
-                "point_field": None,
-                "mesh": ObjPath("read", "mesh"),
-                "phi_min": 0,
-                "phi_max": 1,
-                "phi_n": 100,
-            },
-            inplace=True,
-            throw_unused=True,
-        )
-
-    def name(self) -> str:
-        cell = self.kwargs["cell_field"]
-        point = self.kwargs["point_field"]
-        names = []
-        if cell is not None:
-            names.append(f"cell/{cell}")
-        if point is not None:
-            names.append(f"point/{point}")
-        return f"sweep_density({self.kwargs["mesh"].to_str()}/{'|'.join(names)})"
-
-    def global_begin(self, st: FullStatus):
-        cell = self.kwargs["cell_field"]
-        point = self.kwargs["point_field"]
-        if cell is None and point is None:
-            raise ValueError(
-                f"No field is specified for integral. "
-                + f"Either pass cell_field='P' or point_field='P'"
-            )
-
-        if cell is not None and point is not None:
-            raise ValueError(
-                f"Both cell and point fields are given, ambiguous on which to process. "
-                + f"Either pass cell_field='P' or point_field='P'"
-            )
-
-    def global_end(self, st: FullStatus):
-        pass
-
-    def frame_begin(self, st: FullStatus):
-        pass
-
-    def frame_proc(self, st: FullStatus):
-        meshes = st.f[self.kwargs["mesh"]]
-        out = {}
-
-        phi_min = self.kwargs["phi_min"]
-        phi_max = self.kwargs["phi_max"]
-        phi_n = self.kwargs["phi_n"]
-        dphi = (phi_max - phi_min) / phi_n
-        phis = (np.arange(phi_n) + 0.5) * dphi
-
-        def process(mesh, path):
-            if self.kwargs["cell_field"]:
-                name = self.kwargs["cell_field"]
-            else:
-                name = self.kwargs["point_field"]
-                mesh = shcopy_mesh(mesh, keep_points=[name])
-                mesh = mesh.point_data_to_cell_data(pass_point_data=False)
-
-            mesh = mesh.compute_cell_sizes()
-            if "Area" in mesh.cell_data:
-                meas = mesh.cell_data["Area"]
-            elif "Volume" in mesh.cell_data:
-                meas = mesh.cell_data["Volume"]
-            cell = mesh.cell_data[name]
-            cell, ncomps = comps_castup(cell)
-            xyz = mesh.cell_centers().points
-            phi = self.phi_f(xyz, st)
-            iphi = np.clip(np.floor((phi - phi_min) / dphi).astype(int), -1, phi_n) + 1
-            pcell = np.zeros((phi_n + 2, ncomps), dtype=cell.dtype)
-            pmeas = np.zeros(phi_n + 2)
-            np.add.at(pmeas, iphi, meas)
-            pmeas /= dphi
-            np.add.at(pcell, iphi, cell * meas[:, np.newaxis])
-            pcell /= dphi
-            out[path] = {"phi": phis, "measure": pmeas, "integral": pcell}
-
-        bcast_if_multiblock(meshes, process)
-
-        st.f.set_outputs(self.name(), out)
-
-    def frame_end(self, st: FullStatus):
-        pass
