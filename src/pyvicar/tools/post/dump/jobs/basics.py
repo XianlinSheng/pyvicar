@@ -248,7 +248,11 @@ class Loop(PostJob):
         st.g.loop["progress"] = self._ielem / st.g.loop["nframes_local"]
         st.f.set_outputs(
             self.name(),
-            {"iframe": iframes[self._ielem], "ielem": self._ielem},
+            {
+                "iframe": iframes[self._ielem],
+                "ielem": self._ielem,
+                "skip": False,
+            },
         )
 
     def frame_proc(self, st: FullStatus):
@@ -349,20 +353,33 @@ class Read(PostJob):
             {
                 "read_fields_data": True,
                 "read_markers_data": True,
+                "time": None,
+                "tmin": None,
+                "tmax": None,
             },
             inplace=True,
             throw_unused=True,
         )
 
-        if fields is None and markers is None:
-            raise ValueError(
-                f"Expected at least one among fields and markers to be speicifed"
-            )
-
     def name(self) -> str:
         return "read"
 
     def global_begin(self, st: FullStatus):
+        if self.fields is None and self.markers is None:
+            raise ValueError(
+                f"Expected at least one among fields and markers to be speicifed"
+            )
+
+        if self.kwargs["tmin"] is not None or self.kwargs["tmax"] is not None:
+            self.tclamp = True
+        else:
+            self.tclamp = False
+
+        if self.tclamp and self.kwargs["time"] is None:
+            raise ValueError(
+                f"Expected a nparray time=... argument as the simulation time at tstep"
+            )
+
         nframes = [len(src) for src in [self.fields, self.markers] if src is not None]
         if len(set(nframes)) != 1:
             raise ValueError(

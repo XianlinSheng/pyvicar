@@ -46,15 +46,21 @@ def compact_post(job_read, *jobs):
     while st.g.loop["continue"]:
         for job in jobs:
             try_run(job, "frame_begin", st)
+            if st.f.loop["skip"]:
+                continue
 
         for ijob, job in enumerate(jobs):
             t0 = MPI.Wtime()
             try_run(job, "frame_proc", st)
             dt = MPI.Wtime() - t0
             st.g.loop["jobs_frameproc_time"][ijob] += dt
+            if st.f.loop["skip"]:
+                continue
 
         for job in jobs:
             try_run(job, "frame_end", st)
+            if st.f.loop["skip"]:
+                continue
 
     for job in jobs:
         try_run(job, "global_end", st)
