@@ -25,23 +25,32 @@ def font_sizes_xl():
     }
 
 
-def set_default(mpl_kwargs={}, plt_kwargs={}):
-    mpl_kwargs = args.add_default(
-        mpl_kwargs,
+def font_math(usetex=False):
+    if usetex:
+        return {"text.usetex": True}
+    else:
+        return {
+            "text.usetex": False,
+            "axes.formatter.use_mathtext": True,
+            "font.family": "serif",
+            "font.serif": "cmr10",
+            "mathtext.fontset": "cm",
+            "mathtext.rm": "serif",
+            "mathtext.it": "serif:italic",
+            "mathtext.bf": "serif:bold",
+        }
+
+
+
+def set_default(kwargs={}):
+    kwargs = args.add_default(
+        kwargs,
         {
             "figure.dpi": 100,
             "savefig.dpi": 300,
-            # "text.usetex": True,
-            # "font.family": "Times New Roman",
-        },
-    )
-    plt_kwargs = args.add_default(
-        plt_kwargs,
+        } | 
         font_sizes_l(),
     )
 
-    for k, v in mpl_kwargs.items():
-        mpl.rcParams[k] = v
-
-    for k, v in plt_kwargs.items():
+    for k, v in kwargs.items():
         plt.rcParams[k] = v
