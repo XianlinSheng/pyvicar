@@ -18,6 +18,7 @@ class Job(Group, Writable, Optional):
                 "ntasks": {"default": 48},
                 "partition": {"default": "parallel"},
                 "gres": {"default": []},
+                "qos": {"default": ""},
             },
             recursive=True,
         )
@@ -42,6 +43,7 @@ class Job(Group, Writable, Optional):
             "ntasksPerNode", self._config["ntasks"]["default"]
         )
         self._children.gres = Field("gres", self._config["gres"]["default"])
+        self._children.qos = Field("qos", self._config["qos"]["default"])
         self._children.account = Field("account", "jsmith01")
 
         # [v1.1.0 reserved] starting from v1.1.0
@@ -101,6 +103,8 @@ class Job(Group, Writable, Optional):
         f.write(f"#SBATCH --ntasks-per-node={self._children.ntasksPerNode}\n")
         if self._children.gres.value:
             f.write(f"#SBATCH --gres={','.join(self._children.gres)}\n")
+        if self._children.qos.value:
+            f.write(f"#SBATCH --qos={self._children.qos}\n")
         f.write(f"#SBATCH --account={self._children.account}\n")
         # [v1.1.0 reserved] these two are optional < v1.1.0, will become mandatory to replace log.std >= v1.1.0
         if self._children.output.value:
