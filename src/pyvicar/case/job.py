@@ -51,6 +51,8 @@ class Job(Group, Writable, Optional):
         self._children.output = Field("output", "")
         self._children.error = Field("error", "")
 
+        self._children.flags = Field("flags", [])
+
         self._children.condaDeactivate = Field(
             "condaDeactivate",
             False,
@@ -111,6 +113,9 @@ class Job(Group, Writable, Optional):
             f.write(f"#SBATCH --output={self._children.output}\n")
         if self._children.error.value:
             f.write(f"#SBATCH --error={self._children.error}\n")
+        if self._children.flags.value:
+            for flag in self._children.flags.value:
+                f.write(f"#SBATCH {flag}\n")
         f.write(f"\n")
         f.write(f"# Here starts script\n")
         if self._children.condaDeactivate.value:
