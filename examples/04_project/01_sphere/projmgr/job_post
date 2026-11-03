@@ -1,0 +1,33 @@
+#!/bin/bash
+#SBATCH --job-name='post_@CODE@'
+#SBATCH --partition=parallel 
+#SBATCH --time=2-00:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --cpus-per-task=6
+#SBATCH --account=rmittal3-condo
+#SBATCH --output=sims/@CODE@/log.out.post
+#SBATCH --error=sims/@CODE@/log.err.post
+
+# Here starts script
+
+code="@CODE@"
+
+mpirun -np 8 python post.py alljobs $code
+
+# mpirun -np 4 python post.py isoq $code
+# mpirun -np 2 python post.py compress $code
+
+# python post.py draglift $code
+mpirun -np 8 python post.py attachdl $code
+
+# mpirun -np 32 python post.py bodyanim $code
+
+
+# notice the memory, normally 16 parallel vtk will take up all memory, 
+# larger grids allow even fewer processes
+# if out of memory, either it is explicitly killed, or ffmpeg will run into trouble and cannot return normally
+# only one process is running ffmpeg, so if its killed other processes cannot return normally 
+
+# post_isoq is before compress because one may want the animation asap 
+# and compress can run in background when inspecting animations

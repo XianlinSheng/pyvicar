@@ -5,7 +5,8 @@ Each case is named with a unique brief code that represents its parameters,
 and a small project manager system is responsible for defining the code format, encode/decode, 
 creating parameters set, generating case files, and scheduling processings for a given code in the command.
 Several commands are provided in the project root path, 
-and the implementations or configurations are put in the projmgr folder.
+and the implementation details or configurations are put in the projmgr folder.
+Such a project folder except the sims/ data can be a git repository synchronizable across platforms. 
 A typical file layout for a project is
 ```
 - project
@@ -13,11 +14,9 @@ A typical file layout for a project is
  |- post.py : postprocess cases, python post.py <job> <code1> ...
  |- stat.py : run statistics, python stat.py <job1> ...
  |- sbatch_job_post : sbatch projmgr/job_post script for a case, sbatch_job_post <code>
- |- pull    : pull updates from remote server, including scripts, simulation reports (no dump files)
- |- push    : push updates, mainly the scripts
+ |- pull    : pull simulation data from remote server (only reports, no dump files)
  |- projmgr
-   |- filter-pull   : rsync file filter for ./pull
-   |- filter-push   : rsync file filter for ./push
+   |- filter        : rsync file filter for ./pull, only used
    |- host          : remote server project path
    |- job_post      : postprocess script template
    |- __init__.py   : init of the mini projmgr system, simply import the submodules
@@ -30,7 +29,9 @@ A typical file layout for a project is
      |- misc        : all required detail implementations or tools
    |- statlib
      |- ...         : structure same as postlib, but job.py contains stat_job() func
-  |- codes ...  : simulation cases
+ |- sims    : simulation data
+   |- code1 : one case folder
+   |- ...
 ```
 Postprocess is to process the output data and generate other datasets within the same case
 so each case is independent and one needs to specify the code to run it.

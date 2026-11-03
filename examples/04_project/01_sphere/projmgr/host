@@ -1,0 +1,11 @@
+case "$1" in
+    "R"|"r"|"rockfish")
+        echo "rockfish:~/d/sim-seagull"
+        ;;
+    "B"|"b"|"blackwell")
+        echo "fpclcip:~/d/sim-seagull"
+        ;;
+    *)
+        echo "UNRESOLVED_HOSTNAME"
+        ;;
+esac

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+printhelp() {
+    cat <<MSG
+Usage: 
+${0##*/} <host> test: dry run, only show the file changes that will happen
+${0##*/} <host>     : execute
+MSG
+}
+
+if [[ -z "$1" ]] 
+then
+    printhelp
+    exit
+fi
+
+host=$(./projmgr/host "$1")
+echo "From host $1: $host"
+
+if [[ "$2" == "test" ]] 
+then
+    rsync -avLhnP --filter="merge projmgr/filter" $host/ .
+elif [[ -z "$2" ]]
+then
+    rsync -avLhP --filter="merge projmgr/filter" $host/ .
+else
+    printhelp
+fi
