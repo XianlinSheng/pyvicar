@@ -2,7 +2,7 @@
 
 These instructions help a fresh agent write Python scripts that use `pyvicar` to configure, run, or postprocess ViCar3D cases. They focus on using the package, not developing it.
 
-## 1. Understand the task and find a matching example
+## 1. Understand the task and choose examples
 
 Before writing a script, identify the requested case or study, its output directory, the ViCar3D installation, and the simulation details supplied by the user. Depending on the task, these may include dimensionality, body geometry and motion, flow conditions, grid resolution, time horizon, processor layout, cluster account and partition, and desired outputs. Ask about missing details that materially affect the setup rather than silently inventing them.
 
@@ -13,7 +13,7 @@ Read the relevant parts of `README.md` and adapt the closest example. Examples a
 - `examples/03_postprocess/`: analysis of solver results, plots, reports, videos, and compact data.
 - `examples/04_project/`: parameterized studies, per-case processing, and cross-case statistics.
 
-## 2. Set up the Python and solver environments
+## 2. Choose the Python environment and Case class
 
 The Python environment needs `pyvicar` and the dependencies listed in `README.md`. The README recommends managing Python and these dependencies with Conda; identify the user's environment and activate the appropriate Conda environment before running a script.
 
@@ -29,13 +29,13 @@ Case = pyvicar.import_case("/path/to/ViCar3D/installation")
 
 Importing checks the installation and compatibility between its add-ons and the installed `pyvicar` API. Examples may assert a compatible API range with `pyvicar.assert_api_version(minimum, maximum)`; follow the range used by the closest example when the script relies on version-specific behavior.
 
-`from pyvicar.case import Case` gives the built-in configuration layout without connecting to an installed solver. Use it to inspect or generate basic configuration files, not to run a solver-backed case or depend on an installation-specific job setup. For solver execution and installation-specific features, use the imported `Case`.
+`from pyvicar.case import Case` gives the built-in configuration layout without connecting to an installed solver. Use it to inspect or generate basic configuration files. For solver-backed job generation, execution, and installation-specific features, use the imported `Case`.
 
 Different ViCar3D installations may expose different options and defaults, especially for numerical schemes. The `c.input.misc` section holds settings specific to some solver versions. Do not assume a setting found in one version's `c.input.misc` is valid in another. Use one built-in or installation-specific `Case` layout per Python process.
 
-## 3. Configure a case
+## 3. Configure a single case
 
-A typical setup uses high-level helpers to build the grid, add geometry, set physical conditions, and choose the processor partition. For example:
+A typical setup uses high-level helpers to build the grid, add geometry, set physical conditions, and choose the processor partition:
 
 ```python
 c = Case("case_directory")
@@ -45,7 +45,6 @@ c.set_inlet("x1", [velocity, 0, 0])
 c.set_re(reynolds_number, U=velocity, L=length_scale)
 c.set_tstep(U=velocity, dx=grid_spacing, T=time_scale, nT=number_of_periods)
 c.set_partition()
-c.write()
 ```
 
 This is a pattern, not a complete physical setup. Choose geometry, flow direction, scales, time-step controls, and boundary conditions from the task and a matching example. For 2D cases, use the 2D grid and geometry helpers; they differ from their 3D counterparts.
@@ -63,19 +62,59 @@ The body-list index starts at **1**. Inspect the matching example and generated 
 
 The usual helpers configure the essentials for a case; other settings, such as numerical schemes, may come from the solver installation's defaults. This is often appropriate. If the user specifically requests one of those settings, first check the examples, then use the relevant low-level field if needed and supported by the selected installation.
 
-### Job setup and writing
+## 4. Write the case and leave submission choices to the user
 
-`c.write()` creates the case directory structure and writes solver input, grid, and body files. If a SLURM job is needed, configure `c.job` as shown in the examples before writing. Job fields include task layout, partition, account, QoS/GRES/extra flags, and optional Conda or environment-module setup.
+`c.write()` creates the case directory structure and writes solver input, grid, body, and enabled job files. When the case needs a SLURM job, keep its full configuration in the script: enable `c.job` and set the task layout and relevant account, partition, QoS/GRES/flags, and environment options as in the examples. Do not remove job configuration because the submission calls are disabled.
 
-Do not submit or launch a solver job unless the user asks for execution and the required installation and cluster details are known.
+When adapting an example, retain its relevant case-writing and diagnostic ending. Adapt example-specific variables and statistics to the values defined by the new script; do not copy diagnostics that do not apply. Keep both execution hooks commented so the user can inspect the generated case and choose whether to enable one:
 
-## 4. Read and postprocess results
+```python
+# SLURM job settings, adapted to the user's cluster and task
+c.job.enable()
+c.job.account = "account"
+c.job.partition = "partition"
+
+c.job.condaDeactivate = True
+c.job.modulePurge = True
+c.job.moduleUse = True
+c.job.moduleLoad = True
+c.job.logfile = ""
+c.job.output = "log.out"
+c.job.error = "log.err"
+
+c.write()
+
+# Optional grid preview
+# c.show_grid(gm.center)
+
+# Keep the relevant diagnostics from the matching example and use this
+# script's actual physical values. For example:
+c.stat_grid()
+c.stat_tstep(
+    cfl={"U": Umax, "dx": dx},
+    tdt={"T": T},
+    ndmp={"T": T},
+)
+c.stat_viscosity(
+    re={"U": U, "L": d},
+    yplus={"y": dx, "tau": {"U": U, "L": d}},
+)
+c.stat_partition()
+
+# Uncomment one when ready to run or submit:
+# c.bash()
+# c.sbatch()
+```
+
+The diagnostic values above (`Umax`, `dx`, `T`, `U`, and `d`) are from the example workflow; define the corresponding quantities in the script or substitute the task's values. `c.bash()` runs the generated job script locally; `c.sbatch()` submits it to SLURM. Keep both commented by default and do not execute either hook on the user's behalf unless they explicitly ask you to run or submit the job.
+
+## 5. Read and postprocess results
 
 For an existing case, follow the relevant `examples/03_postprocess/` pattern. For example, `c.draglift.read()` and `c.draglift.proc()` load and process force series. Other examples cover plots, JSON/CSV reports, isosurfaces, slice contours, body animation, recording, and data compaction. Managed postprocessing artifacts are written under the case's `Post` directory. Use the `Case` class corresponding to the existing case and verify that the required solver outputs are available.
 
 For postprocessing on a cluster, the Python environment may need a headless/off-screen VTK build and MPI linked to the target platform. See the dependency notes in `README.md`.
 
-## 5. Manage a multi-case study
+## 6. Manage a multi-case study
 
 `examples/04_project/` demonstrates a project-level manager that converts parameter codes to case settings, generates and runs individual cases, performs per-case post jobs, and computes statistics across cases. Study-specific parameter encoding and orchestration belong in the user's project scripts; do not assume `pyvicar` provides that manager as part of its package API.
 
