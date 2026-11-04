@@ -1,21 +1,26 @@
 # Using pyvicar
 
-These instructions help a fresh agent write Python scripts that use `pyvicar` to configure, run, or postprocess ViCar3D cases. They focus on using the package, not developing it.
+These instructions help a fresh agent write runnable Python scripts that use `pyvicar` to configure, run, or postprocess ViCar3D cases. They focus on using the package, not developing it.
 
 ## 1. Understand the task and choose examples
 
 Before writing a script, identify the requested case or study, its output directory, the ViCar3D installation, and the simulation details supplied by the user. Depending on the task, these may include dimensionality, body geometry and motion, flow conditions, grid resolution, time horizon, processor layout, cluster account and partition, and desired outputs. Ask about missing details that materially affect the setup rather than silently inventing them.
 
-Read the relevant parts of `README.md` and adapt the closest example. Examples are grouped by task:
+Look for the closest example. Examples are grouped by task:
 
 - `examples/01_geometry/`: geometry, imported surfaces, and grid setup.
 - `examples/02_motion/`: moving bodies and motion settings.
 - `examples/03_postprocess/`: analysis of solver results, plots, reports, videos, and compact data.
 - `examples/04_project/`: parameterized studies, per-case processing, and cross-case statistics.
 
+## Terminology
+
+Unless the user explicitly asks for a project parameter/case code, interpret a request for `code` as a runnable Python script that uses `pyvicar` to generate or process case files. Do not answer with a project-study identifier such as those used under `examples/04_project/`. If intent remains unclear, ask briefly.
+
+
 ## 2. Choose the Python environment and Case class
 
-The Python environment needs `pyvicar` and the dependencies listed in `README.md`. The README recommends managing Python and these dependencies with Conda; identify the user's environment and activate the appropriate Conda environment before running a script.
+Use a Python environment where `pyvicar` and its runtime dependencies are installed. Package dependencies are listed in `pyproject.toml`. Conda is commonly used; identify the environment the user intends to use and do not assume its name.
 
 The ViCar3D solver is installed separately. Its installation root contains `bin/ViCar3D` and `lib/pyvicar_addons`. A commonly used location is `~/opt/ViCar3D/versions/<version>`. Treat that as a candidate default: confirm the directory exists and the intended version before relying on it. Do not assume paths in examples match the user's machine.
 
@@ -112,7 +117,7 @@ The diagnostic values above (`Umax`, `dx`, `T`, `U`, and `d`) are from the examp
 
 For an existing case, follow the relevant `examples/03_postprocess/` pattern. For example, `c.draglift.read()` and `c.draglift.proc()` load and process force series. Other examples cover plots, JSON/CSV reports, isosurfaces, slice contours, body animation, recording, and data compaction. Managed postprocessing artifacts are written under the case's `Post` directory. Use the `Case` class corresponding to the existing case and verify that the required solver outputs are available.
 
-For postprocessing on a cluster, the Python environment may need a headless/off-screen VTK build and MPI linked to the target platform. See the dependency notes in `README.md`.
+For postprocessing on a cluster, the Python environment may need a headless/off-screen VTK build and MPI linked to the target platform. Check the active environment and platform-specific installation details when this matters.
 
 ## 6. Manage a multi-case study
 
