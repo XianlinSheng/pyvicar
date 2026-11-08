@@ -1,0 +1,29 @@
+conda install -c conda-forge tbb tbb-devel c-compiler cxx-compiler
+conda install -c conda-forge mesalib
+
+cmake -S . -B build           \
+    -DVTK_WRAP_PYTHON=ON      \
+    -DVTK_BUILD_EXAMPLES=OFF  \
+    -DVTK_BUILD_TESTING=OFF   \
+    -DVTK_ENABLE_WRAPPING=ON  \
+    -DVTK_SMP_IMPLEMENTATION_TYPE=TBB \
+    -DVTK_USE_X=OFF           \
+    -DVTK_OPENGL_HAS_EGL=OFF  \
+    -DVTK_DEFAULT_RENDER_WINDOW_OFFSCREEN=ON \
+    -DVTK_DEFAULT_RENDER_WINDOW_HEADLESS=ON  \
+    -DVTK_GROUP_ENABLE_Rendering=YES  \
+    -DVTK_GROUP_ENABLE_StandAlone=YES \
+    -DVTK_GROUP_ENABLE_Web=NO  \
+    -DVTK_GROUP_ENABLE_Qt=NO   \
+    -DVTK_WHEEL_BUILD=ON       \
+    -DVTK_MODULE_ENABLE_VTK_RenderingMatplotlib=YES \
+    -DCMAKE_C_COMPILER=gcc     \
+    -DCMAKE_CXX_COMPILER=g++   \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=~/opt/vtk/9.6.0-conda-tbb
+
+cmake --build build --target wheel
+cd build
+python3 setup.py bdist_wheel
+pip install dist/*whl
+python -c "import vtk; print(vtk.vtkSMPTools.GetBackend()); print(vtk.vtkRenderWindow().GetClassName())"
