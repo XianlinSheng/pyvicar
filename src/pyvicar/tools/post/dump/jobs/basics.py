@@ -3,6 +3,7 @@ import pyvicar.tools.mpi as mpi
 import pyvicar.tools.post.dump.labels as lb
 from pyvicar.tools.miscellaneous import args
 from pyvicar.tools.post.dump.preprocesses.conversions import resolution_to_size
+from pyvicar._format.tools import Table
 import pyvista as pv
 import shutil
 import numpy as np
@@ -735,7 +736,6 @@ class Snapshot(PostJob):
         self.case.post.animations.read()
         self.case.post.reports.enable()
         a = self.case.post.animations.get_or_create(self.anim)
-        st.g.set_outputs(self.name(), {"anim": a})
         for frame in self.frames:
             if frame["suffix"] is None:
                 raise ValueError(f"Must specify a name suffix= for a frame snapshot")
@@ -761,8 +761,26 @@ class Snapshot(PostJob):
                 i = np.argmin(np.abs(ts - frame["t"]))
                 frame["tstep"] = st.g["read", "frames", i, "tstep"]
 
+        st.g.set_outputs(self.name(), {"anim": a, "triggered_frames": []})
+
     def global_end(self, st: FullStatus):
-        pass
+        log.log_host()
+        log.log_host(f"Post: snapshot({self.anim}) statistics")
+        frames = st.g[self.name(), "triggered_frames"]
+        frames = MPI.COMM_WORLD.allgather(frames)
+        frames = [item for rank_data in frames for item in rank_data]
+        frames.sort(key=lambda d: d["iframe"])
+
+        table = Table.create()
+        table.add(["iframe", "suffix", "tstep", "t", "tsnap"])
+        for frame in frames:
+            row = [f"{frame['iframe']}", f"{frame['suffix']}", f"{frame['tstep']}"]
+            if frame["t"] is not None:
+                row += [f"{frame['t']}", f"{frame['tsnap']}"]
+            else:
+                row += ["", ""]
+            table.add(row)
+        table.format().log_host()
 
     def frame_begin(self, st: FullStatus):
         pass
@@ -782,6 +800,10 @@ class Snapshot(PostJob):
             out_path = self.case.post.reports.path / out_name
             shutil.copy(path, out_path)
             d["triggered"] = True
+            dg = {"suffix": frame_snap["suffix"], "iframe": iframe, "tstep": tstep}
+            if frame_snap["t"] is not None:
+                dg.update({"tsnap": frame_snap["t"], "t": st.f.read["t"]})
+            st.g[self.name(), "triggered_frames"].append(dg)
 
         st.f.set_outputs(self.name(), d)
 
