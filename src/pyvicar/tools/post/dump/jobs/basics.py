@@ -716,6 +716,7 @@ class Snapshot(PostJob):
                     "tstep": None,
                     "t": None,  # snapshot time
                 },
+                inplace=False,
             )
             for frame in frames
         ]
@@ -768,17 +769,21 @@ class Snapshot(PostJob):
 
     def frame_proc(self, st: FullStatus):
         a = st.g[self.name(), "anim"]
+        iframe = st.f.loop["iframe"]
+        tstep = st.f.read["tstep"]
+        d = {"triggered": False}
         for frame_snap in self.frames:
             # find and copy the tstep frame
-            for frame_read in st.g.read["frames"]:
-                if frame_snap["tstep"] != frame_read["tstep"]:
-                    continue
-                i = frame_read["iframe"]
-                # use direct path to avoid .read mpi sync issues
-                path = a.frames.path / f"{self.anim}.{i}.png"
-                out_name = f"{self.anim}{frame_snap["suffix"]}.png"
-                out_path = self.case.post.reports.path / out_name
-                shutil.copy(path, out_path)
+            if frame_snap["tstep"] != tstep:
+                continue
+            # use direct path to avoid .read mpi sync issues
+            path = a.frames.path / f"{self.anim}.{iframe}.png"
+            out_name = f"{self.anim}{frame_snap["suffix"]}.png"
+            out_path = self.case.post.reports.path / out_name
+            shutil.copy(path, out_path)
+            d["triggered"] = True
+
+        st.f.set_outputs(self.name(), d)
 
     def frame_end(self, st: FullStatus):
-        pass
+        st.f.clear_outputs(self.name())
