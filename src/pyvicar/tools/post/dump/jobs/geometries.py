@@ -1,6 +1,7 @@
 from pyvicar.tools.miscellaneous import args
 from .basics import ObjPath, FullStatus, PostJob
 import numpy as np
+import pyvista as pv
 
 
 class Translate(PostJob):
@@ -122,3 +123,38 @@ class Rotate(PostJob):
     def frame_end(self, st: FullStatus):
         if self.kwargs["copy"]:
             st.f.clear_outputs(self.name())
+
+
+class Cube(PostJob):
+    def __init__(self, xyz_path, a_path, **kwargs):
+        self.xyz_path = xyz_path
+        self.a_path = a_path
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "out_name": "cube",
+            },
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self) -> str:
+        return self.kwargs["out_name"]
+
+    def global_begin(self, st: FullStatus):
+        pass
+
+    def global_end(self, st: FullStatus):
+        pass
+
+    def frame_begin(self, st: FullStatus):
+        pass
+
+    def frame_proc(self, st: FullStatus):
+        xyz = st.f[self.xyz_path]
+        a = st.f[self.a_path]
+        mesh = pv.Cube(center=xyz, x_length=a[0], y_length=a[1], z_length=a[2])
+        st.f.set_outputs(self.name(), {"mesh": mesh})
+
+    def frame_end(self, st: FullStatus):
+        st.f.clear_outputs(self.name())

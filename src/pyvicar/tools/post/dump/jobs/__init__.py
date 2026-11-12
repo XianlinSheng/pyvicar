@@ -25,7 +25,7 @@ from .computations import (
 
 from .extractions import IsoSurf, Slice
 
-from .geometries import Translate, Reflect, Rotate
+from .geometries import Translate, Reflect, Rotate, Cube
 
 from .integrals import SweepDensity, TimeAvg
 
