@@ -77,6 +77,7 @@ class VolToSurf(PostJob):
                 config,
                 {
                     "cell_fields": None,
+                    "normal": None,
                     "pos": False,
                     "neg": False,
                     "double": False,
@@ -155,15 +156,23 @@ class VolToSurf(PostJob):
             idx_z = clamp_box(surf.points[:, 2], z, tot_idx=tot_idx)
             npoints = surf.points.shape[0]
             eps = 1e-6
-            norm = (
-                shcopy_mesh(surf, keep_cells=["NORM"])
-                .cell_data_to_point_data(pass_cell_data=False)
-                .point_data["NORM"]
-            )
 
             for config in self.configs:
                 if not (config["pos"] or config["neg"] or config["double"]):
                     return
+
+                if config["normal"] is None:
+                    norm = surf.compute_normals(
+                        point_normals=True,
+                        cell_normals=False,
+                    ).point_data["Normals"]
+                else:
+                    norm_name = config["normal"]
+                    norm = (
+                        shcopy_mesh(surf, keep_cells=[norm_name])
+                        .cell_data_to_point_data(pass_cell_data=False)
+                        .point_data[norm_name]
+                    )
 
                 names = (
                     list(vol.cell_data.keys())
