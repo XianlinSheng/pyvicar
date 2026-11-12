@@ -158,3 +158,36 @@ class Cube(PostJob):
 
     def frame_end(self, st: FullStatus):
         st.f.clear_outputs(self.name())
+
+
+class Curve(PostJob):
+    def __init__(self, xyzs_path, **kwargs):
+        self.xyzs_path = xyzs_path
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "out_name": "curves",
+            },
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self) -> str:
+        return self.kwargs["out_name"]
+
+    def global_begin(self, st: FullStatus):
+        pass
+
+    def global_end(self, st: FullStatus):
+        pass
+
+    def frame_begin(self, st: FullStatus):
+        pass
+
+    def frame_proc(self, st: FullStatus):
+        xyzs = st.f[self.xyzs_path]
+        mesh = pv.lines_from_points(xyzs)
+        st.f.set_outputs(self.name(), {"mesh": mesh})
+
+    def frame_end(self, st: FullStatus):
+        st.f.clear_outputs(self.name())
