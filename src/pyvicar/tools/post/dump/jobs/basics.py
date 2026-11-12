@@ -4,6 +4,7 @@ import pyvicar.tools.post.dump.labels as lb
 from pyvicar.tools.miscellaneous import args
 from pyvicar.tools.post.dump.preprocesses.conversions import resolution_to_size
 import pyvista as pv
+import shutil
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -392,7 +393,26 @@ class Read(PostJob):
                 f"Fields/Marker length {nframes} not match with existing loop length {st.g.loop["nframes"]}"
             )
 
-        st.g.set_outputs(self.name(), {"nframes": nframes})
+        # construct frame-tstep-time relations
+        frames = []
+        for i in range(nframes):
+            tstep = []
+            if self.fields is not None:
+                fields = self.fields[i + 1]
+                tstep.append(fields.tstep)
+            if self.markers is not None:
+                marker = self.markers[i + 1]
+                tstep.append(marker.tstep)
+            if len(set(tstep)) != 1:
+                raise ValueError(
+                    f"Fields/Marker tstep should match, got {tstep} respectively for local frame {i}"
+                )
+            d = {"iframe": i, "tstep": tstep[0]}
+            if self.kwargs["time"] is not None:
+                d["t"] = self.kwargs["time"][tstep[0] - 1]
+            frames.append(d)
+
+        st.g.set_outputs(self.name(), {"nframes": nframes, "frames": frames})
 
     def global_end(self, st: FullStatus):
         pass
@@ -400,24 +420,29 @@ class Read(PostJob):
     def frame_begin(self, st: FullStatus):
         i = st.f.loop["iframe"]
         msg = f"Post: Frame {i}"
-        out = st.f.set_outputs(self.name(), {})
-        tstep = []
+        d = {}
         if self.fields is not None:
             fields = self.fields[i + 1]
             msg += f" {fields}"
-            out["fields"] = fields
-            tstep.append(fields.tstep)
+            d["fields"] = fields
         if self.markers is not None:
             marker = self.markers[i + 1]
             msg += f" {marker}"
-            out["marker"] = marker
-            tstep.append(fields.tstep)
+            d["marker"] = marker
         log.log(msg)
-        if len(set(tstep)) != 1:
-            raise ValueError(
-                f"Fields/Marker tstep should match, got {tstep} respectively for frame {i}"
-            )
-        out["tstep"] = tstep[0]
+        d["tstep"] = st.g[self.name(), "frames", i, "tstep"]
+
+        if self.kwargs["time"] is not None:
+            t = st.g[self.name(), "frames", i, "t"]
+            d["t"] = t
+
+        st.f.set_outputs(self.name(), d)
+
+        if self.tclamp:
+            tmin = self.kwargs["tmin"]
+            tmax = self.kwargs["tmax"]
+            if (tmin is not None and t < tmin) or (tmax is not None and t > tmax):
+                st.f.loop.skip = True
 
     def frame_proc(self, st: FullStatus):
         out = st.f.read
@@ -674,6 +699,86 @@ class Matplotlib(PostJob):
             self.plot_f(st),
             dpi=self.kwargs["dpi"],
         )
+
+    def frame_end(self, st: FullStatus):
+        pass
+
+
+class Snapshot(PostJob):
+    def __init__(self, case, anim, *frames, **kwargs):
+        self.case = case
+        self.anim = anim
+        self.frames = [
+            args.add_default(
+                frame,
+                {
+                    "suffix": None,
+                    "tstep": None,
+                    "t": None,  # snapshot time
+                },
+            )
+            for frame in frames
+        ]
+        self.kwargs = args.add_default(
+            kwargs,
+            {},
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self) -> str:
+        return f"snapshot({self.anim})"
+
+    def global_begin(self, st: FullStatus):
+        self.case.post.enable()
+        self.case.post.animations.read()
+        self.case.post.reports.enable()
+        a = self.case.post.animations.get_or_create(self.anim)
+        st.g.set_outputs(self.name(), {"anim": a})
+        for frame in self.frames:
+            if frame["suffix"] is None:
+                raise ValueError(f"Must specify a name suffix= for a frame snapshot")
+
+            if frame["tstep"] is None and frame["t"] is None:
+                raise ValueError(f"Must specify either tstep= or t= to locate a frame")
+
+            if frame["t"] is not None:
+                if frame["tstep"] is not None:
+                    raise ValueError(
+                        f"Must specify only one among tstep= and t=, got tstep={frame["tstep"]} and t={frame["t"]}"
+                    )
+
+                # find the nearest available tstep if locating using time
+                try:
+                    ts = np.array(
+                        [frame_read["t"] for frame_read in st.g.read["frames"]]
+                    )
+                except Exception as e:
+                    raise ValueError(
+                        f"Locating frame using t= requires job Read to pass a time= argument to retrieve the simulation time at frames"
+                    )
+                i = np.argmin(np.abs(ts - frame["t"]))
+                frame["tstep"] = st.g["read", "frames", i, "tstep"]
+
+    def global_end(self, st: FullStatus):
+        pass
+
+    def frame_begin(self, st: FullStatus):
+        pass
+
+    def frame_proc(self, st: FullStatus):
+        a = st.g[self.name(), "anim"]
+        for frame_snap in self.frames:
+            # find and copy the tstep frame
+            for frame_read in st.g.read["frames"]:
+                if frame_snap["tstep"] != frame_read["tstep"]:
+                    continue
+                i = frame_read["iframe"]
+                # use direct path to avoid .read mpi sync issues
+                path = a.frames.path / f"{self.anim}.{i}.png"
+                out_name = f"{self.anim}{frame_snap["suffix"]}.png"
+                out_path = self.case.post.reports.path / out_name
+                shutil.copy(path, out_path)
 
     def frame_end(self, st: FullStatus):
         pass

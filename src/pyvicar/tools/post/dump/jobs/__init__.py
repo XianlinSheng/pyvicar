@@ -12,6 +12,7 @@ from .basics import (
     Plot,
     SaveCaseAnim,
     Matplotlib,
+    Snapshot,
 )
 
 from .computations import (
