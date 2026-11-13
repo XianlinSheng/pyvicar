@@ -172,10 +172,15 @@ class Report(Group, Dict, Readable):
     def name(self):
         return self._name
 
+    # [v1.1.0] will be renamed to plot_by_matplotlib
     def table_visual_by_matplotlib(self, fig, *args, **kwargs):
         path = self._path / f"{self._name}.png"
         fig.savefig(path, *args, **kwargs)
         plt.close(fig)
+
+    def plot_by_pyvista(self, plotter, *args, **kwargs):
+        path = self._path / f"{self._name}.png"
+        plotter.screenshot(path, *args, **kwargs)
 
     # [v1.1.0] will be removed, deprecated, use json_by_dict instead
     def table_by_dict(self, row, **kwargs):
@@ -191,7 +196,7 @@ class Report(Group, Dict, Readable):
 
         with open(path, "w") as f:
             json.dump(d, f, indent=indent, **kwargs)
-    
+
     def csv_by_dataframe(self, df, **kwargs):
         path = self._path / f"{self._name}.csv"
         pd.DataFrame(df).to_csv(path, **kwargs)
@@ -307,12 +312,16 @@ class Table(Group):
 
     def to_pandas(self):
         if self._extension != "csv":
-            raise Exception(f"Only .csv report file can be read to pandas, but encountered {self._extension}")
+            raise Exception(
+                f"Only .csv report file can be read to pandas, but encountered {self._extension}"
+            )
         return pd.read_csv(self._path)
-    
+
     def to_dict(self):
         if self._extension != "json":
-            raise Exception(f"Only .json report file can be read to dict, but encountered {self._extension}")
+            raise Exception(
+                f"Only .json report file can be read to dict, but encountered {self._extension}"
+            )
         with open(self._path, "r") as f:
             return json.load(f)
 
