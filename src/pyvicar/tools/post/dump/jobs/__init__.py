@@ -22,6 +22,7 @@ from .computations import (
     CalcFunc,
     CalcNondimVec,
     CalcNondimP,
+    CalcNormal,
 )
 
 from .extractions import IsoSurf, Slice

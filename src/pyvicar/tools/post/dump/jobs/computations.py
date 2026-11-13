@@ -157,6 +157,7 @@ class CalcFunc(PostJob):
             kwargs,
             {
                 "mesh": ObjPath("read", "mesh"),
+                "topo": "cell",
             },
             inplace=True,
             throw_unused=True,
@@ -166,7 +167,10 @@ class CalcFunc(PostJob):
         return f"calc_func({self.out_name})"
 
     def global_begin(self, st: FullStatus):
-        pass
+        if self.kwargs["topo"] != "cell" and self.kwargs["topo"] != "point":
+            raise ValueError(
+                f"Expect 'cell' or 'point' in topo= argument, got {self.kwargs['topo']}"
+            )
 
     def global_end(self, st: FullStatus):
         pass
@@ -178,8 +182,9 @@ class CalcFunc(PostJob):
         meshobj = st.f[self.kwargs["mesh"]]
 
         def calc(mesh, path):
-            inputs = [mesh[name] for name in self.names]
-            mesh[self.out_name] = self.f(*inputs)
+            dset = getattr(mesh, f"{self.kwargs['topo']}_data")
+            inputs = [dset[name] for name in self.names]
+            dset[self.out_name] = self.f(*inputs)
 
         bcast_if_multiblock(meshobj, calc)
 
@@ -284,3 +289,49 @@ class CalcNondimP(PostJob):
 
     def frame_end(self, st: FullStatus):
         st.f.clear_outputs(self.name())
+
+
+class CalcNormal(PostJob):
+    def __init__(self, **kwargs):
+        self.kwargs = args.add_default(
+            kwargs,
+            {
+                "mesh": ObjPath("read", "bodies"),
+                "out_name": "NORM",
+                "cell": True,
+                "point": True,
+            },
+            inplace=True,
+            throw_unused=True,
+        )
+
+    def name(self) -> str:
+        return f"calc_normal({self.kwargs['mesh'].to_str()})"
+
+    def global_begin(self, st: FullStatus):
+        pass
+
+    def global_end(self, st: FullStatus):
+        pass
+
+    def frame_begin(self, st: FullStatus):
+        pass
+
+    def frame_proc(self, st: FullStatus):
+        meshobj = st.f[self.kwargs["mesh"]]
+
+        def calc(mesh, path):
+            nmesh = shcopy_mesh(mesh).compute_normals(
+                point_normals=self.kwargs["point"],
+                cell_normals=self.kwargs["cell"],
+            )
+            out_name = self.kwargs["out_name"]
+            if self.kwargs["point"]:
+                mesh.point_data[out_name] = nmesh.point_data.pop("Normals")
+            if self.kwargs["cell"]:
+                mesh.cell_data[out_name] = nmesh.cell_data.pop("Normals")
+
+        bcast_if_multiblock(meshobj, calc)
+
+    def frame_end(self, st: FullStatus):
+        pass

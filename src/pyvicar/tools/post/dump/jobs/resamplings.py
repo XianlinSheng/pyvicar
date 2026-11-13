@@ -162,7 +162,7 @@ class VolToSurf(PostJob):
                     return
 
                 if config["normal"] is None:
-                    norm = surf.compute_normals(
+                    norm = shcopy_mesh(surf).compute_normals(
                         point_normals=True,
                         cell_normals=False,
                     ).point_data["Normals"]
