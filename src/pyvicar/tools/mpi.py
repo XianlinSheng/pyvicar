@@ -7,21 +7,31 @@ from datetime import timedelta
 from pyvicar.tools.miscellaneous import split_into_n
 
 
-for var in [
-    "OMPI_COMM_WORLD_SIZE",
-    "PMI_SIZE",
-    "PMIX_SIZE",
-    "MV2_COMM_WORLD_SIZE",
-]:
-    value = os.environ.get(var)
-    if value is not None:
-        _is_mpi_env = True
-_is_mpi_env = False
+class MPIEnvError(RuntimeError):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __bool__(self):
+        return False
+
+    def __str__(self):
+        return self.msg
+
+
+if any(k in os.environ for k in (
+    "PMI_RANK",
+    "PMIX_RANK",
+    "OMPI_COMM_WORLD_RANK",
+    "MV2_COMM_WORLD_RANK",
+)):
+    _is_mpi_env = True
+else:
+    _is_mpi_env = MPIEnvError("MPI Env not present, run python using mpirun -np x python script.py")
 
 
 def check_mpi_env():
     if not _is_mpi_env:
-        raise Exception(f"Require MPI Env, start python using mpirun -np x python script.py")
+        raise _is_mpi_env
 
 
 if _is_mpi_env:
@@ -49,8 +59,7 @@ class ParallelMode(Enum):
     Async = 1
 
 
-if _is_mpi_env:
-    _parallelmode = ParallelMode.Sync
+_parallelmode = ParallelMode.Sync
 
 
 def comm():
@@ -71,36 +80,30 @@ def is_host():
 
 
 def parallel_mode():
-    check_mpi_env()
     return _parallelmode
 
 
 def set_sync():
-    check_mpi_env()
     global _parallelmode
     _parallelmode = ParallelMode.Sync
     _comm.Barrier()
 
 
 def set_async():
-    check_mpi_env()
     global _parallelmode
     _comm.Barrier()
     _parallelmode = ParallelMode.Async
 
 
 def is_sync():
-    check_mpi_env()
     return _parallelmode == ParallelMode.Sync
 
 
 def is_async():
-    check_mpi_env()
     return _parallelmode == ParallelMode.Async
 
 
 def is_synchost_or_async():
-    check_mpi_env()
     return (
         _parallelmode == ParallelMode.Sync
         and _rank == 0
@@ -109,7 +112,6 @@ def is_synchost_or_async():
 
 
 def barrier_or_async():
-    check_mpi_env()
     if _parallelmode == ParallelMode.Sync:
         _comm.Barrier()
 
