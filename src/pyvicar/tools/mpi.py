@@ -1,4 +1,4 @@
-from mpi4py import MPI
+import os
 from collections.abc import Iterable, Sequence
 from itertools import product
 from enum import Enum
@@ -7,17 +7,41 @@ from datetime import timedelta
 from pyvicar.tools.miscellaneous import split_into_n
 
 
-_comm = MPI.COMM_WORLD
-_rank = _comm.Get_rank()
-_size = _comm.Get_size()
+for var in [
+    "OMPI_COMM_WORLD_SIZE",
+    "PMI_SIZE",
+    "PMIX_SIZE",
+    "MV2_COMM_WORLD_SIZE",
+]:
+    value = os.environ.get(var)
+    if value is not None:
+        _is_mpi_env = True
+_is_mpi_env = False
 
-_is_host = _rank == 0
+
+def check_mpi_env():
+    if not _is_mpi_env:
+        raise Exception(f"Require MPI Env, start python using mpirun -np x python script.py")
+
+
+if _is_mpi_env:
+    from mpi4py import MPI
+
+    _comm = MPI.COMM_WORLD
+    _rank = _comm.Get_rank()
+    _size = _comm.Get_size()
+    _is_host = _rank == 0
+else:
+    _rank = 0
+    _size = 1
+    _is_host = True
 
 _start_time = time.time()
 
 
 def barrier():
-    return _comm.Barrier()
+    if _is_mpi_env:
+        return _comm.Barrier()
 
 
 class ParallelMode(Enum):
@@ -25,10 +49,12 @@ class ParallelMode(Enum):
     Async = 1
 
 
-_parallelmode = ParallelMode.Sync
+if _is_mpi_env:
+    _parallelmode = ParallelMode.Sync
 
 
 def comm():
+    check_mpi_env()
     return _comm
 
 
@@ -40,35 +66,41 @@ def size():
     return _size
 
 
+def is_host():
+    return _is_host
+
+
 def parallel_mode():
+    check_mpi_env()
     return _parallelmode
 
 
 def set_sync():
+    check_mpi_env()
     global _parallelmode
     _parallelmode = ParallelMode.Sync
     _comm.Barrier()
 
 
 def set_async():
+    check_mpi_env()
     global _parallelmode
     _comm.Barrier()
     _parallelmode = ParallelMode.Async
 
 
 def is_sync():
+    check_mpi_env()
     return _parallelmode == ParallelMode.Sync
 
 
 def is_async():
+    check_mpi_env()
     return _parallelmode == ParallelMode.Async
 
 
-def is_host():
-    return _is_host
-
-
 def is_synchost_or_async():
+    check_mpi_env()
     return (
         _parallelmode == ParallelMode.Sync
         and _rank == 0
@@ -77,6 +109,7 @@ def is_synchost_or_async():
 
 
 def barrier_or_async():
+    check_mpi_env()
     if _parallelmode == ParallelMode.Sync:
         _comm.Barrier()
 
@@ -159,14 +192,14 @@ class MPIView(Iterable):
 
 
 def elapsed_time():
-    _comm.Barrier()
+    barrier()
     end_time = time.time()
     return end_time - _start_time
 
 
 def print_elapsed_time(banner="-"):
     etime = elapsed_time()
-    if _is_host:
+    if is_host():
         msg = f"Total elapsed time: {str(timedelta(seconds=etime))}"
         banner = "".join([banner] * len(msg))
         print(f"\n{banner}\n{msg}\n{banner}\n")
