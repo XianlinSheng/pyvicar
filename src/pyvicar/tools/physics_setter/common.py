@@ -226,13 +226,21 @@ def set_partition_total(c, nproc):
 
 # node-based auto calc number of partitions, part_ncell is approx
 # since its node-based, also set job file
-def set_partition(c, nproc_node=48, ncell_proc=100e3, nnode_max=16):
+def set_partition(c, nproc_node=48, ncell_proc=100e3, nnode_max=16, throw_exceed=False):
     nxc = c.input.domain.nx.value - 1
     nyc = c.input.domain.ny.value - 1
     nzc = c.input.domain.nz.value - 1
     ncell_total = nxc * nyc * nzc
 
-    nnode = max(1, min(nnode_max, int(np.round(ncell_total / ncell_proc / nproc_node))))
+    raw = int(np.round(ncell_total / ncell_proc / nproc_node))
+    if throw_exceed and raw > nnode_max:
+        raise ValueError(
+            f"Required number of nodes {raw} exceeds nnode_max {nnode_max}. "
+            "Specify a larger ncell_proc= to relieve partitioning burden, "
+            "or a larger nnode_max= to grant more available resources, "
+            "or pass throw_exceed=False to silently use the nnode_max once exceeding"
+        )
+    nnode = max(1, min(nnode_max, raw))
     nproc = nnode * nproc_node
 
     set_partition_total(c, nproc)
