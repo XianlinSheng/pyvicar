@@ -70,6 +70,25 @@ def reshape_3d(x, nx, ny, nz):
     )
 
 
+def point_spacing(mesh):
+    edges = mesh.extract_all_edges()
+    lines = edges.lines.reshape(-1, 3)[:, 1:]
+
+    p0 = edges.points[lines[:, 0]]
+    p1 = edges.points[lines[:, 1]]
+    lengths = np.linalg.norm(p1 - p0, axis=1)
+
+    h = np.zeros(mesh.n_points)
+    count = np.zeros(mesh.n_points)
+
+    np.add.at(h, lines[:, 0], lengths)
+    np.add.at(h, lines[:, 1], lengths)
+    np.add.at(count, lines[:, 0], 1)
+    np.add.at(count, lines[:, 1], 1)
+
+    return h / np.maximum(count, 1)
+
+
 class VolToSurf(PostJob):
     def __init__(self, *configs, **kwargs):
         self.configs = [
@@ -77,6 +96,7 @@ class VolToSurf(PostJob):
                 config,
                 {
                     "cell_fields": None,
+                    "normal": None,
                     "pos": False,
                     "neg": False,
                     "double": False,
@@ -90,6 +110,7 @@ class VolToSurf(PostJob):
                 "mesh_vol": ObjPath("read", "mesh"),
                 "mesh_surf": ObjPath("read", "bodies"),
                 "tot_idx": 6,
+                "kernel": "idw",
             },
             inplace=True,
             throw_unused=True,
@@ -107,6 +128,19 @@ class VolToSurf(PostJob):
                 + f"to create surface fields"
             )
 
+        kernels = ["idw", "gaussian", "imultiquadric"]
+        match self.kwargs["kernel"]:
+            case "idw":
+                kernel_f = lambda d2, h: 1.0 / np.maximum(d2, h / 5) ** 2
+            case "gaussian":
+                kernel_f = lambda d2, h: np.exp(-d2 * (0.5 / h) ** 2)
+            case "imultiquadric":
+                kernel_f = lambda d2, h: 1 / np.sqrt(1 + d2 * (0.5 / h) ** 2)
+            case _:
+                raise ValueError(
+                    f"Unrecognized interpolation kernel '{self.kwargs['kernel']}', accepts {kernels}"
+                )
+
         for i, config in enumerate(self.configs):
             if not (config["neg"] or config["pos"] or config["double"]):
                 log.log(
@@ -116,6 +150,8 @@ class VolToSurf(PostJob):
                     + "{'cell_fields': ['P'], 'neg': True, 'pos': True}"
                     + f"to create surface fields"
                 )
+
+        st.g.set_outputs(self.name(), {"kernel_f": kernel_f})
 
     def global_end(self, st: FullStatus):
         pass
@@ -148,22 +184,35 @@ class VolToSurf(PostJob):
         y = (y[1:] + y[:-1]) / 2
         z = (z[1:] + z[:-1]) / 2
         tot_idx = self.kwargs["tot_idx"]
+        kernel_f = st.g[self.name(), "kernel_f"]
 
         def process(surf, path):
             idx_x = clamp_box(surf.points[:, 0], x, tot_idx=tot_idx)
             idx_y = clamp_box(surf.points[:, 1], y, tot_idx=tot_idx)
             idx_z = clamp_box(surf.points[:, 2], z, tot_idx=tot_idx)
             npoints = surf.points.shape[0]
-            eps = 1e-6
-            norm = (
-                shcopy_mesh(surf, keep_cells=["NORM"])
-                .cell_data_to_point_data(pass_cell_data=False)
-                .point_data["NORM"]
-            )
+            h = point_spacing(surf)
 
             for config in self.configs:
                 if not (config["pos"] or config["neg"] or config["double"]):
                     return
+
+                if config["normal"] is None:
+                    norm = (
+                        shcopy_mesh(surf)
+                        .compute_normals(
+                            point_normals=True,
+                            cell_normals=False,
+                        )
+                        .point_data["Normals"]
+                    )
+                else:
+                    norm_name = config["normal"]
+                    norm = (
+                        shcopy_mesh(surf, keep_cells=[norm_name])
+                        .cell_data_to_point_data(pass_cell_data=False)
+                        .point_data[norm_name]
+                    )
 
                 names = (
                     list(vol.cell_data.keys())
@@ -205,8 +254,8 @@ class VolToSurf(PostJob):
                         dxyz = np.stack((dx, dy, dz), axis=-1)
 
                         d2 = dx * dx + dy * dy + dz * dz
-                        # IDW
-                        w = 1.0 / np.maximum(d2, eps) ** 2
+                        # kernel weight
+                        w = kernel_f(d2, h)
 
                         # dot == 0 is ill-formed and cannot guarantee the side of the value so is excluded both
                         if config["neg"]:

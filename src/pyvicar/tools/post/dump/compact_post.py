@@ -65,6 +65,7 @@ def compact_post(job_read, *jobs):
     for job in jobs:
         try_run(job, "global_end", st)
 
+    log.log_host()
     log.log_host(f"Post: frame process avg time")
     table = Table.create()
     table.add(["No.", "Job Name", "Avg Frame Proc (s)", "% Total"])

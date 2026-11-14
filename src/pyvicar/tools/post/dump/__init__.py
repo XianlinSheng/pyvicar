@@ -5,3 +5,5 @@ from .body_anim import create_bodyanim_video
 from .labels import Color, Field, Texture
 from .plotter_fs import set_cam_compass, set_cam_hovering
 from .preprocesses.data import prep_field
+from .preprocesses.conversions import resolution_to_size
+from .figure_grid import figure_grid

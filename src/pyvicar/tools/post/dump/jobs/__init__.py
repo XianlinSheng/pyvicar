@@ -12,6 +12,7 @@ from .basics import (
     Plot,
     SaveCaseAnim,
     Matplotlib,
+    Snapshot,
 )
 
 from .computations import (
@@ -21,11 +22,12 @@ from .computations import (
     CalcFunc,
     CalcNondimVec,
     CalcNondimP,
+    CalcNormal,
 )
 
 from .extractions import IsoSurf, Slice
 
-from .geometries import Translate, Reflect, Rotate
+from .geometries import Translate, Reflect, Rotate, Cube, Curve
 
 from .integrals import SweepDensity, TimeAvg
 
