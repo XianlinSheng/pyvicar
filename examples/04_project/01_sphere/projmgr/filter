@@ -1,0 +1,15 @@
+- __pycache__
+- *Files
+- ProcLog
+- Restart
++ /sims/
++ /sims/*/
++ /sims/*/*.csv
++ /sims/*/log.out
++ /sims/*/log.err
++ /sims/*/Post/
++ /sims/*/Post/Animations/
++ /sims/*/Post/Reports/
++ /sims/*/Post/Animations/*.mp4
++ /sims/*/Post/Reports/*
+- *

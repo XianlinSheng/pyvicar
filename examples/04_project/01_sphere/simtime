@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+if [[ -z "$1" ]] 
+then
+    cat <<MSG
+Usage: 
+${0##*/} <code>: get the simulation time of the case <code> from log.out
+MSG
+else
+    echo "$1"
+    grep 'NTIME =' "sims/$1/log.out" | tail -n1
+fi

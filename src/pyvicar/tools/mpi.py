@@ -1,4 +1,4 @@
-from mpi4py import MPI
+import os
 from collections.abc import Iterable, Sequence
 from itertools import product
 from enum import Enum
@@ -7,17 +7,51 @@ from datetime import timedelta
 from pyvicar.tools.miscellaneous import split_into_n
 
 
-_comm = MPI.COMM_WORLD
-_rank = _comm.Get_rank()
-_size = _comm.Get_size()
+class MPIEnvError(RuntimeError):
+    def __init__(self, msg):
+        self.msg = msg
 
-_is_host = _rank == 0
+    def __bool__(self):
+        return False
+
+    def __str__(self):
+        return self.msg
+
+
+if any(k in os.environ for k in (
+    "PMI_RANK",
+    "PMIX_RANK",
+    "OMPI_COMM_WORLD_RANK",
+    "MV2_COMM_WORLD_RANK",
+)):
+    _is_mpi_env = True
+else:
+    _is_mpi_env = MPIEnvError("MPI Env not present, run python using mpirun -np x python script.py")
+
+
+def check_mpi_env():
+    if not _is_mpi_env:
+        raise _is_mpi_env
+
+
+if _is_mpi_env:
+    from mpi4py import MPI
+
+    _comm = MPI.COMM_WORLD
+    _rank = _comm.Get_rank()
+    _size = _comm.Get_size()
+    _is_host = _rank == 0
+else:
+    _rank = 0
+    _size = 1
+    _is_host = True
 
 _start_time = time.time()
 
 
 def barrier():
-    return _comm.Barrier()
+    if _is_mpi_env:
+        return _comm.Barrier()
 
 
 class ParallelMode(Enum):
@@ -29,6 +63,7 @@ _parallelmode = ParallelMode.Sync
 
 
 def comm():
+    check_mpi_env()
     return _comm
 
 
@@ -38,6 +73,10 @@ def rank():
 
 def size():
     return _size
+
+
+def is_host():
+    return _is_host
 
 
 def parallel_mode():
@@ -62,10 +101,6 @@ def is_sync():
 
 def is_async():
     return _parallelmode == ParallelMode.Async
-
-
-def is_host():
-    return _is_host
 
 
 def is_synchost_or_async():
@@ -159,14 +194,14 @@ class MPIView(Iterable):
 
 
 def elapsed_time():
-    _comm.Barrier()
+    barrier()
     end_time = time.time()
     return end_time - _start_time
 
 
 def print_elapsed_time(banner="-"):
     etime = elapsed_time()
-    if _is_host:
+    if is_host():
         msg = f"Total elapsed time: {str(timedelta(seconds=etime))}"
         banner = "".join([banner] * len(msg))
         print(f"\n{banner}\n{msg}\n{banner}\n")
