@@ -1,5 +1,4 @@
 import numpy as np
-import pyvista as pv
 import trimesh
 from pyvicar._datatype import Dataset2D
 from .stl_reader import read_stl
@@ -49,6 +48,7 @@ class TriSurface:
         # pyvista takes: [3, i0, i1, i2, 3, i0, i1, i2, ...]
         faces_pv = np.hstack([np.full((faces.shape[0], 1), 3), faces]).ravel()
 
+        import pyvista as pv
         return pv.PolyData(points, faces_pv)
 
     def to_trimesh(self):

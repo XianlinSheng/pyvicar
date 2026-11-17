@@ -5,9 +5,11 @@ from . import labels as lb
 from .preprocesses.data import prep_field
 from .preprocesses.conversions import resolution_to_size
 
+# PYVISTA REQUIRED
+
 
 # quick generate
-# (c, i, v, m) is fixed plotter function arguments, 
+# (c, i, v, m) is fixed plotter function arguments,
 # v(vtk) is always set None when called in this case
 def create_bodyanim_video(
     c,
@@ -47,9 +49,7 @@ def create_bodyanim_video(
     mpi.set_async()
 
     for i, marker in mpi.dispatch(enumerate(markers)):
-        log.log(
-            f"Body Anim Video: Posting frame {i} {marker}"
-        )
+        log.log(f"Body Anim Video: Posting frame {i} {marker}")
 
         plotter = pv.Plotter(off_screen=True)
 

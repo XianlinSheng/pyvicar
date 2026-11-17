@@ -1,5 +1,3 @@
-import pyvista as pv
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from pyvicar._tree import List
 from pyvicar.file import Readable, Series
@@ -12,6 +10,8 @@ from pyvicar.tools.vtk import (
     compress_to_binary,
 )
 import pyvicar.tools.log as log
+
+# PYVISTA OPTIONALLY INVOLVED
 
 
 class VTKListBase(List, Readable, Optional):
@@ -176,9 +176,13 @@ class VTM(VTKBase):
         VTKBase.__init__(self, path, tstep, seriesi)
 
     def to_pyvista(self):
+        import pyvista as pv
+
         return pv.read(self._path).combine().clean(tolerance=1e-6)
 
     def to_pyvista_multiblock(self):
+        import pyvista as pv
+
         return pv.read(self._path)
 
     def __repr__(self):
@@ -190,6 +194,8 @@ class VTK(VTKBase):
         VTKBase.__init__(self, path, tstep, seriesi)
 
     def to_pyvista(self):
+        import pyvista as pv
+
         return pv.read(self._path)
 
     def __repr__(self):
@@ -201,6 +207,8 @@ class VTR(VTKBase):
         VTKBase.__init__(self, path, tstep, seriesi)
 
     def to_pyvista(self):
+        import pyvista as pv
+
         return pv.read(self._path)
 
     def __repr__(self):

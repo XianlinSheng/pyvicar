@@ -4,6 +4,8 @@ from collections.abc import Iterable
 import pyvicar.tools.post.dump.labels as lb
 from pyvicar.tools.collections import struct
 
+# PYVISTA REQUIRED
+
 
 def prep_field(mesh, field):
     match field:

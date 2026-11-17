@@ -1,6 +1,8 @@
 import ffmpeg
 from pathlib import Path
 
+# FFMPEG REQUIRED
+
 
 def probe_video(path):
     probe = ffmpeg.probe(path)

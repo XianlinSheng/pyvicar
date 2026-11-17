@@ -1,10 +1,11 @@
 from pyvicar._tree import List
 from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
-import pyvista as pv
 import numpy as np
 import re
 from collections import defaultdict
+
+# PYVISTA OPTIONALLY INVOLVED
 
 
 class CGNSList(List, Readable, Optional):
@@ -65,6 +66,8 @@ class CGNS:
         self._seriesi = seriesi
 
     def to_pyvista(self):
+        import pyvista as pv
+
         mesh = pv.read(self._path)[0][0][0]
         mesh = combine_xyz_vectors(mesh)
         return mesh

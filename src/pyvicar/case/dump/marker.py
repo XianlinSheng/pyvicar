@@ -1,8 +1,9 @@
-import pyvista as pv
 from dataclasses import dataclass
 from pyvicar._tree import List
 from pyvicar.file import Readable, Series
 from pyvicar._utilities import Optional
+
+# PYVISTA OPTIONALLY INVOLVED
 
 
 class MarkerList(List, Readable, Optional):
@@ -68,6 +69,8 @@ class Marker:
         return self._seriesi
 
     def to_pyvista_multiblocks(self):
+        import pyvista as pv
+
         return pv.read(self._path)
 
     def __repr__(self):

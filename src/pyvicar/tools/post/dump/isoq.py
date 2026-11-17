@@ -13,6 +13,8 @@ from .preprocesses.data import (
 )
 from .preprocesses.conversions import resolution_to_size
 
+# PYVISTA REQUIRED
+
 
 class QBase:
     pass

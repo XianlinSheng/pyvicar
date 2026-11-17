@@ -1,6 +1,8 @@
 import pyvista as pv
 import numpy as np
 
+# PYVISTA REQUIRED
+
 
 def get_full_sample(sample):
     full_sample = sample

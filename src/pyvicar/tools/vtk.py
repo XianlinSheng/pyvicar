@@ -6,6 +6,8 @@ from pathlib import Path
 import pyvicar.tools.mpi as mpi
 from pyvicar.tools.log import log
 
+# PYVISTA REQUIRED
+
 
 def combine_vtr(vtm, ijs):
     # reconstruct full grid first

@@ -11,6 +11,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from mpi4py import MPI
 
+# PYVISTA REQUIRED
+
 
 def bcast_if_multiblock(mesh, f, path=tuple()):
     if isinstance(mesh, pv.MultiBlock):

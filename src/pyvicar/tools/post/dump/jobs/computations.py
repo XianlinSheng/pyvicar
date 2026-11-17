@@ -4,6 +4,8 @@ from .basics import ObjPath, FullStatus, PostJob, bcast_if_multiblock, shcopy_me
 import numpy as np
 import pyvista as pv
 
+# PYVISTA REQUIRED
+
 
 class CalcQ(PostJob):
     def __init__(self, out_name, **kwargs):

@@ -4,6 +4,7 @@ from abc import abstractmethod
 from pyvicar.tools.miscellaneous import split_into_n
 import pyvicar.tools.log as log
 
+# PYVISTA REQUIRED
 
 _is_test = False
 

@@ -8,6 +8,8 @@ from .preprocesses.conversions import normal_to_plane, resolution_to_size
 from dataclasses import dataclass
 from collections.abc import Iterable
 
+# PYVISTA REQUIRED
+
 
 # make the slice contour
 def create_slice(

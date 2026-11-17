@@ -9,7 +9,6 @@ from .basics import (
     comps_castup,
     comps_castdown,
 )
-import pyvista as pv
 import numpy as np
 
 

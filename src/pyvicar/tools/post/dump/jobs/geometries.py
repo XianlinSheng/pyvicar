@@ -3,6 +3,8 @@ from .basics import ObjPath, FullStatus, PostJob
 import numpy as np
 import pyvista as pv
 
+# PYVISTA REQUIRED
+
 
 class Translate(PostJob):
     def __init__(self, xyz, **kwargs):

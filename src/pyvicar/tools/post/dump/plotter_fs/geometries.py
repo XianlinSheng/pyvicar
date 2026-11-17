@@ -3,6 +3,8 @@ import pyvista as pv
 import pyvicar.tools.fp as fp
 from pyvicar.tools.post.dump.preprocesses.conversions import vecstr_to_array
 
+# PYVISTA REQUIRED
+
 
 def make_plane_plotter_f(
     xyz_f,

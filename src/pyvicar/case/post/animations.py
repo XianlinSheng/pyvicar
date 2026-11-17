@@ -1,12 +1,12 @@
-import ffmpeg
 import shutil
 import matplotlib.pyplot as plt
 from pyvicar._utilities import Optional
-from pyvicar.tools.ffmpeg import Canvas
 from pyvicar._tree import Group, Dict, List
 from pyvicar.file import Readable
 from pyvicar.file import Series, Siblings
 import pyvicar.tools.mpi as mpi
+
+# FFMPEG OPTIONALLY INVOLVED
 
 
 class AnimationDict(Dict, Readable, Optional):
@@ -170,7 +170,7 @@ class Animation(Group, Dict, Readable):
     def name(self):
         return self._name
 
-    # [v1.1.0: default outformat will be "mp4"] 
+    # [v1.1.0: default outformat will be "mp4"]
     def video_by_ffmpeg(self, video, outformat="gif", quiet=False):
         match mpi.parallel_mode():
             case mpi.ParallelMode.Sync:
@@ -261,6 +261,8 @@ class Frames(List, Readable, Optional):
         self,
         framerate=10,
     ):
+        import ffmpeg
+
         if not self:
             raise Exception(
                 f"Frames inactive, cannot be transferred to ffmpeg, call animation.read() to load data"
@@ -330,7 +332,11 @@ class Video(Group):
         return self._extension
 
     def to_ffmpeg(self):
+        import ffmpeg
+
         return ffmpeg.input(f"{self._path}")
 
     def to_canvas(self, row_height=0.25):
+        from pyvicar.tools.ffmpeg import Canvas
+
         return Canvas(self.path, row_height=row_height)
