@@ -1,10 +1,9 @@
-import pyvista as pv
 import numpy as np
 from abc import abstractmethod
 from pyvicar.tools.miscellaneous import split_into_n
 import pyvicar.tools.log as log
 
-# PYVISTA REQUIRED
+# PYVISTA OPTIONALLY INVOLVED
 
 _is_test = False
 
@@ -54,6 +53,8 @@ class _SampleMeshGenerator3DDomain(_SampleMeshGenerator):
         self.npz = npz
 
     def to_pyvista_multiblocks(self):
+        import pyvista as pv
+
         x_full = np.linspace(0, self.lx, self.nx + 1)
         y_full = np.linspace(0, self.ly, self.ny + 1)
         z_full = np.linspace(0, self.lz, self.nz + 1)
@@ -92,6 +93,8 @@ class _SampleMeshGenerator3DDomain(_SampleMeshGenerator):
 
 
 class sample_option:
+    _inited = False
+
     def __new__(cls, *args, **kwargs):
         raise TypeError(
             f"{cls} is a static class used to store configs and cannot be instantiated."
@@ -104,9 +107,19 @@ class sample_option:
         )
         cls._sample = cls._generator.to_pyvista_multiblocks()
         cls._sample_combined = cls._sample.combine()
+        cls._inited = True
 
+    @classmethod
+    def sample(cls):
+        if not cls._inited:
+            cls.use_3ddomain()
+        return cls._sample
 
-sample_option.use_3ddomain()
+    @classmethod
+    def sample_combined(cls):
+        if not cls._inited:
+            cls.use_3ddomain()
+        return cls.sample_combined()
 
 
 class SampleVTM:
@@ -132,13 +145,13 @@ class SampleVTM:
         log.log(
             f"VTM Debug: transferring to pyvista mb {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
-        return sample_option._sample
+        return sample_option.sample()
 
     def to_pyvista(self):
         log.log(
             f"VTM Debug: transferring to pyvista combined {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
-        return sample_option._sample_combined
+        return sample_option.sample_combined()
 
     def __repr__(self):
         return f"SampleVTM(tstep = {self._tstep})"
@@ -167,7 +180,7 @@ class SampleVTK:
         log.log(
             f"VTK Debug: transferring to pyvista combined {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
-        return sample_option._sample_combined
+        return sample_option.sample_combined()
 
     def __repr__(self):
         return f"SampleVTK(tstep = {self._tstep})"
@@ -196,7 +209,7 @@ class SampleVTR:
         log.log(
             f"VTR Debug: transferring to pyvista {self._path}, step {self._tstep}, No. {self._seriesi}"
         )
-        return sample_option._sample_combined[0]
+        return sample_option.sample_combined()[0]
 
     def __repr__(self):
         return f"SampleVTR(tstep = {self._tstep})"

@@ -3,7 +3,6 @@ import pyvicar.geometry.case_setter.common as geom
 import pyvicar.grid.case_setter.common as grid
 from pyvicar.grid.previewer.common import show_grid, stat_grid
 import pyvicar.tools.post.case_setter.common as post
-import pyvicar.tools.post.dump as dump
 
 
 class ToolsLinker:
@@ -49,10 +48,20 @@ class ToolsLinker:
             cls.create_matplotlib_fig = post.create_matplotlib_fig
             cls.create_json_dict = post.create_json_dict
             cls.create_csv_dataframe = post.create_csv_dataframe
-            cls.create_isoq_video = dump.create_isoq_video
-            cls.create_slicecontour_video = dump.create_slicecontour_video
-            cls.create_recorder_video = dump.create_recorder_video
-            cls.create_bodyanim_video = dump.create_bodyanim_video
+
+            # [v1.1.0 will be removed and replaced by post.compact_post imported by user]
+            try:
+                import pyvicar.tools.post.dump as dump
+
+                cls.create_isoq_video = dump.create_isoq_video
+                cls.create_slicecontour_video = dump.create_slicecontour_video
+                cls.create_recorder_video = dump.create_recorder_video
+                cls.create_bodyanim_video = dump.create_bodyanim_video
+            except:
+                cls.create_isoq_video = ModuleNotFoundError(f"Require pyvista")
+                cls.create_slicecontour_video = ModuleNotFoundError(f"Require pyvista")
+                cls.create_recorder_video = ModuleNotFoundError(f"Require pyvista")
+                cls.create_bodyanim_video = ModuleNotFoundError(f"Require pyvista")
 
             return cls
 
