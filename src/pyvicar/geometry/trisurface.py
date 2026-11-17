@@ -1,7 +1,8 @@
 import numpy as np
 import trimesh
 from pyvicar._datatype import Dataset2D
-from .stl_reader import read_stl
+
+# PYVISTA OPTIONALLY INVOLVED
 
 
 class TriSurface:
@@ -49,6 +50,7 @@ class TriSurface:
         faces_pv = np.hstack([np.full((faces.shape[0], 1), 3), faces]).ravel()
 
         import pyvista as pv
+
         return pv.PolyData(points, faces_pv)
 
     def to_trimesh(self):
@@ -105,18 +107,17 @@ class TriSurface:
             conn=Dataset2D(conn, startIdx=toStartIdx),
         )
 
-    def from_stl(path, tol=1e-10, startIdx=1):
-        xyz, conn, bounding_box = read_stl(path, tol)
+    @classmethod
+    def from_stl(cls, path, startIdx=1):
+        return cls.from_file(path, startIdx=startIdx)
 
-        conn += startIdx
+    @classmethod
+    def from_obj(cls, path, startIdx=1):
+        return cls.from_file(path, startIdx=startIdx)
 
-        return TriSurface(
-            xyz=Dataset2D(xyz, startIdx=startIdx),
-            conn=Dataset2D(conn, startIdx=startIdx),
-        )
-
-    def from_obj(path, startIdx=1):
-        mesh = trimesh.load(path)
+    @classmethod
+    def from_file(cls, path, startIdx=1):
+        mesh = trimesh.load(path).merge_vertices()
         return TriSurface(
             Dataset2D(mesh.vertices, startIdx=startIdx),
             Dataset2D(mesh.faces + startIdx, startIdx=startIdx),
