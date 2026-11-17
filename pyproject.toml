@@ -13,14 +13,11 @@ requires-python = ">=3.8,<3.13"
 dependencies = [
     "numpy",
     "scipy",
-    "numpy-stl",
     "trimesh",
-    "h5py",
+    "trimesh",
     "pandas",
+    "h5py",
     "matplotlib",
-    "mpi4py",
-    "ffmpeg-python",
-    "pyvista",
 ]
 
 [tool.setuptools.packages.find]
