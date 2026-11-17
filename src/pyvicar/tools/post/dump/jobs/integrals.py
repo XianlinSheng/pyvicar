@@ -1,4 +1,5 @@
 import pyvicar.tools.log as log
+import pyvicar.tools.mpi as mpi
 from pyvicar.tools.miscellaneous import args
 from .basics import (
     ObjPath,
@@ -10,7 +11,6 @@ from .basics import (
     comps_castdown,
 )
 import numpy as np
-from mpi4py import MPI
 
 
 class SweepDensity(PostJob):
@@ -133,13 +133,13 @@ class TimeAvg(PostJob):
 
     def global_end(self, st: FullStatus):
         out = st.g[self.name()]
-        comm = MPI.COMM_WORLD
         if not out["init"]:
-            shape = None
+            shapes = None
         else:
-            shape = out["v_acc"].shape
+            shapes = out["v_acc"].shape
 
-        shapes = comm.allgather(shape)
+        if mpi.is_mpi_env():
+            shapes = mpi.comm().allgather(shape)
         shapes_set = set(shapes)
         shapes_set.discard(None)
         if len(shapes_set) > 1:
@@ -156,8 +156,11 @@ class TimeAvg(PostJob):
             out["v_acc"] = np.zeros(shape)
             out["t_acc"] = np.array(0, dtype=float)
 
-        comm.Allreduce(MPI.IN_PLACE, out["v_acc"], op=MPI.SUM)
-        comm.Allreduce(MPI.IN_PLACE, out["t_acc"], op=MPI.SUM)
+        if mpi.is_mpi_env():
+            comm = mpi.comm()
+            MPI = mpi.MPI()
+            comm.Allreduce(MPI.IN_PLACE, out["v_acc"], op=MPI.SUM)
+            comm.Allreduce(MPI.IN_PLACE, out["t_acc"], op=MPI.SUM)
         out["v_avg"] = out["v_acc"] / out["t_acc"]
 
     def frame_begin(self, st: FullStatus):

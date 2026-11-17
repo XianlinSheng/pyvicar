@@ -2,7 +2,6 @@ import os
 from collections.abc import Iterable, Sequence
 from itertools import product
 from enum import Enum
-import time
 from datetime import timedelta
 from pyvicar.tools.miscellaneous import split_into_n
 
@@ -18,15 +17,24 @@ class MPIEnvError(RuntimeError):
         return self.msg
 
 
-if any(k in os.environ for k in (
-    "PMI_RANK",
-    "PMIX_RANK",
-    "OMPI_COMM_WORLD_RANK",
-    "MV2_COMM_WORLD_RANK",
-)):
+if any(
+    k in os.environ
+    for k in (
+        "PMI_RANK",
+        "PMIX_RANK",
+        "OMPI_COMM_WORLD_RANK",
+        "MV2_COMM_WORLD_RANK",
+    )
+):
     _is_mpi_env = True
 else:
-    _is_mpi_env = MPIEnvError("MPI Env not present, run python using mpirun -np x python script.py")
+    _is_mpi_env = MPIEnvError(
+        "MPI Env not present, run python using mpirun -np x python script.py"
+    )
+
+
+def is_mpi_env():
+    return _is_mpi_env
 
 
 def check_mpi_env():
@@ -37,6 +45,7 @@ def check_mpi_env():
 if _is_mpi_env:
     from mpi4py import MPI
 
+    _MPI = MPI
     _comm = MPI.COMM_WORLD
     _rank = _comm.Get_rank()
     _size = _comm.Get_size()
@@ -46,7 +55,17 @@ else:
     _size = 1
     _is_host = True
 
-_start_time = time.time()
+
+def wtime():
+    if _is_mpi_env:
+        return _MPI.WTime()
+    else:
+        import time
+
+        return time.time()
+
+
+_start_time = wtime()
 
 
 def barrier():
@@ -65,6 +84,11 @@ _parallelmode = ParallelMode.Sync
 def comm():
     check_mpi_env()
     return _comm
+
+
+def MPI():
+    check_mpi_env()
+    return _MPI
 
 
 def rank():
@@ -195,7 +219,7 @@ class MPIView(Iterable):
 
 def elapsed_time():
     barrier()
-    end_time = time.time()
+    end_time = wtime()
     return end_time - _start_time
 
 

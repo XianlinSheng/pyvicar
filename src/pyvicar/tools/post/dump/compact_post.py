@@ -3,7 +3,6 @@ import pyvicar.tools.mpi as mpi
 import pyvicar.tools.log as log
 from pyvicar._format.tools import Table
 import numpy as np
-from mpi4py import MPI
 
 
 def try_run(job, stage, st):
@@ -50,9 +49,9 @@ def compact_post(job_read, *jobs):
                 continue
 
         for ijob, job in enumerate(jobs):
-            t0 = MPI.Wtime()
+            t0 = mpi.MPI().Wtime()
             try_run(job, "frame_proc", st)
-            dt = MPI.Wtime() - t0
+            dt = mpi.MPI().Wtime() - t0
             st.g.loop["jobs_frameproc_time"][ijob] += dt
             if st.f.loop["skip"]:
                 continue

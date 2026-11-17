@@ -9,7 +9,6 @@ import shutil
 import numpy as np
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from mpi4py import MPI
 
 # PYVISTA REQUIRED
 
@@ -241,9 +240,11 @@ class Loop(PostJob):
         mpi.set_async()
 
     def global_end(self, st: FullStatus):
-        comm = MPI.COMM_WORLD
         times = st.g.loop["jobs_frameproc_time"]
-        comm.Allreduce(MPI.IN_PLACE, times, op=MPI.SUM)
+        if mpi.is_mpi_env():
+            comm = mpi.comm()
+            MPI = mpi.MPI()
+            comm.Allreduce(MPI.IN_PLACE, times, op=MPI.SUM)
         if st.g.loop["nframes"] > 0:
             times /= st.g.loop["nframes"]
 
@@ -769,8 +770,9 @@ class Snapshot(PostJob):
         log.log_host()
         log.log_host(f"Post: snapshot({self.anim}) statistics")
         frames = st.g[self.name(), "triggered_frames"]
-        frames = MPI.COMM_WORLD.allgather(frames)
-        frames = [item for rank_data in frames for item in rank_data]
+        if mpi.is_mpi_env():
+            frames = mpi.comm().allgather(frames)
+            frames = [item for rank_data in frames for item in rank_data]
         frames.sort(key=lambda d: d["iframe"])
 
         table = Table.create()
