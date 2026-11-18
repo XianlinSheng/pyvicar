@@ -22,7 +22,7 @@ dependencies = [
 
 [project.optional-dependencies]
 post = ["pyvista", "ffmpeg-python"]
-mpi = ["mpi4py]
+mpi = ["mpi4py"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
