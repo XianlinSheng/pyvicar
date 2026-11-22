@@ -7,3 +7,4 @@ from .plotter_fs import set_cam_compass, set_cam_hovering
 from .preprocesses.data import prep_field
 from .preprocesses.conversions import resolution_to_size
 from .figure_grid import figure_grid
+from .figure_rearrange import figure_rearrange, detect_figure_bbox

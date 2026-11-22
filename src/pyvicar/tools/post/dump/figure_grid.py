@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 def figure_grid(
     row_height: int,
     rows: list[list[dict]],
-    output: str = "combined.png",
+    output: str | None = None,
     padding: int = 10,
 ):
     title_height = int(row_height * 0.1)
@@ -67,5 +67,7 @@ def figure_grid(
             ty = y + (title_height - th) // 2 - bbox[1]
             draw.text((tx, ty), title, fill="black", font=font)
 
-    canvas.save(output)
+    if output is not None:
+        canvas.save(output)
+
     return canvas
