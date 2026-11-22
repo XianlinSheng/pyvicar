@@ -68,32 +68,53 @@ After ViCar3D is correctly installed on a platform, pyvicar requires the followi
 
 - python>=3.8,<3.13
 - numpy (dataset data structure)
-- scipy (postprocessing tools)
-- numpy-stl (reading .stl geometries)
+- scipy (numerical tools)
 - trimesh (operating triangular meshes)
 - pandas (reading output tables)
 - h5py (storing database, can be auto handled by conda)
 - matplotlib (visualize dataset)
-- mpi4py (parallel postprocessing)
-- ffmpeg (convert frames to video files, can be auto handled by conda)
-- ffmpeg-python (python controller of above)
+- mpi4py (optional, for parallel postprocessing)
+- ffmpeg-python (optional, convert frames to video files)
+- pyvista (optional, field and mesh postprocessing)
 
-Some libs need special treatment based on platform:
+**If you only need the case-generation preprocessing features
+and do not need to manage a conda environment**,
+this section can be skipped and you can directly go to [Install](#install)
+to install `pyvicar` by a single `pip install` command 
+(Suppose you already have `python` in whatever form, >=3.8 and <3.13).
+`pip` can automatically handle the basic dependencies
+and these have no special env concerns like the packages for postprocessing and parallel. 
 
-These are managed by conda, simply do:
-<pre>
+If you decide to manage it in a conda env, 
+do the following and note that some libs need special treatment based on platform:
+```bash
 conda create -n vicar python=3.12
 conda activate vicar
-conda install -c conda-forge    \
-    numpy scipy numpy-stl       \
-    trimesh pandas h5py matplotlib
-conda install -c conda-forge vtk=*=osmesa* # has special treatments, see below
-conda install -c conda-forge ffmpeg-python pyvista
-conda install -c conda-forge mpi4py # has special treatments, see below
-</pre>
-It is separated into multiple commands in case of slow env solving process,
-and keep the sequence of matplotlib-vtk-ffmpeg/pyvista in case of vtk build overwrite
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+conda install numpy scipy trimesh pandas h5py matplotlib
+# below are optional, if you need MPI parallel processing:
+conda install mpi4py        # has special treatments, see below
+# and postprocessing:
+conda install vtk=*=osmesa* # has special treatments, see below
+conda install ffmpeg-python pyvista
+```
+It is separated into multiple commands in case of slow env solving process.
+Keep the sequence of vtk-ffmpeg/pyvista in case of vtk build overwrite,
 and do mpi4py separately.
+
+If one wants to share existing mpi library,
+like sending platform-specific cross-node pyvicar parallel postprocessing,
+make sure the mpi4py wrapper links against the platform mpi correctly:
+<pre>
+which mpicc
+pip install --no-binary mpi4py --no-cache-dir --force-reinstall mpi4py
+python -c "from mpi4py import MPI; print(MPI.Get_library_version())"
+</pre>
+and this platform mpi will need to be visible at user level together with conda
+since it becomes the conda package backend.
+It is still recommended to directly use conda mpi for compatibility
+if theres only one node and does not need platform-specific mpi backend.
 
 VTK can use X server, off-screen CPU, or off-screen GPU.
 Typically one need to install osmesa (off screen mesa) build on cluster 
@@ -114,30 +135,17 @@ python -c "import vtk; rw = vtk.vtkRenderWindow(); print(rw.GetClassName())"
 Especially on cluster or X display server is not available, 
 make sure this shows an OS (Off Screen) type.
 
-If one wants to share existing mpi library,
-like sending platform-specific cross-node pyvicar parallel postprocessing,
-make sure the mpi4py wrapper links against the platform mpi correctly:
-<pre>
-which mpicc
-pip install --no-binary mpi4py --no-cache-dir --force-reinstall mpi4py
-python -c "from mpi4py import MPI; print(MPI.Get_library_version())"
-</pre>
-and this platform mpi will need to be visible at user level together with conda
-since it becomes the conda package backend.
-It is still recommended to directly use conda mpi for compatibility
-if theres only one node and does not need platform-specific mpi backend.
 If running into weird situations when submitting jobs using .sbatch() or .bash(),
 this is the first thing to check espcially mpirun or python mpi import throws some warnings.  
 
 
 ## Install
 Once the dependencies are handled, installing pyvicar is simply a pip install:
-<pre>
-git clone https://github.com/XianlinSheng/pyvicar.git
+```bash
+git clone https://github.com/XianlinSheng/pyvicar.git --branch v1.0.3 # or other release tag
 cd pyvicar
-git checkout v1.0.3 # or other release tag
-pip install .
-</pre>
+pip install . # or python -m pip install .
+```
 Now one can copy the examples/01_geometry/01_sphere.py to a test folder
 and run it after changing the pyvicar.import_case(...) line to the path where ViCar3D backend is installed.
 
