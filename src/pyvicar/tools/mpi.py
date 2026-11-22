@@ -58,7 +58,7 @@ else:
 
 def wtime():
     if _is_mpi_env:
-        return _MPI.WTime()
+        return _MPI.Wtime()
     else:
         import time
 
@@ -110,12 +110,12 @@ def parallel_mode():
 def set_sync():
     global _parallelmode
     _parallelmode = ParallelMode.Sync
-    _comm.Barrier()
+    barrier()
 
 
 def set_async():
     global _parallelmode
-    _comm.Barrier()
+    barrier()
     _parallelmode = ParallelMode.Async
 
 
@@ -137,7 +137,7 @@ def is_synchost_or_async():
 
 def barrier_or_async():
     if _parallelmode == ParallelMode.Sync:
-        _comm.Barrier()
+        barrier()
 
 
 def dispatch_sequence(listobj: Sequence, startidx=0):
