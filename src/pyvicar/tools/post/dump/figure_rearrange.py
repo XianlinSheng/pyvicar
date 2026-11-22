@@ -55,7 +55,7 @@ def figure_rearrange(
         Rearranged RGBA image.
     """
 
-    if isinstance(image, (str, bytes)):
+    if isinstance(image, (str, Path)):
         image = Image.open(image)
 
     image = image.convert("RGBA")
