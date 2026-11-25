@@ -139,7 +139,7 @@ class TimeAvg(PostJob):
             shapes = out["v_acc"].shape
 
         if mpi.is_mpi_env():
-            shapes = mpi.comm().allgather(shape)
+            shapes = mpi.comm().allgather(shapes)
         shapes_set = set(shapes)
         shapes_set.discard(None)
         if len(shapes_set) > 1:
